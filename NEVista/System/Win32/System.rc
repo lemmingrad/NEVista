@@ -1,0 +1,244 @@
+// Microsoft Visual C++ generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "afxres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.K.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENG)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_UK
+#pragma code_page(1252)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE 
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO 
+BEGIN
+    IDD_NEVISTA_CONFIG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 253
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 217
+    END
+
+    IDD_ROLLUP_MESSAGES, DIALOG
+    BEGIN
+        LEFTMARGIN, 3
+        RIGHTMARGIN, 177
+        TOPMARGIN, 3
+        BOTTOMMARGIN, 83
+    END
+
+    IDD_ROLLUP_GL_SETTINGS, DIALOG
+    BEGIN
+        LEFTMARGIN, 3
+        RIGHTMARGIN, 177
+        TOPMARGIN, 3
+        BOTTOMMARGIN, 156
+    END
+
+    IDD_ROLLUP_WINDOW_SETTINGS, DIALOG
+    BEGIN
+        LEFTMARGIN, 3
+        RIGHTMARGIN, 177
+        VERTGUIDE, 74
+        TOPMARGIN, 3
+        BOTTOMMARGIN, 55
+    END
+
+    IDD_ROLLUP_NETWORK, DIALOG
+    BEGIN
+        LEFTMARGIN, 3
+        RIGHTMARGIN, 177
+        TOPMARGIN, 3
+        BOTTOMMARGIN, 19
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_BITMAP_NEVISTA_SIDELOGO BITMAP                  "nevista.bmp"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_NEVISTA_CONFIG DIALOGEX 0, 0, 260, 225
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUP | WS_CAPTION
+CAPTION "NEVista Settings"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "Start",IDOK,151,200,74,17
+    PUSHBUTTON      "Exit",IDCANCEL,227,201,26,16
+    CONTROL         102,IDC_STATIC,"Static",SS_BITMAP | SS_REALSIZEIMAGE,7,7,57,191
+    LTEXT           "Version #",IDC_NEVISTA_VERSION,7,198,122,12
+    CONTROL         "Show on startup",IDC_CHECK_SHOWATSTARTUP,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,209,68,8
+    CONTROL         "RollupContainer",IDC_CUSTOM_ROLLUPCONTAINER,
+                    "WinSysRollupContainer",WS_TABSTOP,65,7,188,191,WS_EX_CONTROLPARENT | WS_EX_STATICEDGE
+END
+
+IDD_ROLLUP_MESSAGES DIALOGEX 0, 0, 180, 86
+STYLE DS_SETFONT | DS_FIXEDSYS | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    CTEXT           "Messages to go here.",IDC_MESSAGES,3,3,174,80
+END
+
+IDD_ROLLUP_GL_SETTINGS DIALOGEX 0, 0, 180, 159
+STYLE DS_SETFONT | DS_FIXEDSYS | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+END
+
+IDD_ROLLUP_WINDOW_SETTINGS DIALOGEX 0, 0, 180, 58
+STYLE DS_SETFONT | DS_FIXEDSYS | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    COMBOBOX        IDC_COMBO_WINDOWMODE,74,3,103,86,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Mode",IDC_CUSTOM_ROLLUPCONTAINER,3,6,34,11
+    COMBOBOX        IDC_COMBO_RESOLUTION,74,23,103,81,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Resolution",IDC_STATIC,3,26,35,8
+    COMBOBOX        IDC_COMBO_BPP,74,43,103,83,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Colour depth",IDC_STATIC,3,46,42,8
+END
+
+IDD_ROLLUP_NETWORK DIALOGEX 0, 0, 180, 22
+STYLE DS_SETFONT | DS_FIXEDSYS | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_SYSMENU
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    EDITTEXT        IDC_EDIT_SERVER_ADDRESS,29,3,148,15,ES_AUTOHSCROLL
+    LTEXT           "Server",IDC_STATIC,3,5,22,8
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 1,0,0,14
+ PRODUCTVERSION 1,0,0,13
+ FILEFLAGSMASK 0x17L
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x4L
+ FILETYPE 0x0L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "080904b0"
+        BEGIN
+            VALUE "FileDescription", "System"
+            VALUE "FileVersion", "1, 0, 0, 14"
+            VALUE "InternalName", "System"
+            VALUE "LegalCopyright", "Copyright (C) 2015"
+            VALUE "OriginalFilename", "System.rc"
+            VALUE "ProductName", "System"
+            VALUE "ProductVersion", "1, 0, 0, 13"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x809, 1200
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE 
+BEGIN
+    IDS_MODE_WINDOWED       "Windowed"
+    IDS_MODE_BORDERLESS     "Borderless"
+    IDS_MODE_FULLSCREEN     "Fullscreen"
+    IDS_CONFIG_WELCOME      "NEVista Engine\n\nCopyright Blackfox Design 2015"
+    IDS_CONFIG_ERROR        "Warning: Current window settings are invalid. Please try again."
+    IDS_BPP_16              "16 bpp"
+    IDS_BPP_32              "32 bpp"
+    IDS_RES_640x480         "640 x 480"
+    IDS_RES_800x600         "800 x 600"
+    IDS_RES_1024x768        "1024 x 768"
+    IDS_RES_1920x1080       "1920 x 1080"
+END
+
+STRINGTABLE 
+BEGIN
+    IDS_RES_1280x720        "1280 x 720"
+    IDS_RES_1280x800        "1280 x 800"
+    IDS_RES_1366x768        "1366 x 768"
+    IDS_RES_1440x900        "1440 x 900"
+    IDS_RES_1680x1050       "1680 x 1050"
+    IDS_RES_1600x900        "1600 x 900"
+END
+
+#endif    // English (U.K.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+
