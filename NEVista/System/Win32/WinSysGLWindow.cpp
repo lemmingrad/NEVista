@@ -732,7 +732,7 @@ s32 CWinSysGLWindow::CreateGLWindow(const s32 nWidth, const s32 nHeight, const s
 	
 	//-- Find a matching supported pixel format
 	UINT pixelFormat = ChoosePixelFormat(m_hDC, &pfd);
-	if (!pixelFormat)
+	if (IS_ZERO(pixelFormat))
 	{
 		//-- Error, no suitable pixel format found
 //		gDbgLog.Printf("<Could not find a suitable pixel format.");

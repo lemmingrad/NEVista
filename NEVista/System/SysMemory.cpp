@@ -47,7 +47,7 @@ void* Memory::Memcpy(void* pDest, size_t nDestSize, const void* pSrc, size_t nSr
 #if defined(SYSMEMORY_USES_SAFE_MEMORY)
 
     errno_t nError = memcpy_s(pDest, nDestSize, pSrc, nSrcSize);
-    if (nError == 0)
+    if (IS_ZERO(nError))
     {
         return pDest;
     }
@@ -58,7 +58,10 @@ void* Memory::Memcpy(void* pDest, size_t nDestSize, const void* pSrc, size_t nSr
 
 #else
 	
-    if (!pDest || (nDestSize == 0) || !pSrc || (nSrcSize == 0))
+    if ( IS_NULL_PTR(pDest)
+		|| IS_ZERO(nDestSize) 
+		|| IS_NULL_PTR(pSrc) 
+		|| IS_ZERO(nSrcSize) )
     {
         //-- Be consistent with the behavior of memcpy_s.
         return NULL;
@@ -100,7 +103,7 @@ void* Memory::Memmove(void* pDest, size_t nDestSize, const void* pSrc, size_t nS
 #if defined(SYSMEMORY_USES_SAFE_MEMORY)
 
     errno_t nError = memmove_s(pDest, nDestSize, pSrc, nSrcSize);
-    if (nError == 0)
+    if (IS_ZERO(nError))
     {
         return pDest;
     }
@@ -111,7 +114,10 @@ void* Memory::Memmove(void* pDest, size_t nDestSize, const void* pSrc, size_t nS
 
 #else
 	
-    if (!pDest || (nDestSize == 0) || !pSrc || (nSrcSize == 0))
+    if ( IS_NULL_PTR(pDest)
+		|| IS_ZERO(nDestSize) 
+		|| IS_NULL_PTR(pSrc) 
+		|| IS_ZERO(nSrcSize) )
     {
         //-- Be consistent with the behavior of memmove_s.
         return NULL;
@@ -148,7 +154,8 @@ void* Memory::Memmove(void* pDest, size_t nDestSize, const void* pSrc, size_t nS
 //----------------------------------------------------------//
 void* Memory::Memset(void* pMem, s8 nValue, size_t nByteCount)
 {
-    if (!pMem || (nByteCount == 0))
+    if ( IS_NULL_PTR(pMem)
+		|| IS_ZERO(nByteCount) )
     {
         return NULL;
     }
@@ -174,7 +181,8 @@ void* Memory::Memset(void* pMem, s8 nValue, size_t nByteCount)
 //----------------------------------------------------------//
 void* Memory::Memclear(void* pMem, size_t nByteCount)
 {
-    if (!pMem || (nByteCount == 0))
+    if ( IS_NULL_PTR(pMem)
+		|| IS_ZERO(nByteCount) )
     {
         return NULL;
     }

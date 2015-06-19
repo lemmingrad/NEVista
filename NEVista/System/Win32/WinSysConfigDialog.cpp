@@ -108,7 +108,7 @@ INT_PTR CALLBACK CWinSysConfigDialog::StaticDlgEventProc(HWND hWnd, UINT nMsg, W
 		pThis = reinterpret_cast<CWinSysConfigDialog*>(GetWindowLongPtr(hWnd, DWLP_USER));
 	}
 
-	if (pThis)
+	if (IS_PTR(pThis))
 	{
 		return pThis->DlgEventProc(hWnd, nMsg, wParam, lParam);
 	}

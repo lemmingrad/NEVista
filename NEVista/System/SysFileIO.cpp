@@ -23,6 +23,10 @@
 // GLOBALS
 //----------------------------------------------------------//
 
+
+const FileIO::Handle FileIO::INVALID_HANDLE = (FileIO::Handle)NULL;
+
+
 //----------------------------------------------------------//
 // FileIO::Fopen
 //----------------------------------------------------------//
@@ -35,13 +39,13 @@ FileIO::Handle FileIO::Fopen(const s8* strFilename, const s8* strMode)
   
 	Handle pFile;
 	errno_t nError = fopen_s(&pFile, strFilename, strMode);
-	if (nError == 0)
+	if (IS_ZERO(nError))
 	{
 		return pFile;
 	}
 	else
 	{
-		return NULL;
+		return FileIO::INVALID_HANDLE;
 	}
 
 #else
@@ -122,7 +126,8 @@ s32 FileIO::Fprintf(FileIO::Handle pFile, const s8* strFormatting, ...)
 {
 	s32 nSymbolsConverted = -1;
 	 
-	if (!pFile || !strFormatting)
+	if ( (FileIO::INVALID_HANDLE == pFile)
+		|| IS_NULL_PTR(strFormatting) )
 	{
 		return nSymbolsConverted;
 	}

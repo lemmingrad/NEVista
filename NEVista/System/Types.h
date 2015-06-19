@@ -31,6 +31,11 @@
 #define IS_TRUE(x) (true == (x))
 #define IS_FALSE(x) (false == (x))
 
+#define IS_ZERO(x) (0 == (x))
+#define IS_NOT_ZERO(x) (0 != (x))
+#define IS_NULL_PTR(p) (!(p))
+#define IS_PTR(p) (p)
+
 //-- Max/min
 #define MAX(a,b) (((a) > (b)) ? (a) : (b))
 #define MIN(a,b) (((a) > (b)) ? (b) : (a))

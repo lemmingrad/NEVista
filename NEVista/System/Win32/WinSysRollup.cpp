@@ -34,7 +34,7 @@
 //----------------------------------------------------------//
 CWinSysRollup::CWinSysRollup(CWinSysRollupContainer* pContainer, const s8* strName, s32 nDialogID, State::Enum eInitialState)
 {
-	String::Strcpy(m_strName, WINSYS_ROLLUP_NAME_LENGTH, strName);
+	m_strName.Set(strName);
 
 	m_nDialogID = nDialogID;
 	m_hRollupWnd = NULL;
@@ -101,7 +101,7 @@ INT_PTR CALLBACK CWinSysRollup::StaticDlgEventProc(HWND hWnd, UINT nMsg, WPARAM 
 		pThis = reinterpret_cast<CWinSysRollup*>(GetWindowLongPtr(hWnd, DWLP_USER));
 	}
 
-	if (pThis)
+	if (IS_PTR(pThis))
 	{
 		return pThis->DlgEventProc(hWnd, nMsg, wParam, lParam);
 	}
@@ -249,7 +249,7 @@ s32 CWinSysRollup::Construct(HWND hParentContainer)
 							CWinSysRollup::StaticDlgEventProc,
 							reinterpret_cast<LPARAM>(this));
 
-	if (m_hRollupWnd == 0)
+	if (IS_ZERO(m_hRollupWnd))
 	{
 		return WINSYS_CONFIG_ROLLUPCONTAINER_ADDROLLUP_FAIL;
 	}
@@ -470,7 +470,7 @@ s32 CWinSysRollup::Render(HDC hDC)
 	rectHeaderText.top = rectHeaderShadow.bottom + ROLLUPCONTAINER_SPACING;
 	rectHeaderText.bottom -= ROLLUPCONTAINER_SPACING;
 
-	DrawText(hDC, m_strName, String::Strlen(m_strName), &rectHeaderText, DT_LEFT);
+	DrawText(hDC, m_strName.Buffer(), m_strName.Length(), &rectHeaderText, DT_LEFT);
 
 	//-- Draw min/max button outline, white highlight, dark gray/black shadow
 	switch (m_eState)

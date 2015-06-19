@@ -79,12 +79,99 @@ class String
 		static size_t		KeyEncode(s8* strBuffer, size_t strBufferSize, const void* pDataBuffer, size_t dataSize, Key key);
 		static size_t		KeyDecode(void* pDataBuffer, size_t dataBufferSize, const s8* strBuffer, size_t strLength, String::Key key);
 
+		static bool			IsEmpty(const s8* strBuffer);
+
 	private:
 
 		static const std::string KeyDictionary[NUM_KEY_DICTIONARIES];
 
 		String();
 		~String();
+};
+
+template <size_t S>
+class FixedString
+{
+	public:
+
+		FixedString()
+		{
+			Clear();
+		}
+		FixedString(const s8* strIn)
+		{
+			Clear();
+			Set(strIn);
+		}
+		template <size_t S2> FixedString(FixedString<S2>& in)
+		{
+			Clear();
+			Set(in);
+		}
+
+		~FixedString() {};
+		
+		s8* Buffer(void)
+		{
+			return m_strBuffer;
+		}
+		const s8* ConstBuffer(void) const
+		{
+			return m_strBuffer;
+		}
+		size_t Length(void)
+		{
+			return String::Strlen(m_strBuffer);
+		}
+
+		String::Hash GenerateHash(void) const
+		{
+			return String::GenerateHash(m_strBuffer);
+		}
+
+		void Clear(void)
+		{
+			m_strBuffer[0] = 0;
+		}
+
+		bool IsEmpty(void)
+		{
+			return String::IsEmpty(m_strBuffer);
+		}
+
+		s8* Set(const s8* strIn)
+		{
+			return String::Strcpy(m_strBuffer, S, strIn);
+		}
+		s8* Set(const s8* strIn, size_t nStrInLength)
+		{
+			return String::Strncpy(m_strBuffer, S, strIn, nStrInLength);
+		}
+		template <size_t S2> s8* Set(FixedString<S2>& in)
+		{
+			return Set(in.Buffer(), in.Length());
+		}
+
+		s8* Append(const s8* strIn)
+		{
+			return String::Strcat(m_strBuffer, S, strIn);
+		}
+		s8* operator+=(const s8* strIn)
+		{
+			return Append(strIn);
+		}
+		template <size_t S2> s8* Append(FixedString<S2>& in)
+		{
+			return Append(in.Buffer());
+		}
+		template <size_t S2> s8* operator+=(FixedString<S2>& in)
+		{
+			return Append(in);
+		}
+	
+	private:
+
+		s8		m_strBuffer[S];
 };
 
 

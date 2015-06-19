@@ -1,13 +1,17 @@
-#ifndef _SYS_FILEIO_H_
-#define _SYS_FILEIO_H_
+#ifndef _FILEACCESSOR_H_
+#define _FILEACCESSOR_H_
 #pragma once
 
 //----------------------------------------------------------//
-// SYSFILEIO.H
+// FILEACCESSOR.H
 //----------------------------------------------------------//
 //-- Description
-// Wrapper for file IO
+// CFileAccessor utility class.
 //----------------------------------------------------------//
+
+
+#include "FileData.h"
+
 
 //----------------------------------------------------------//
 // DEFINES
@@ -26,32 +30,30 @@
 //----------------------------------------------------------//
 
 
-class FileIO
+class CFileAccessor
 {
+	protected:
+
+		CFileData*						m_pData;
+
 	public:
 
-		typedef FILE*				Handle;
-		static const Handle			INVALID_HANDLE;
+		CFileAccessor(CFileData* pData);
+		virtual ~CFileAccessor();
+	
+		const s8*						GetFileName(void) const;
+		String::Hash					GetHash(void) const;
+		CFileData::Type::Enum			GetFileType(void) const;
+		CFileData::AccessMethod::Enum	GetAccessMethod(void) const;
 
-		static Handle				Fopen(const s8* strFilename, const s8* strMode);
-		static s32					Fclose(Handle pFile); 
-		static s32					Fflush(Handle pFile);
+		virtual bool					ValidateData(void) const = 0;
+		virtual bool					IsOpen(void) const = 0;
 
-		static s32					Fseek(Handle pFile, size_t nOffset, s32 nOrigin);
-		static s32					Ftell(Handle pFile);
-		static s32					Feof(Handle pFile);
-
-		static s32					Fprintf(Handle pFile, const s8* strFormatting, ...);
-		static s32					Fputs(Handle pFile, const s8* strBuffer);
-		static s8*					Fgets(Handle pFile, s8* strBuffer, size_t nCount);
-
-		static size_t				Fread(Handle pFile, size_t nSize, size_t nCount, void* pBuffer, size_t nBufferSize);
-		static size_t				Fwrite(Handle pFile, size_t nSize, size_t nCount, const void* pBuffer, size_t nBufferSize);
-
-	private:
-			
-		FileIO();
-		~FileIO();
+//		size_t							Read(size_t nRequestedSize, void* pDstBuffer, size_t nDstBufferSize);
+//		s8*								GetString(s8* pDstBuffer, size_t nDstBufferSize);
+//		size_t							Write(size_t nRequestedSize, const void* pSrcBuffer, size_t nSrcBufferSize);
+//		size_t							Printf(const s8* strFormatting, ...);
+//		size_t							PutString(const s8* strSrcBuffer);
 };
 
 
@@ -63,4 +65,4 @@ class FileIO
 // EOF
 //----------------------------------------------------------//
 
-#endif
+#endif //_FILEACCESSOR_H_

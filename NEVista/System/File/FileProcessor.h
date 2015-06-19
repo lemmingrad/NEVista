@@ -1,65 +1,68 @@
+#ifndef _FILEPROCESSOR_H_
+#define _FILEPROCESSOR_H_
+#pragma once
+
 //----------------------------------------------------------//
-// SYSTIME.CPP
+// FILEPROCESSOR.H
 //----------------------------------------------------------//
 //-- Description
-// Wrapper for time functions
+// CFileProcessor utility class.
 //----------------------------------------------------------//
 
 
-#include "Types.h"
-
-#include "SysTime.h"
+#include "FileData.h"
 
 
 //----------------------------------------------------------//
 // DEFINES
 //----------------------------------------------------------//
 
-
-//-- Define this to use safer time functions in VC8 and beyond
-#define SYSTIME_USES_SAFE_TIME
-
-
 //----------------------------------------------------------//
-// GLOBALS
+// ENUMS
 //----------------------------------------------------------//
 
 //----------------------------------------------------------//
-// Time::Ctime
+// STRUCTS
 //----------------------------------------------------------//
-//-- Description
-// Wrapper around ctime function
+
 //----------------------------------------------------------//
-s8* Time::Ctime(s8* strDest, size_t nDestSize, const time_t* pTime)
+// CLASSES
+//----------------------------------------------------------//
+
+
+class CFileProcessor
 {
-#if defined(SYSTIME_USES_SAFE_TIME)
+	protected:
 
-	errno_t nError = ctime_s(strDest, nDestSize, pTime);
-	if (IS_ZERO(nError))
-	{
-		return strDest;
-	}
-	else
-	{
-		return NULL;
-	}
+		CFileData*								m_pData;
 
-#else
+	public:
 
-	if ( IS_NULL_PTR(strDest) 
-		|| IS_ZERO(nDestSize) )
-	{
-		//-- Be consistent with the behavior of ctime_s.
-		return NULL;
-	}
+		struct Error
+		{
+			enum Enum
+			{
+				FileNotFound					= 0x80000001,
+				Failed							= -1,
+				Ok								= 0
+			};
+		};
 
-	String::Strcpy(strDest, nDestSize, ctime(pTime), nDestSize);
-	return strDest;
+		CFileProcessor(CFileData* pData);
+		virtual ~CFileProcessor();
 
-#endif
-}
+		virtual Error::Enum						Open(void) = 0;
+		virtual Error::Enum						Close(void) = 0;
+		virtual Error::Enum						Update(void) = 0;
+};
 
+
+//----------------------------------------------------------//
+// EXTERNALS
+//----------------------------------------------------------//
 
 //----------------------------------------------------------//
 // EOF
 //----------------------------------------------------------//
+
+#endif //_FILEPROCESSOR_H_

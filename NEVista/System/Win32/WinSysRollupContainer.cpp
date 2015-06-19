@@ -88,6 +88,11 @@ s32 CWinSysRollupContainer::Initialise(void)
 		//-- Failed to add rollup
 	}
 
+	if (WINSYS_OK != AddRollup("Credits", IDD_ROLLUP_CREDITS, CWinSysRollup::State::RolledUp))
+	{
+		//-- Failed to add rollup
+	}
+
 	m_hRollupContainerWnd = NULL;
 
 	//-- Success
@@ -131,7 +136,7 @@ s32 CWinSysRollupContainer::Shutdown(void)
 LRESULT CALLBACK CWinSysRollupContainer::StaticWndEventProc(HWND hWnd, UINT nMsg, WPARAM wParam, LPARAM lParam)
 {
 	CWinSysRollupContainer* pThis = reinterpret_cast<CWinSysRollupContainer*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
-	if (pThis)
+	if (IS_PTR(pThis))
 	{
 		return pThis->WndEventProc(hWnd, nMsg, wParam, lParam);
 	}

@@ -1,13 +1,22 @@
-#ifndef _SYS_FILEIO_H_
-#define _SYS_FILEIO_H_
+#ifndef _FILEDIRECTTEXTREADER_H_
+#define _FILEDIRECTTEXTREADER_H_
 #pragma once
 
 //----------------------------------------------------------//
-// SYSFILEIO.H
+// FILEDIRECTTEXTREADER.H
 //----------------------------------------------------------//
 //-- Description
-// Wrapper for file IO
+// CFileAccessorDirectTextReader class. Derived from
+// CFileAccessorDirectReader.
+//
+// CFileProcessorDirectTextReader class. Derived from
+// CFileProcessorDirectReader.
 //----------------------------------------------------------//
+
+
+#include "FileData.h"
+#include "FileDirectReader.h"
+
 
 //----------------------------------------------------------//
 // DEFINES
@@ -26,32 +35,31 @@
 //----------------------------------------------------------//
 
 
-class FileIO
+class CFileAccessorDirectTextReader : public CFileAccessorDirectReader
 {
 	public:
 
-		typedef FILE*				Handle;
-		static const Handle			INVALID_HANDLE;
+		CFileAccessorDirectTextReader(CFileData* pData);
+		virtual ~CFileAccessorDirectTextReader();
 
-		static Handle				Fopen(const s8* strFilename, const s8* strMode);
-		static s32					Fclose(Handle pFile); 
-		static s32					Fflush(Handle pFile);
+		virtual bool							ValidateData(void) const;
 
-		static s32					Fseek(Handle pFile, size_t nOffset, s32 nOrigin);
-		static s32					Ftell(Handle pFile);
-		static s32					Feof(Handle pFile);
+		s8*										GetString(s8* pDstBuffer, size_t nDstBufferSize);
+};
 
-		static s32					Fprintf(Handle pFile, const s8* strFormatting, ...);
-		static s32					Fputs(Handle pFile, const s8* strBuffer);
-		static s8*					Fgets(Handle pFile, s8* strBuffer, size_t nCount);
 
-		static size_t				Fread(Handle pFile, size_t nSize, size_t nCount, void* pBuffer, size_t nBufferSize);
-		static size_t				Fwrite(Handle pFile, size_t nSize, size_t nCount, const void* pBuffer, size_t nBufferSize);
+class CFileProcessorDirectTextReader : public CFileProcessorDirectReader
+{
+	public:
 
-	private:
-			
-		FileIO();
-		~FileIO();
+		CFileProcessorDirectTextReader(CFileData* pData);
+		virtual ~CFileProcessorDirectTextReader();
+
+		virtual bool							ValidateData(void) const;
+
+		virtual Error::Enum						Open(void);
+		virtual Error::Enum						Close(void);
+		virtual Error::Enum						Update(void);
 };
 
 
@@ -63,4 +71,4 @@ class FileIO
 // EOF
 //----------------------------------------------------------//
 
-#endif
+#endif //_FILEDIRECTTEXTREADER_H_

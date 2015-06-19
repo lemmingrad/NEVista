@@ -70,7 +70,7 @@ class CWinSysRollup
 
 		bool			IsInsideArea(s32 nMouseX, s32 nMouseY, RECT& area);
 
-		s8				m_strName[WINSYS_ROLLUP_NAME_LENGTH];
+		FixedString<WINSYS_ROLLUP_NAME_LENGTH> m_strName;
 		s32				m_nDialogID;
 
 		HWND			m_hRollupWnd;			

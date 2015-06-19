@@ -63,7 +63,7 @@ s8* String::Strcpy(s8* strDest, size_t nDestSize, const s8* strSrc)
 
    //-- Use the new safe strcpy
 	errno_t nError = strcpy_s(strDest, nDestSize, strSrc);
-	if (nError == 0)
+	if (IS_ZERO(nError))
 	{
 		return strDest;
 	}
@@ -75,7 +75,9 @@ s8* String::Strcpy(s8* strDest, size_t nDestSize, const s8* strSrc)
 #else
 
    //-- Emulate the safe string copy
-	if (!strDest || (0 == nDestSize) || !strSrc)
+	if ( IS_NULL_PTR(strDest)
+		|| IS_ZERO(nDestSize) 
+		|| IS_NULL_PTR(strSrc) )
 	{
 		//-- Be consistent with the behavior of strcpy_s.
 		return NULL;
@@ -102,7 +104,7 @@ s8* String::Strncpy(s8* strDest, size_t nDestSize, const s8* strSrc, size_t nSrc
     
 	//-- Use the new safe strncpy
 	errno_t nError = strncpy_s(strDest, nDestSize, strSrc, nSrcSize);
-	if (nError == 0)
+	if (IS_ZERO(nError))
 	{
 			return strDest;
 	}
@@ -114,7 +116,10 @@ s8* String::Strncpy(s8* strDest, size_t nDestSize, const s8* strSrc, size_t nSrc
 #else
 
     //-- Emulate the safe string copy
-	if (!strDest || (nDestSize == 0) || !strSrc || nSrcSize == 0)
+	if ( IS_NULL_PTR(strDest)
+		|| IS_ZERO(nDestSize) 
+		|| IS_NULL_PTR(strSrc)
+		|| IS_ZERO(nSrcSize) )
 	{
 		//-- Be consistent with the behavior of strncpy_s.
 		return NULL;
@@ -148,7 +153,7 @@ s8* String::Strcat(s8* strDest, size_t nDestSize, const s8* strSrc)
 #if defined(SYSSTRING_USES_SAFE_STRINGS)
 
 	errno_t nError = strcat_s(strDest, nDestSize, strSrc);
-	if (nError == 0)
+	if (IS_ZERO(nError))
 	{
 		return strDest;
 	}
@@ -160,7 +165,9 @@ s8* String::Strcat(s8* strDest, size_t nDestSize, const s8* strSrc)
 #else
 
     //-- Emulate the safe string copy
-	if (!strDest || (nDestSize == 0) || !strSrc)
+	if ( IS_NULL_PTR(strDest) 
+		|| IS_ZERO(nDestSize) 
+		|| IS_NULL_PTR(strSrc) )
 	{
 		//-- Be consistent with the behavior of strcat_s.
 		return NULL;
@@ -285,7 +292,7 @@ s8* String::Strupr(s8* strSrc, size_t nSrcSize)
 #if defined(SYSSTRING_USES_SAFE_STRINGS)
 
 	errno_t nError = _strupr_s(strSrc, nSrcSize);
-	if (nError == 0)
+	if (IS_ZERO(nError))
 	{
 		return strSrc;
 	}
@@ -313,7 +320,7 @@ s8* String::Strlwr(s8* strSrc, size_t nSrcSize)
 #if defined(SYSSTRING_USES_SAFE_STRINGS)
 
 	errno_t nError = _strlwr_s(strSrc, nSrcSize);
-	if (nError == 0)
+	if (IS_ZERO(nError))
 	{
 		return strSrc;
 	}
@@ -340,7 +347,9 @@ s32 String::Sprintf(s8* strDest, size_t nDestSize, const s8* strFormating, ...)
 {
 	s32 nSymbolsConverted = -1;
 
-	if (!strDest || (nDestSize == 0) || !strFormating)
+	if ( IS_NULL_PTR(strDest)
+		|| IS_ZERO(nDestSize) 
+		|| IS_NULL_PTR(strFormating) )
 	{
 		return nSymbolsConverted;
 	}
@@ -363,16 +372,18 @@ s32 String::Sprintf(s8* strDest, size_t nDestSize, const s8* strFormating, ...)
 //----------------------------------------------------------//
 s32 String::Vsprintf(s8* strDest, size_t nDestSize, const s8* strFormating, va_list ArgList)
 {
-   s32 nSymbolsConverted = -1;
+	s32 nSymbolsConverted = -1;
 	
-	if (!strDest || (nDestSize == 0) || !strFormating)
-  {
-      return nSymbolsConverted;
-  }
+	if ( IS_NULL_PTR(strDest)
+		|| IS_ZERO(nDestSize) 
+		|| IS_NULL_PTR(strFormating) )
+	{
+		return nSymbolsConverted;
+	}
 
 #if defined(SYSSTRING_USES_SAFE_STRINGS)
 
-  nSymbolsConverted = vsprintf_s(strDest, nDestSize, strFormating, ArgList);
+	nSymbolsConverted = vsprintf_s(strDest, nDestSize, strFormating, ArgList);
 
 #else
 
@@ -380,7 +391,9 @@ s32 String::Vsprintf(s8* strDest, size_t nDestSize, const s8* strFormating, va_l
 
 #endif
 
-  return nSymbolsConverted;
+	strDest[nDestSize - 1] = 0;
+
+	return nSymbolsConverted;
 }
 
 
@@ -421,7 +434,7 @@ s32 String::Atoi(const s8* strBuffer)
 //----------------------------------------------------------//
 String::Hash String::GenerateHash(const s8* strBuffer)
 {
-	if ((strBuffer == NULL) || (strBuffer[0] == '\0'))
+	if (IS_TRUE(String::IsEmpty(strBuffer)))
 	{
 		//-- 0 length string
 		return INVALID_HASH;
@@ -522,7 +535,10 @@ size_t String::Base64Decode(void* pDataBuffer, size_t dataBufferSize, const s8* 
 //----------------------------------------------------------//
 size_t String::KeyEncode(s8* strBuffer, size_t strBufferSize, const void* pDataBuffer, size_t dataSize, String::Key key)
 {
-	if (!pDataBuffer || (dataSize == 0) || !strBuffer || (strBufferSize < 1))
+	if ( IS_NULL_PTR(pDataBuffer)
+		|| IS_ZERO(dataSize) 
+		|| IS_NULL_PTR(strBuffer)
+		|| (strBufferSize < 1) )
 	{
 		return 0;
 	}
@@ -592,7 +608,11 @@ size_t String::KeyEncode(s8* strBuffer, size_t strBufferSize, const void* pDataB
 //----------------------------------------------------------//
 size_t String::KeyDecode(void* pDataBuffer, size_t dataBufferSize, const s8* strBuffer, size_t strLength, String::Key key)
 {
-	if (!strBuffer || (strLength == 0) || !pDataBuffer || (dataBufferSize == 0) || ((strLength % 4) != 0))
+	if ( IS_NULL_PTR(strBuffer)
+		|| IS_ZERO(strLength) 
+		|| IS_NULL_PTR(pDataBuffer) 
+		|| IS_ZERO(dataBufferSize) 
+		|| (0 != (strLength % 4)) )
 	{
 		return 0;
 	}
@@ -600,10 +620,10 @@ size_t String::KeyDecode(void* pDataBuffer, size_t dataBufferSize, const s8* str
 	size_t bufLength = (strLength / 4) * 3;
 	size_t bufShrunk = bufLength;
 
-	if (strBuffer[strLength-1] == '=')
+	if ('=' == strBuffer[strLength-1])
 	{
 		--bufShrunk;
-		if (strBuffer[strLength-2] == '=')
+		if ('=' == strBuffer[strLength-2])
 		{
 			--bufShrunk;
 		}
@@ -662,6 +682,25 @@ size_t String::KeyDecode(void* pDataBuffer, size_t dataBufferSize, const s8* str
 
 	return bufShrunk;
 }
+
+
+//----------------------------------------------------------//
+// String::IsEmpty
+//----------------------------------------------------------//
+//-- Description
+// Very basic test for empty string
+//----------------------------------------------------------//
+bool String::IsEmpty(const s8* strBuffer)
+{
+	if ( IS_NULL_PTR(strBuffer)
+		|| ('\0' == strBuffer[0]) )
+	{
+		return true;
+	}
+
+	return false;
+}
+
 
 //----------------------------------------------------------//
 // EOF
