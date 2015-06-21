@@ -1,14 +1,13 @@
-#ifndef _WINSYSROLLUPMAIN_H_
-#define _WINSYSROLLUPMAIN_H_
-
 //----------------------------------------------------------//
-// WINSYSMAIN.H
+// FILEPROCESSOR.CPP
 //----------------------------------------------------------//
-//-- Description			
+//-- Description
+// CFileProcessor utility class.
 //----------------------------------------------------------//
 
 
-#include "WinSysIncludes.h"
+#include "../SystemIncludes.h"
+#include "FileProcessor.h"
 
 
 //----------------------------------------------------------//
@@ -16,46 +15,28 @@
 //----------------------------------------------------------//
 
 //----------------------------------------------------------//
-// ENUMS
+// GLOBALS
 //----------------------------------------------------------//
 
 
-struct WinSysInitState
+//----------------------------------------------------------//
+// CFileProcessor::CFileProcessor
+//----------------------------------------------------------//
+CFileProcessor::CFileProcessor(CFileData* pData)
+: m_pData(pData)
 {
-	enum Enum
-	{
-		Finished = 0,
-		ResolvingMode, 
-		ShowConfigDialog,
-		CreateWindow
-	};
-};
+}
 
 
 //----------------------------------------------------------//
-// STRUCTS
+// CFileAccessor::~CFileAccessor
 //----------------------------------------------------------//
-
-//----------------------------------------------------------//
-// CLASSES
-//----------------------------------------------------------//
-
-//----------------------------------------------------------//
-// EXTERNALS
-//----------------------------------------------------------//
-
-
-int WinSys_Main(LPSTR lpCmdLine);
-s32	WinSys_Initialise(void);
-s32	WinSys_Shutdown(void);
-s32	WinSys_Update(void);
-
-
-extern CLog gDebugLog;
+CFileProcessor::~CFileProcessor()
+{
+}
 
 
 //----------------------------------------------------------//
 // EOF
 //----------------------------------------------------------//
 
-#endif

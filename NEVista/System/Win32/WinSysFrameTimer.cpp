@@ -47,7 +47,8 @@ CWinSysFrameTimer::~CWinSysFrameTimer()
 //----------------------------------------------------------//
 s32 CWinSysFrameTimer::Initialise(void)
 {
-//	gDbgLog.Printf(">Hi-Res Frame Timer Initialisation");
+	gDebugLog.Printf("Hi-Res Frame Timer Initialisation");
+	SCOPED_LOG_INDENT(gDebugLog);
 
 	m_fFrameTime			= 0.0f;
 	m_fFrameMultiplier		= 0.0f;
@@ -63,17 +64,17 @@ s32 CWinSysFrameTimer::Initialise(void)
 	if (QueryPerformanceFrequency(&nClockFrequency))
 	{
 		//-- hi-res timer available
-//		gDbgLog.Printf("Hi-Res frame timer is available for use.");
+		gDebugLog.Printf("Hi-Res frame timer is available for use.");
 
 		QueryPerformanceCounter(&m_HiRes.m_nLastTime);
 	}
 	else
 	{
 		//-- no hi-res timer unavailable, use lo-res millisecond timer instead
-//		gDbgLog.Printf("Hi-Res frame timer is not available. Switching to Low-Res frame timer (accuracy will be affected).");
+		gDebugLog.Printf("Hi-Res frame timer is not available. Switching to Low-Res frame timer (accuracy will be affected).");
 	}
 
-//	gDbgLog.Printf("<Initialisation completed. (OK)");
+	gDebugLog.Printf("Initialisation completed. (OK)");
 
 	return WINSYS_OK;
 }
@@ -87,8 +88,9 @@ s32 CWinSysFrameTimer::Initialise(void)
 //----------------------------------------------------------//
 s32 CWinSysFrameTimer::Shutdown(void)
 {
-//	gDbgLog.Printf(">Hi-Res Frame Timer Shutdown:");
-//	gDbgLog.Printf("<Shutdown completed. (OK)");
+	gDebugLog.Printf("Hi-Res Frame Timer Shutdown:");
+	SCOPED_LOG_INDENT(gDebugLog);
+	gDebugLog.Printf("Shutdown completed. (OK)");
 
 	return WINSYS_OK;
 }

@@ -103,6 +103,78 @@ size_t CFileAccessorDirectTextWriter::PutString(const s8* strSrcBuffer)
 }
 
 
+//----------------------------------------------------------//
+// CFileProcessorDirectTextWriter::CFileProcessorDirectTextWriter
+//----------------------------------------------------------//
+CFileProcessorDirectTextWriter::CFileProcessorDirectTextWriter(CFileData* pData)
+: CFileProcessorDirectWriter(pData)
+{
+}
+
+
+//----------------------------------------------------------//
+// CFileProcessorDirectTextWriter::~CFileProcessorDirectTextWriter
+//----------------------------------------------------------//
+CFileProcessorDirectTextWriter::~CFileProcessorDirectTextWriter()
+{
+}
+
+
+//----------------------------------------------------------//
+// CFileProcessorDirectTextWriter::ValidateData
+//----------------------------------------------------------//
+bool CFileProcessorDirectTextWriter::ValidateData(void) const
+{
+	assert(IS_PTR(m_pData));
+	assert(IS_TRUE(m_pData->Validate(CFileData::Type::Text, CFileData::AccessMethod::DirectWrite)));
+	
+	if (IS_PTR(m_pData))
+	{
+		if (IS_TRUE(m_pData->Validate(CFileData::Type::Text, CFileData::AccessMethod::DirectWrite)))
+		{
+			//-- Data validated
+			return true;
+		}
+	}
+
+	//-- Failed to validate data
+	return false;
+}
+
+
+CFileProcessor::Error::Enum CFileProcessorDirectTextWriter::Open(void)
+{
+	if (IS_TRUE(ValidateData()))
+	{
+		Error::Enum eResult = CFileProcessorDirectWriter::Open();
+		if (Error::Ok == eResult)
+		{
+			m_pData->m_DirectWriterData.m_pFile = FileIO::Fopen(m_pData->m_strFileName.Buffer(), "wt");
+			if (IS_FALSE(IsOpen()))
+			{
+				//-- Failed to open file
+				return Error::Failed;
+			}
+
+			return Error::Ok;
+		}
+	}
+
+	return Error::Failed;
+}
+
+
+CFileProcessor::Error::Enum CFileProcessorDirectTextWriter::Close(void)
+{
+	return CFileProcessorDirectWriter::Close();
+}
+
+
+CFileProcessor::Error::Enum CFileProcessorDirectTextWriter::Update(void)
+{
+	return CFileProcessorDirectWriter::Update();
+}
+
 
 //----------------------------------------------------------//
 // EOF

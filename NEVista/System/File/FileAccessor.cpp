@@ -92,7 +92,6 @@ CFileData::AccessMethod::Enum CFileAccessor::GetAccessMethod(void) const
 }
 
 
-
 //----------------------------------------------------------//
 // EOF
 //----------------------------------------------------------//

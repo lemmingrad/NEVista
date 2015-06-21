@@ -69,7 +69,6 @@ class CFileProcessorDirectTextWriter : public CFileProcessorDirectWriter
 		virtual Error::Enum						Open(void);
 		virtual Error::Enum						Close(void);
 		virtual Error::Enum						Update(void);
-
 };
 
 

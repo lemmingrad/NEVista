@@ -23,6 +23,10 @@
 // GLOBALS
 //----------------------------------------------------------//
 
+
+CLog gDebugLog;
+
+
 //----------------------------------------------------------//
 // WinSys_Initialise
 //----------------------------------------------------------//
@@ -35,11 +39,11 @@ s32 WinSys_Initialise(void)
 	s32 nReturnStatus = WINSYS_OK;
 
 	//-- Initialise a debug log
-/*	if (IS_FALSE(gDbgLog.Initialise("DebugLog.txt"))
+	if (IS_FALSE(gDebugLog.Initialise("DebugLog.txt")))
 	{
-		MessageBox(NULL, "Debug Log cannot be created. Logging disabled.", GAME_TITLE, MB_OK|MB_ICONEXCLAMATION);
+		MessageBox(NULL, "Debug Log cannot be created. Logging disabled.", TEXT(Game_Title()), MB_OK|MB_ICONEXCLAMATION);
 	}
-
+/*
 	//-- Initialise Mem Manager
 	if (IS_FALSE(gMemMgr.Initialise())
 	{
@@ -196,8 +200,9 @@ s32 WinSys_Shutdown(void)
 //	gFileMgr.Shutdown();
 	//-- and the memory manager
 //	gMemMgr.Shutdown();
+
 	//-- and the debug log
-//	gDbgLog.Shutdown();
+	gDebugLog.Shutdown();
 
 	return WINSYS_OK;
 }

@@ -121,6 +121,43 @@ bool CFileProcessorDirectWriter::IsOpen(void) const
 }
 
 
+CFileProcessor::Error::Enum CFileProcessorDirectWriter::Open(void)
+{
+	if (IS_TRUE(ValidateData()))
+	{
+		m_pData->m_DirectWriterData.m_pFile = FileIO::INVALID_HANDLE;
+		m_pData->m_DirectWriterData.m_nWritten = 0;
+
+		return Error::Ok;
+	}
+
+	return Error::Failed;
+}
+
+
+CFileProcessor::Error::Enum CFileProcessorDirectWriter::Close(void)
+{
+	if (IS_TRUE(ValidateData()))
+	{
+		if (IS_TRUE(IsOpen()))
+		{
+			FileIO::Fclose(m_pData->m_DirectWriterData.m_pFile);
+		}
+		m_pData->m_DirectWriterData.m_nWritten = 0;
+
+		return Error::Ok;
+	}
+
+	return Error::Failed;
+}
+
+
+CFileProcessor::Error::Enum CFileProcessorDirectWriter::Update(void)
+{
+	return Error::Ok;
+}
+
+
 //----------------------------------------------------------//
 // EOF
 //----------------------------------------------------------//

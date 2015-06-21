@@ -64,9 +64,9 @@ class CFileProcessorDirectWriter : public CFileProcessor
 		virtual bool				ValidateData(void) const = 0;
 		virtual bool				IsOpen(void) const;
 
-		virtual Error::Enum			Open(void) = 0;
-		virtual Error::Enum			Close(void) = 0;
-		virtual Error::Enum			Update(void) = 0;
+		virtual Error::Enum			Open(void);
+		virtual Error::Enum			Close(void);
+		virtual Error::Enum			Update(void);
 };
 
 //----------------------------------------------------------//

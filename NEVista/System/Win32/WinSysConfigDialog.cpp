@@ -203,7 +203,8 @@ s32 CWinSysConfigDialog::Initialise(void)
 {
 	s32 nReturnStatus = WINSYS_OK;
 
-//	gDbgLog.Printf(">CWinSysConfigDialog::Initialise");
+	gDebugLog.Printf("CWinSysConfigDialog::Initialise:");
+	SCOPED_LOG_INDENT(gDebugLog);
 
 	if (IS_FALSE(m_bRegistered))
 	{
@@ -218,8 +219,11 @@ s32 CWinSysConfigDialog::Initialise(void)
 	if (WINSYS_OK != nReturnStatus)
 	{
 		//-- Failed to Initialise rollup container
+		gDebugLog.Printf("Failed to initialise rollup container.");
 		return nReturnStatus;
 	}
+
+	gDebugLog.Printf("Complete. (OK)");
 
 	//-- Success
 	return WINSYS_OK;
@@ -257,6 +261,9 @@ s32 CWinSysConfigDialog::Shutdown(void)
 //----------------------------------------------------------//
 s32 CWinSysConfigDialog::Show(void)
 {
+	gDebugLog.Printf("Show Config Dialog:");
+	SCOPED_LOG_INDENT(gDebugLog);
+
 	INT_PTR ret = DialogBoxParam(GetModuleHandle(0), 
 					MAKEINTRESOURCE(IDD_NEVISTA_CONFIG), 
 					NULL, 
@@ -265,12 +272,12 @@ s32 CWinSysConfigDialog::Show(void)
 	if (IDOK != ret)
 	{
 		//-- Failed to create config dialog
-//		gDbgLog.Printf("<Could not create Config Dialog or Dialog \"Exit\" pressed.");
+		gDebugLog.Printf("Could not create Config Dialog or Dialog \"Exit\" pressed.");
 
 		return WINSYS_CONFIG_DIALOG_FAIL;
 	}
 
-//	gDbgLog.Printf("<Completed. (OK)");
+	gDebugLog.Printf("Completed. (OK)");
 
 	//-- Success
 	return WINSYS_OK;

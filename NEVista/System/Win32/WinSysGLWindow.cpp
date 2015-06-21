@@ -573,10 +573,13 @@ s32 CWinSysGLWindow::InitialiseWindowedMode(s32 nWidth, s32 nHeight, s32 nBPP)
 //----------------------------------------------------------//
 s32 CWinSysGLWindow::Shutdown(void)
 {
-//	gDbgLog.Printf(">CWinSysGLWindow::Shutdown");
+	gDebugLog.Printf("CWinSysGLWindow::Shutdown:");
+	SCOPED_LOG_INDENT(gDebugLog);
 
 	RevertFullscreenDisplay();
 	DestroyGLWindow();
+
+	gDebugLog.Printf("Completed. (OK)");
 
 	return WINSYS_OK;
 }
@@ -638,7 +641,8 @@ s32 CWinSysGLWindow::RevertFullscreenDisplay(void)
 //----------------------------------------------------------//
 s32 CWinSysGLWindow::CreateGLWindow(const s32 nWidth, const s32 nHeight, const s32 nBPP, DWORD dwStyle, DWORD dwExStyle)
 {
-//	gDbgLog.Printf(">CWinSysGLWindow::CreateGLWindow");
+	gDebugLog.Printf("CWinSysGLWindow::CreateGLWindow:");
+	SCOPED_LOG_INDENT(gDebugLog);
 
 	if (IS_FALSE(m_bRegisteredClass))
 	{
@@ -694,7 +698,7 @@ s32 CWinSysGLWindow::CreateGLWindow(const s32 nWidth, const s32 nHeight, const s
 	if (!m_hWnd)
 	{
 		//-- Error, window could not be created.
-//		gDbgLog.Printf("<Window could not be created.");
+		gDebugLog.Printf("Window could not be created.");
 		return WINSYS_WINDOW_HWND_NOT_CREATED;			
 	}
 
@@ -703,10 +707,10 @@ s32 CWinSysGLWindow::CreateGLWindow(const s32 nWidth, const s32 nHeight, const s
 	if (!m_hDC)
 	{
 		//-- Error, Device Context could not be created
-//		gDbgLog.Printf("<Could not create a Device Context.");
+		gDebugLog.Printf("Could not create a Device Context.");
 		return WINSYS_WINDOW_HDC_NOT_CREATED;								
 	}
-//	gDbgLog.Printf("Device Context created.");
+	gDebugLog.Printf("Device Context created.");
 
 	static PIXELFORMATDESCRIPTOR pfd =	//-- Get the pixel format's description
 	{
@@ -735,19 +739,19 @@ s32 CWinSysGLWindow::CreateGLWindow(const s32 nWidth, const s32 nHeight, const s
 	if (IS_ZERO(pixelFormat))
 	{
 		//-- Error, no suitable pixel format found
-//		gDbgLog.Printf("<Could not find a suitable pixel format.");
+		gDebugLog.Printf("Could not find a suitable pixel format.");
 		return WINSYS_WINDOW_PIXELFORMAT_NOT_FOUND;						
 	}
-//	gDbgLog.Printf("Found suitable pixel format.");
+	gDebugLog.Printf("Found suitable pixel format.");
 
 	// Set the pixel format
 	if (!SetPixelFormat(m_hDC, pixelFormat, &pfd))
 	{
 		//-- Error, pixel format could not be set
-//		gDbgLog.Printf("<Could not set pixel format.");
+		gDebugLog.Printf("Could not set pixel format.");
 		return WINSYS_WINDOW_PIXELFORMAT_NOT_SET;						
 	}
-//	gDbgLog.Printf("Pixel format is set.");
+	gDebugLog.Printf("Pixel format is set.");
 
 	//-- Attempt to create a Core GL rendering Context
 //	m_hRC = wglCreateContextAttribsARB(m_hDC, 0, NULL);
@@ -761,25 +765,25 @@ s32 CWinSysGLWindow::CreateGLWindow(const s32 nWidth, const s32 nHeight, const s
 	if (!m_hRC)
 	{
 		//-- Error, failed to create a GL rendering context
-//		gDbgLog.Printf("<Could not create an OpenGL Rendering Context.");
+		gDebugLog.Printf("Could not create an OpenGL Rendering Context.");
 		return WINSYS_WINDOW_HRC_NOT_CREATED;		
 	}
-//	gDbgLog.Printf("Created an OpenGL Rendering Context.");
+	gDebugLog.Printf("Created an OpenGL Rendering Context.");
 
 	//-- Make rendering context active
 	if (!wglMakeCurrent(m_hDC, m_hRC))
 	{
 		//-- Error, could not activate rendering context
-//		gDbgLog.Printf("<Could not activate the OpenGL Rendering Context.");
+		gDebugLog.Printf("Could not activate the OpenGL Rendering Context.");
 		return WINSYS_WINDOW_HRC_NOT_ACTIVATED;			
 	}
-//	gDbgLog.Printf("Activated the OpenGL Rendering Context.");
+	gDebugLog.Printf("Activated the OpenGL Rendering Context.");
 
 	ShowWindow(m_hWnd, SW_SHOW);				//-- Show the window
 	SetForegroundWindow(m_hWnd);				//-- Bring this window to the front
 	SetFocus(m_hWnd);							//-- Sets the keyboard's focus to the window
 
-//	gDbgLog.Printf("<Complete. (OK)");
+	gDebugLog.Printf("Complete. (OK)");
 
 	return WINSYS_OK;
 }
@@ -792,25 +796,28 @@ s32 CWinSysGLWindow::CreateGLWindow(const s32 nWidth, const s32 nHeight, const s
 //----------------------------------------------------------//
 s32 CWinSysGLWindow::DestroyGLWindow(void) 
 {
+	gDebugLog.Printf("CWinSysGLWindow::DestroyGLWindow:");
+	SCOPED_LOG_INDENT(gDebugLog);
+
 	//-- Try to release rendering context
 	if (m_hRC) 
 	{
 		if (wglMakeCurrent(NULL, NULL))
 		{
-//			gDbgLog.Printf("Deactivated OpenGL Rendering Context.");
+			gDebugLog.Printf("Deactivated OpenGL Rendering Context.");
 		}
 		else
 		{
-//			gDbgLog.Printf("Could not deactivate OpenGL Rendering Context.");
+			gDebugLog.Printf("Could not deactivate OpenGL Rendering Context.");
 		}
 
 		if (wglDeleteContext(m_hRC))	
 		{
-//			gDbgLog.Printf("Released OpenGL Rendering Context.");
+			gDebugLog.Printf("Released OpenGL Rendering Context.");
 		}
 		else
 		{
-//			gDbgLog.Printf("Could not delete OpenGL Rendering Context.");
+			gDebugLog.Printf("Could not delete OpenGL Rendering Context.");
 		}
 	}
 	m_hRC = NULL;		
@@ -818,38 +825,38 @@ s32 CWinSysGLWindow::DestroyGLWindow(void)
 	//-- Try to release the Device Context
 	if (m_hDC && ReleaseDC(m_hWnd, m_hDC))	
 	{
-//		gDbgLog.Printf("Released the Device Context.");
+		gDebugLog.Printf("Released the Device Context.");
 	}
 	else
 	{
-//		gDbgLog.Printf("Could not release the Device Context.");
+		gDebugLog.Printf("Could not release the Device Context.");
 	}
 	m_hDC = NULL;				
 
 	//-- Try to delete the window
 	if (m_hWnd && DestroyWindow(m_hWnd))
 	{
-//		gDbgLog.Printf("Released main window handle.");
+		gDebugLog.Printf("Released main window handle.");
 	}
 	else
 	{
-//		gDbgLog.Printf("Could not release main window handle.");
+		gDebugLog.Printf("Could not release main window handle.");
 	}
 	m_hWnd = NULL;					
  
 	//-- Unregister class
 	if (IS_TRUE(m_bRegisteredClass) && UnregisterClass(Game_Title(), m_hInstance))	
 	{
-//		gDbgLog.Printf("Unregistered window class.");
+		gDebugLog.Printf("Unregistered window class.");
 	}
 	else
 	{
-//		gDbgLog.Printf("Could not unregister window class.");	
+		gDebugLog.Printf("Could not unregister window class.");	
 	}
 	m_hInstance = NULL;			
 	m_bRegisteredClass = false;
 
-//	gDbgLog.Printf("<Complete. (OK)");
+	gDebugLog.Printf("Complete. (OK)");
 
 	return WINSYS_OK;
 }
