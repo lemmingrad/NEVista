@@ -63,8 +63,9 @@ CWinSysRollupContainer::~CWinSysRollupContainer()
 //-- Description
 // Initialise rollup container.
 //----------------------------------------------------------//
-s32 CWinSysRollupContainer::Initialise(void)
+s32 CWinSysRollupContainer::Initialise(CWinSysConfigDialog* pParent)
 {
+	m_pParent = pParent;
 	m_Rollups.clear();
 
 	//-- Add rollups
@@ -569,6 +570,18 @@ void CWinSysRollupContainer::CancelScroll(void)
 	}
 }
 
+
+//----------------------------------------------------------//
+// CWinSysRollupContainer::GetParentConfigDialog
+//----------------------------------------------------------//
+//-- Description
+// Get the parent of the rollup container. Should be
+// a CWinSysConfigDialog
+//----------------------------------------------------------//
+CWinSysConfigDialog* CWinSysRollupContainer::GetParentConfigDialog(void)
+{
+	return m_pParent;
+}
 
 
 //----------------------------------------------------------//

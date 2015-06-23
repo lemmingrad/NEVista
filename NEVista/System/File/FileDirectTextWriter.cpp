@@ -78,7 +78,7 @@ size_t CFileAccessorDirectTextWriter::Printf(const s8* strFormatting, ...)
 	String::Vsprintf(m_strWorkingBuffer.Buffer(), FILE_WORKING_TEXT_BUFFER_SIZE, strFormatting, ArgList);
 	va_end(ArgList);
 
-	return PutString(m_strWorkingBuffer.Buffer());
+	return PutString(m_strWorkingBuffer.ConstBuffer());
 }
 
 
@@ -149,7 +149,7 @@ CFileProcessor::Error::Enum CFileProcessorDirectTextWriter::Open(void)
 		Error::Enum eResult = CFileProcessorDirectWriter::Open();
 		if (Error::Ok == eResult)
 		{
-			m_pData->m_DirectWriterData.m_pFile = FileIO::Fopen(m_pData->m_strFileName.Buffer(), "wt");
+			m_pData->m_DirectWriterData.m_pFile = FileIO::Fopen(m_pData->m_strFileName.ConstBuffer(), "wt");
 			if (IS_FALSE(IsOpen()))
 			{
 				//-- Failed to open file

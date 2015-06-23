@@ -11,6 +11,7 @@
 //----------------------------------------------------------//
 
 
+#include "../Ini.h"
 #include <vector>
 
 
@@ -33,6 +34,7 @@
 //----------------------------------------------------------//
 
 
+class CWinSysConfigDialog;
 class CWinSysRollup;
 
 
@@ -52,7 +54,7 @@ class CWinSysRollupContainer
 		CWinSysRollupContainer();
 		~CWinSysRollupContainer();
 
-		s32				Initialise(void);
+		s32				Initialise(CWinSysConfigDialog* pParent);
 		s32				Shutdown(void);
 		s32				Construct(HWND hParentDialog, u32 nControlID);
 		s32				Update(bool bForceRedraw);
@@ -61,6 +63,8 @@ class CWinSysRollupContainer
 
 		RECT&			GetContainerArea(void);
 		void			CancelScroll(void);
+
+		CWinSysConfigDialog* GetParentConfigDialog(void);
 
 		static s32		RegisterRollupContainerClass(void);
 		static void		UnregisterRollupContainerClass(void);
@@ -74,6 +78,7 @@ class CWinSysRollupContainer
 		bool			IsInsideArea(s32 nMouseX, s32 nMouseY, RECT& area);
 
 		HWND			m_hRollupContainerWnd;
+		CWinSysConfigDialog* m_pParent;
 
 		RECT			m_ContainerArea;
 		RECT			m_ScrollbarArea;

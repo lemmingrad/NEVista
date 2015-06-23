@@ -114,9 +114,9 @@ s32 WinSys_Initialise(void)
 
 			case WinSysInitState::CreateWindow:
 			{
-				s32 nWidth = configDialog.GetDesiredWidth();
-				s32 nHeight = configDialog.GetDesiredHeight();
-				s32 nBPP = configDialog.GetDesiredBPP();
+				s32 nWidth = configDialog.GetDesiredResolutionWidth();
+				s32 nHeight = configDialog.GetDesiredResolutionHeight();
+				s32 nBPP = configDialog.GetDesiredBPPValue();
 
 				switch (configDialog.GetDesiredWindowMode())
 				{
@@ -131,24 +131,22 @@ s32 WinSys_Initialise(void)
 						{
 							//-- Failed to create window
 							eInitState = WinSysInitState::ResolvingMode;
-//							gConfigIni.WriteInt("Screen", "DisplayModeValid", false);
 						}
 					}
 					break;
 
 					case CWinSysConfigDialog::DesiredWindowMode::Borderless:
 					{
-//						if (WINSYS_OK == gWinSysGLWindow.InitialiseBorderlessWindowMode(nBPP))
+						if (WINSYS_OK == gWinSysGLWindow.InitialiseBorderlessWindowMode(nBPP))
 						{
 							//-- Success
 							eInitState = WinSysInitState::Finished;
 						}
-//						else
-//						{
-//							//-- Failed to create window
-//							eInitState = WinSysInitState::ResolvingMode;
-//							gConfigIni.WriteInt("Screen", "DisplayModeValid", false);
-//						}
+						else
+						{
+							//-- Failed to create window
+							eInitState = WinSysInitState::ResolvingMode;
+						}
 					}
 					break;
 
@@ -163,7 +161,6 @@ s32 WinSys_Initialise(void)
 						{
 							//-- Failed to create window
 							eInitState = WinSysInitState::ResolvingMode;
-//							gConfigIni.WriteInt("Screen", "DisplayModeValid", false);
 						}
 					}
 					break;
@@ -194,8 +191,6 @@ s32 WinSys_Shutdown(void)
 //	gInput.Shutdown();
 	//-- and the timer
 //	gWinSysTimer.Shutdown();
-	//-- and the Ini file
-//	gConfigIni.Shutdown();
 	//-- and the File manager
 //	gFileMgr.Shutdown();
 	//-- and the memory manager

@@ -123,6 +123,10 @@ class FixedString
 		{
 			return String::Strlen(m_strBuffer);
 		}
+		size_t Size(void) const
+		{
+			return S;
+		}
 
 		String::Hash GenerateHash(void) const
 		{

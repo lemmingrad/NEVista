@@ -87,7 +87,7 @@ bool CLog::Initialise(const s8* strFileName)
 	FixedString<SYSTIME_BUFFER_SIZE> strTime;
 	Time::Ctime(strTime.Buffer(), SYSTIME_BUFFER_SIZE, &m_nStartTime);
 
-	m_FileAccessor.Printf("%s ver %s log created %s\n", Game_Title(), Game_Version(), strTime.Buffer());
+	m_FileAccessor.Printf("%s ver %s log created %s\n", Game_Title(), Game_Version(), strTime.ConstBuffer());
 
 	return true;
 }
@@ -108,7 +108,7 @@ bool CLog::Shutdown(void)
 
 	if (IS_TRUE(m_FileAccessor.IsOpen()))
 	{
-		m_FileAccessor.Printf("\n\nLog closed %s", strTime.Buffer());
+		m_FileAccessor.Printf("\n\nLog closed %s", strTime.ConstBuffer());
 		m_FileProcessor.Close();
 	}
 
@@ -577,7 +577,7 @@ void CLog::AddTimeStamp(void)
 		FixedString<SYSTIME_BUFFER_SIZE> strTime;
 		Time::Ctime(strTime.Buffer(), SYSTIME_BUFFER_SIZE, &nLogTime);
 		
-		m_FileAccessor.Printf("[%s]\n", strTime.Buffer());
+		m_FileAccessor.Printf("[%s]\n", strTime.ConstBuffer());
 	}
 }
 

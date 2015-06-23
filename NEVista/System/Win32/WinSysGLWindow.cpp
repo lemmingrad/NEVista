@@ -543,6 +543,39 @@ s32 CWinSysGLWindow::InitialiseFullscreenMode(s32 nWidth, s32 nHeight, s32 nBPP)
 
 
 //----------------------------------------------------------//
+// CWinSysGLWindow::InitialiseBorderlessWindowMode
+//----------------------------------------------------------//
+//-- Description
+// Attempt to create a borderless window context
+//----------------------------------------------------------//
+s32 CWinSysGLWindow::InitialiseBorderlessWindowMode(s32 nBPP)
+{
+	RevertFullscreenDisplay();
+
+	s32 nWidth = GetSystemMetrics(SM_CXSCREEN);
+	s32 nHeight = GetSystemMetrics(SM_CYSCREEN);
+
+	if ( IS_ZERO(nWidth)
+		|| IS_ZERO(nHeight) )
+	{
+		//-- Bad screen width or height.
+		return WINSYS_WINDOW_BAD_WIDTH_OR_HEIGHT;
+	}
+
+	s32 nStatus = CreateGLWindow(nWidth, nHeight, nBPP, WS_POPUP, WS_EX_APPWINDOW);
+	if (WINSYS_OK != nStatus)
+	{
+		//-- Failed to create window
+		return nStatus;
+	}
+
+	//-- Success
+	m_eWindowMode = WindowMode::Borderless;
+	return nStatus;
+}
+
+
+//----------------------------------------------------------//
 // CWinSysGLWindow::InitialiseWindowedMode
 //----------------------------------------------------------//
 //-- Description			

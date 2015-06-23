@@ -115,61 +115,63 @@ INT_PTR CWinSysRollup::DlgEventProc(HWND hWnd, UINT nMsg, WPARAM wParam, LPARAM 
 	{
 		case WM_INITDIALOG:
 		{
-			s8 tempReadBuffer[256];
+			FixedString<256> strTempReadBuffer;
 
-			CWinSysConfigDialog::DesiredWindowMode::Enum eWM = CWinSysConfigDialog::DesiredWindowMode::Windowed;
+			CWinSysConfigDialog::DesiredWindowMode::Enum eWM = GetParentConfigDialog()->GetDesiredWindowMode();
 			HWND hComboWM = GetDlgItem(hWnd, IDC_COMBO_WINDOWMODE);
 			if (hComboWM)
 			{
 				for (s32 i = 0; i < CWinSysConfigDialog::DesiredWindowMode::MAX; ++i)
 				{
-					LoadString(GetModuleHandle(0), CWinSysConfigDialog::sm_WindowModeTable[i].m_nStringID, tempReadBuffer, 256);
-					ComboBox_AddString(hComboWM, TEXT(tempReadBuffer));
+					LoadString(GetModuleHandle(0), CWinSysConfigDialog::sm_WindowModeTable[i].m_nStringID, strTempReadBuffer.Buffer(), strTempReadBuffer.Size());
+					ComboBox_AddString(hComboWM, TEXT(strTempReadBuffer.ConstBuffer()));
 				}
 
 				ComboBox_SetCurSel(hComboWM, eWM);
 			}
 
-			CWinSysConfigDialog::DesiredResolution::Enum eResolution = CWinSysConfigDialog::DesiredResolution::Res640x480;
+			CWinSysConfigDialog::DesiredResolution::Enum eResolution = GetParentConfigDialog()->GetDesiredResolution();
 			HWND hComboResolution = GetDlgItem(hWnd, IDC_COMBO_RESOLUTION);
 			if (hComboResolution)
 			{
 				for (s32 i = 0; i < CWinSysConfigDialog::DesiredResolution::MAX; ++i)
 				{
-					LoadString(GetModuleHandle(0), CWinSysConfigDialog::sm_ResolutionTable[i].m_nStringID, tempReadBuffer, 256);
-					ComboBox_AddString(hComboResolution, TEXT(tempReadBuffer));
+					LoadString(GetModuleHandle(0), CWinSysConfigDialog::sm_ResolutionTable[i].m_nStringID, strTempReadBuffer.Buffer(), strTempReadBuffer.Size());
+					ComboBox_AddString(hComboResolution, TEXT(strTempReadBuffer.ConstBuffer()));
 				}
 
 				ComboBox_SetCurSel(hComboResolution, eResolution);
+
+				EnableWindow(hComboResolution, (CWinSysConfigDialog::DesiredWindowMode::Borderless != eWM));
 			}
 
-			CWinSysConfigDialog::DesiredBPP::Enum eBPP = CWinSysConfigDialog::DesiredBPP::Bpp16;
+			CWinSysConfigDialog::DesiredBPP::Enum eBPP = GetParentConfigDialog()->GetDesiredBPP();
 			HWND hComboBPP = GetDlgItem(hWnd, IDC_COMBO_BPP);
 			if (hComboBPP)
 			{
 				for (s32 i = 0; i < CWinSysConfigDialog::DesiredBPP::MAX; ++i)
 				{
-					LoadString(GetModuleHandle(0), CWinSysConfigDialog::sm_BPPTable[i].m_nStringID, tempReadBuffer, 256);
-					ComboBox_AddString(hComboBPP, TEXT(tempReadBuffer));
+					LoadString(GetModuleHandle(0), CWinSysConfigDialog::sm_BPPTable[i].m_nStringID, strTempReadBuffer.Buffer(), strTempReadBuffer.Size());
+					ComboBox_AddString(hComboBPP, TEXT(strTempReadBuffer.ConstBuffer()));
 				}
 
 				ComboBox_SetCurSel(hComboBPP, eBPP);
 			}
 
-			s8* strServerAddress = "This is a test.";
+			const s8* strServerAddress = GetParentConfigDialog()->GetServerAddress();
 			HWND hServerAddress = GetDlgItem(hWnd, IDC_EDIT_SERVER_ADDRESS);
 			Edit_SetText(hServerAddress, TEXT(strServerAddress));		
 
-			bool bValidScreenMode = true; //gConfigIni.ReadInt("Screen", "DisplayModeValid");
+			bool bValidScreenMode = true; 
 			if (IS_TRUE(bValidScreenMode))
 			{
-				LoadString(GetModuleHandle(0), IDS_CONFIG_WELCOME, tempReadBuffer, 256);
+				LoadString(GetModuleHandle(0), IDS_CONFIG_WELCOME, strTempReadBuffer.Buffer(), strTempReadBuffer.Size());
 			}
 			else
 			{
-				LoadString(GetModuleHandle(0), IDS_CONFIG_ERROR, tempReadBuffer, 256);
+				LoadString(GetModuleHandle(0), IDS_CONFIG_ERROR, strTempReadBuffer.Buffer(), strTempReadBuffer.Size());
 			}
-			SetDlgItemText(hWnd, IDC_MESSAGES, tempReadBuffer);
+			SetDlgItemText(hWnd, IDC_MESSAGES, strTempReadBuffer.ConstBuffer());
 
 			return true;
 		}
@@ -193,7 +195,12 @@ INT_PTR CWinSysRollup::DlgEventProc(HWND hWnd, UINT nMsg, WPARAM wParam, LPARAM 
 					if (CBN_SELCHANGE == HIWORD(wParam))
 					{
 						s32 nWM = ComboBox_GetCurSel((HWND)lParam); 
-//						SetDlgItemText(NULL, IDC_MESSAGES, "");
+						CWinSysConfigDialog::DesiredWindowMode::Enum eWM = (CWinSysConfigDialog::DesiredWindowMode::Enum)nWM;
+					
+						GetParentConfigDialog()->SetDesiredWindowMode(eWM);
+
+						EnableWindow(GetDlgItem(hWnd, IDC_COMBO_RESOLUTION), (CWinSysConfigDialog::DesiredWindowMode::Borderless != eWM));
+
 						return true;
 					}
 				}
@@ -201,22 +208,35 @@ INT_PTR CWinSysRollup::DlgEventProc(HWND hWnd, UINT nMsg, WPARAM wParam, LPARAM 
 
 				case IDC_COMBO_RESOLUTION:
 				{
+					if (CBN_SELCHANGE == HIWORD(wParam))
+					{
+						s32 nRes = ComboBox_GetCurSel((HWND)lParam); 
+						GetParentConfigDialog()->SetDesiredResolution((CWinSysConfigDialog::DesiredResolution::Enum)nRes);
+						return true;
+					}
 				}
 				break;
 
 				case IDC_COMBO_BPP:
 				{
+					if (CBN_SELCHANGE == HIWORD(wParam))
+					{
+						s32 nBPP = ComboBox_GetCurSel((HWND)lParam); 
+						GetParentConfigDialog()->SetDesiredBPP((CWinSysConfigDialog::DesiredBPP::Enum)nBPP);
+						return true;
+					}
 				}
 				break;
 
 				case IDC_EDIT_SERVER_ADDRESS:
 				{
-					s8 strServerAddress[256];
+					FixedString<256> strServerAddress;
 
 					if (EN_CHANGE == HIWORD(wParam))
 					{
-						if (Edit_GetText((HWND)lParam, strServerAddress, 256) > 0)
+						if (Edit_GetText((HWND)lParam, strServerAddress.Buffer(), strServerAddress.Size()) > 0)
 						{
+							GetParentConfigDialog()->SetServerAddress(strServerAddress.ConstBuffer());
 						}
 						return true;
 					}
@@ -470,7 +490,7 @@ s32 CWinSysRollup::Render(HDC hDC)
 	rectHeaderText.top = rectHeaderShadow.bottom + ROLLUPCONTAINER_SPACING;
 	rectHeaderText.bottom -= ROLLUPCONTAINER_SPACING;
 
-	DrawText(hDC, m_strName.Buffer(), m_strName.Length(), &rectHeaderText, DT_LEFT);
+	DrawText(hDC, m_strName.ConstBuffer(), m_strName.Length(), &rectHeaderText, DT_LEFT);
 
 	//-- Draw min/max button outline, white highlight, dark gray/black shadow
 	switch (m_eState)
@@ -532,7 +552,7 @@ s32 CWinSysRollup::Render(HDC hDC)
 //-- Description
 // Test to see if a coordinate is inside a given rectangle.
 //----------------------------------------------------------//
-bool	CWinSysRollup::IsInsideArea(s32 nMouseX, s32 nMouseY, RECT& area)
+bool CWinSysRollup::IsInsideArea(s32 nMouseX, s32 nMouseY, RECT& area)
 {
 	if ( (nMouseX < area.left) 
 		|| (nMouseX >= area.right)
@@ -544,6 +564,12 @@ bool	CWinSysRollup::IsInsideArea(s32 nMouseX, s32 nMouseY, RECT& area)
 
 	return true;
 }
+
+CWinSysConfigDialog* CWinSysRollup::GetParentConfigDialog(void)
+{
+	return m_pParent->GetParentConfigDialog();
+}
+
 
 
 //----------------------------------------------------------//

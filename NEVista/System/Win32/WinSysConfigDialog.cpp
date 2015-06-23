@@ -27,7 +27,16 @@ processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 //----------------------------------------------------------//
 
 
-#define WINSYS_CONFIG_SAVE_FILE			"../../Data/config.ini"
+#define WINSYS_CONFIG_SAVE_FILE					"Data/config.ini"
+
+#define WINSYS_CONFIG_SECTION_CONFIG			"Config"
+#define WINSYS_CONFIG_SHOWATSTARTUP				"ShowDialogOnStartup"
+#define WINSYS_CONFIG_SECTION_WINDOW			"Window"
+#define WINSYS_CONFIG_WINDOWMODE				"Mode"
+#define WINSYS_CONFIG_RESOLUTION				"Resolution"
+#define WINSYS_CONFIG_BPP						"BPP"
+#define WINSYS_CONFIG_SECTION_NETWORK			"Network"
+#define WINSYS_CONFIG_SERVER					"Server"
 
 
 //----------------------------------------------------------//
@@ -84,7 +93,6 @@ CWinSysConfigDialog::CWinSysConfigDialog()
 //----------------------------------------------------------//
 CWinSysConfigDialog::~CWinSysConfigDialog()
 {
-	Shutdown();
 }
 
 
@@ -163,17 +171,7 @@ INT_PTR CWinSysConfigDialog::DlgEventProc(HWND hWnd, UINT nMsg, WPARAM wParam, L
 
 				case IDC_CHECK_SHOWATSTARTUP:
 				{
-//					if (m_ConfigIni.ReadInt("Config", "ShowDialogOnStartup") == 1)
-					{
-						CheckDlgButton(hWnd, IDC_CHECK_SHOWATSTARTUP, BST_UNCHECKED);
-//						m_ConfigIni.WriteInt("Config", "ShowDialogOnStartup", 0);
-					}
-//					else
-//					{
-//						CheckDlgButton(hWnd, IDC_SHOWDIALOG, BST_CHECKED);
-//						m_ConfigIni.WriteInt("Config", "ShowDialogOnStartup", 1);
-//					}
-
+					ChangeShowAtStartup(BST_CHECKED == IsDlgButtonChecked(hWnd, IDC_CHECK_SHOWATSTARTUP));
 					return true;
 				}
 				break;
@@ -214,8 +212,25 @@ s32 CWinSysConfigDialog::Initialise(void)
 	}
 
 	//TODO - init config ini
+	if (IS_FALSE(m_ConfigIni.Initialise()))
+	{
+		// Failed to initialise config ini
+		return WINSYS_CONFIG_INI_NOT_LOADED;
+	}
 
-	nReturnStatus = m_RollupContainer.Initialise();
+	ChangeShowAtStartup(true);
+	SetDesiredWindowMode(DesiredWindowMode::Windowed);
+	SetDesiredResolution(DesiredResolution::Res640x480);
+	SetDesiredBPP(DesiredBPP::Bpp32);
+	SetServerAddress("192.168.1.100:1234");
+
+	if (IS_FALSE(m_ConfigIni.Load(WINSYS_CONFIG_SAVE_FILE)))
+	{
+		// Failed to load config ini
+		MessageBox(NULL, "Configuration Ini cannot be created. Using defaults.", Game_Title(), MB_OK|MB_ICONEXCLAMATION);
+	}
+
+	nReturnStatus = m_RollupContainer.Initialise(this);
 	if (WINSYS_OK != nReturnStatus)
 	{
 		//-- Failed to Initialise rollup container
@@ -240,7 +255,8 @@ s32 CWinSysConfigDialog::Shutdown(void)
 {
 	m_RollupContainer.Shutdown();
 	
-//	m_ConfigIni.Save(WINSYS_CONFIG_SAVE_FILE);
+	m_ConfigIni.Save(WINSYS_CONFIG_SAVE_FILE);
+	m_ConfigIni.Shutdown();
 
 	if (IS_TRUE(m_bRegistered))
 	{
@@ -290,38 +306,87 @@ s32 CWinSysConfigDialog::Show(void)
 //-- Description	
 // Query whether config dialog should be display at startup
 //----------------------------------------------------------//
-bool CWinSysConfigDialog::ShowAtStartup(void) const
+bool CWinSysConfigDialog::ShowAtStartup(void)
 {
-//	if (IS_TRUE(m_ConfigIni.ReadInt("Config", "ShowDialogOnStartup")))
-//	{
+	if (m_ConfigIni.ReadInt(WINSYS_CONFIG_SECTION_CONFIG, WINSYS_CONFIG_SHOWATSTARTUP) == 1)
+	{
 		return true;
-//	}
-//
-//	return false;
+	}
+
+	return false;
 }
 
 
 //----------------------------------------------------------//
-// CWinSysConfigDialog::GetDesiredWidth
+// CWinSysConfigDialog::ChangeShowAtStartup
+//----------------------------------------------------------//
+//-- Description	
+// Change 'show on startup' setting
+//----------------------------------------------------------//
+void CWinSysConfigDialog::ChangeShowAtStartup(bool bShow)
+{
+	m_ConfigIni.WriteInt(WINSYS_CONFIG_SECTION_CONFIG, WINSYS_CONFIG_SHOWATSTARTUP, IS_TRUE(bShow));
+}
+
+
+//----------------------------------------------------------//
+// CWinSysConfigDialog::GetDesiredResolution
+//----------------------------------------------------------//
+//-- Description
+// Returns the desired config resolution enum
+//----------------------------------------------------------//
+CWinSysConfigDialog::DesiredResolution::Enum CWinSysConfigDialog::GetDesiredResolution(void)
+{
+	s32 nRes = m_ConfigIni.ReadInt(WINSYS_CONFIG_SECTION_WINDOW, WINSYS_CONFIG_RESOLUTION);
+	if (nRes < DesiredResolution::MAX)
+	{
+		return (DesiredResolution::Enum)nRes;
+	}
+
+	return DesiredResolution::Res640x480;
+}
+
+
+//----------------------------------------------------------//
+// CWinSysConfigDialog::SetDesiredResolution
+//----------------------------------------------------------//
+//-- Description
+// Set the desired config resolution enum
+//----------------------------------------------------------//
+void CWinSysConfigDialog::SetDesiredResolution(CWinSysConfigDialog::DesiredResolution::Enum eRes)
+{
+	if (eRes < DesiredResolution::MAX)
+	{
+		m_ConfigIni.WriteInt(WINSYS_CONFIG_SECTION_WINDOW, WINSYS_CONFIG_RESOLUTION, eRes);
+	}
+	else
+	{
+		m_ConfigIni.WriteInt(WINSYS_CONFIG_SECTION_WINDOW, WINSYS_CONFIG_RESOLUTION, DesiredResolution::Res640x480);
+	}
+}
+
+
+//----------------------------------------------------------//
+// CWinSysConfigDialog::GetDesiredResolutionWidth
 //----------------------------------------------------------//
 //-- Description
 // Returns the desired config width
 //----------------------------------------------------------//
-s32 CWinSysConfigDialog::GetDesiredWidth(void) const
+s32 CWinSysConfigDialog::GetDesiredResolutionWidth(void)
 {
-	return sm_ResolutionTable[DesiredResolution::Res640x480].m_nWidth; //m_ConfigIni.ReadInt("Window", "Width");
+	return sm_ResolutionTable[GetDesiredResolution()].m_nWidth;
 }
 
 
 //----------------------------------------------------------//
-// CWinSysConfigDialog::GetDesiredHeight
+// CWinSysConfigDialog::GetDesiredResolutionHeight
 //----------------------------------------------------------//
 //-- Description
 // Returns the desired config height
 //----------------------------------------------------------//
-s32 CWinSysConfigDialog::GetDesiredHeight(void) const
+s32 CWinSysConfigDialog::GetDesiredResolutionHeight(void)
 {
-	return sm_ResolutionTable[DesiredResolution::Res640x480].m_nHeight; //m_ConfigIni.ReadInt("Window", "Height");
+	return sm_ResolutionTable[GetDesiredResolution()].m_nHeight;
 }
 
 
@@ -331,9 +396,46 @@ s32 CWinSysConfigDialog::GetDesiredHeight(void) const
 //-- Description
 // Returns the desired config BPP
 //----------------------------------------------------------//
-s32 CWinSysConfigDialog::GetDesiredBPP(void) const
+CWinSysConfigDialog::DesiredBPP::Enum CWinSysConfigDialog::GetDesiredBPP(void)
 {
-	return sm_BPPTable[DesiredBPP::Bpp16].m_nBPP; //m_ConfigIni.ReadInt("Window", "BPP");
+	s32 nBPP = m_ConfigIni.ReadInt(WINSYS_CONFIG_SECTION_WINDOW, WINSYS_CONFIG_BPP);
+	if (nBPP < DesiredBPP::MAX)
+	{
+		return (DesiredBPP::Enum)nBPP;
+	}
+
+	return DesiredBPP::Bpp16;
+}
+
+
+//----------------------------------------------------------//
+// CWinSysConfigDialog::SetDesiredBPP
+//----------------------------------------------------------//
+//-- Description
+// Set the desired config BPP enum
+//----------------------------------------------------------//
+void CWinSysConfigDialog::SetDesiredBPP(CWinSysConfigDialog::DesiredBPP::Enum eBPP)
+{
+	if (eBPP < DesiredBPP::MAX)
+	{
+		m_ConfigIni.WriteInt(WINSYS_CONFIG_SECTION_WINDOW, WINSYS_CONFIG_BPP, eBPP);
+	}
+	else
+	{
+		m_ConfigIni.WriteInt(WINSYS_CONFIG_SECTION_WINDOW, WINSYS_CONFIG_BPP, DesiredBPP::Bpp16);
+	}
+}
+
+
+//----------------------------------------------------------//
+// CWinSysConfigDialog::GetDesiredBPPValue
+//----------------------------------------------------------//
+//-- Description
+// Returns the desired config BPP value
+//----------------------------------------------------------//
+s32 CWinSysConfigDialog::GetDesiredBPPValue(void)
+{
+	return sm_BPPTable[GetDesiredBPP()].m_nBPP;
 }
 
 
@@ -343,27 +445,59 @@ s32 CWinSysConfigDialog::GetDesiredBPP(void) const
 //-- Description
 // Returns the desired config window mode
 //----------------------------------------------------------//
-CWinSysConfigDialog::DesiredWindowMode::Enum CWinSysConfigDialog::GetDesiredWindowMode(void) const
+CWinSysConfigDialog::DesiredWindowMode::Enum CWinSysConfigDialog::GetDesiredWindowMode(void)
 {
-/*	switch (m_ConfigIni.ReadInt("Window", "Mode"))
+	s32 nWM = m_ConfigIni.ReadInt(WINSYS_CONFIG_SECTION_WINDOW, WINSYS_CONFIG_WINDOWMODE);
+	if (nWM < DesiredWindowMode::MAX)
 	{
-		case DesiredWindowMode::Fullscreen:
-		{
-			return DesiredWindowMode::Fullscreen;
-		}
-		break;
-		case DesiredWindowMode::Borderless:
-		{
-			return DesiredWindowMode::Borderless;
-		}
-		break;
-		default:
-		break;
+		return (DesiredWindowMode::Enum)nWM;
 	}
-*/
+
 	return DesiredWindowMode::Windowed;
 }
 
+
+//----------------------------------------------------------//
+// CWinSysConfigDialog::GetDesiredWindowMode
+//----------------------------------------------------------//
+//-- Description
+// Returns the desired config window mode
+//----------------------------------------------------------//
+void CWinSysConfigDialog::SetDesiredWindowMode(CWinSysConfigDialog::DesiredWindowMode::Enum eWM)
+{
+	if (eWM < DesiredWindowMode::MAX)
+	{
+		m_ConfigIni.WriteInt(WINSYS_CONFIG_SECTION_WINDOW, WINSYS_CONFIG_WINDOWMODE, eWM);
+	}
+	else
+	{
+		m_ConfigIni.WriteInt(WINSYS_CONFIG_SECTION_WINDOW, WINSYS_CONFIG_WINDOWMODE, DesiredWindowMode::Windowed);
+	}
+}
+
+
+//----------------------------------------------------------//
+// CWinSysConfigDialog::GetServerAddress
+//----------------------------------------------------------//
+//-- Description
+// Returns the desired config server address
+//----------------------------------------------------------//
+const s8* CWinSysConfigDialog::GetServerAddress(void)
+{
+	return m_ConfigIni.ReadString(WINSYS_CONFIG_SECTION_NETWORK, WINSYS_CONFIG_SERVER);
+}
+
+
+//----------------------------------------------------------//
+// CWinSysConfigDialog::SetServerAddress
+//----------------------------------------------------------//
+//-- Description
+// Sets the desired config server address
+//----------------------------------------------------------//
+void CWinSysConfigDialog::SetServerAddress(const s8* strAddress)
+{
+	m_ConfigIni.WriteString(WINSYS_CONFIG_SECTION_NETWORK, WINSYS_CONFIG_SERVER, strAddress);
+}
 
 
 //----------------------------------------------------------//

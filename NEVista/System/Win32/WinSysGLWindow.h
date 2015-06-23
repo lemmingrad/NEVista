@@ -55,7 +55,7 @@ class CWinSysGLWindow
 
 		s32				InitialiseFullscreenMode(s32 nWidth, s32 nHeight, s32 nBPP);
 		s32				InitialiseWindowedMode(s32 nWidth, s32 nHeight, s32 nBPP);
-		s32				InitialiseBorderlessWindowedMode(s32 nBPP);
+		s32				InitialiseBorderlessWindowMode(s32 nBPP);
 		s32				Shutdown(void);
 
 		void			SwapBuffers(void) const;

@@ -131,7 +131,7 @@ CFileProcessor::Error::Enum CFileProcessorDirectTextReader::Open(void)
 		Error::Enum eResult = CFileProcessorDirectReader::Open();
 		if (Error::Ok == eResult)
 		{
-			m_pData->m_DirectReaderData.m_pFile = FileIO::Fopen(m_pData->m_strFileName.Buffer(), "rt");
+			m_pData->m_DirectReaderData.m_pFile = FileIO::Fopen(m_pData->m_strFileName.ConstBuffer(), "rt");
 			if (IS_FALSE(IsOpen()))
 			{
 				//-- Failed to open file

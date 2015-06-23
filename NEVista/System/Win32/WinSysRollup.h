@@ -63,6 +63,8 @@ class CWinSysRollup
 		
 		void			Reposition(s32* pnOffset);
 
+		CWinSysConfigDialog* GetParentConfigDialog(void);
+
 		static  INT_PTR CALLBACK StaticDlgEventProc(HWND hWnd, UINT nMsg, WPARAM wParam, LPARAM lParam);
 		INT_PTR			DlgEventProc(HWND hWnd, UINT nMsg, WPARAM wParam, LPARAM lParam);
 

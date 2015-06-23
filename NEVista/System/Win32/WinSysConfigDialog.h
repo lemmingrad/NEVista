@@ -11,6 +11,10 @@
 // triggered whenever an invalid display mode is set. 
 //----------------------------------------------------------//
 
+
+#include "../Ini.h"
+
+
 //----------------------------------------------------------//
 // DEFINES
 //----------------------------------------------------------//
@@ -103,16 +107,29 @@ class CWinSysConfigDialog
 		static  INT_PTR CALLBACK	StaticDlgEventProc(HWND hWnd, UINT nMsg, WPARAM wParam, LPARAM lParam);
 		INT_PTR						DlgEventProc(HWND hWnd, UINT nMsg, WPARAM wParam, LPARAM lParam);
 
-		bool						ShowAtStartup(void) const;
+		bool						ShowAtStartup(void);
+		void						ChangeShowAtStartup(bool bShow);
 
-		s32							GetDesiredWidth(void) const;
-		s32							GetDesiredHeight(void) const;
-		s32							GetDesiredBPP(void) const;
-		DesiredWindowMode::Enum		GetDesiredWindowMode(void) const;
+		DesiredResolution::Enum		GetDesiredResolution(void);
+		void						SetDesiredResolution(DesiredResolution::Enum eResolution);
+		s32							GetDesiredResolutionWidth(void);
+		s32							GetDesiredResolutionHeight(void);
+
+		DesiredBPP::Enum			GetDesiredBPP(void);
+		void						SetDesiredBPP(DesiredBPP::Enum eBPP);
+		s32							GetDesiredBPPValue(void);
+
+		DesiredWindowMode::Enum		GetDesiredWindowMode(void);
+		void						SetDesiredWindowMode(DesiredWindowMode::Enum eWM);
+
+		const s8*					GetServerAddress(void);
+		void						SetServerAddress(const s8* strAddress);
 
 	private:
 
 		CWinSysRollupContainer		m_RollupContainer;
+
+		CIni						m_ConfigIni;
 
 		bool						m_bRegistered;
 };
