@@ -8,14 +8,14 @@
 //----------------------------------------------------------//
 
 
-#include "SystemIncludes.h"
-#include "Win32/WinSysMain.h"
+#include "Ini.h"
+#include "Types.h"
+#include "SysString.h"
 #include "File/FileData.h"
 #include "File/FileDirectTextReader.h"
 #include "File/FileDirectTextWriter.h"
-#include "Ini.h"
-#include "../../DS3D/Win32/Game.h"
-
+#include "Win32/WinSysMain.h"
+#include "Win32/Game.h"
 
 
 //----------------------------------------------------------//
@@ -110,7 +110,7 @@ bool CIni::Load(const s8 *strFileName)
 			s8* pLine = strLineBuffer.Buffer();
 			size_t nLen = strLineBuffer.Length();
 
-			if (IS_FALSE(String::IsEmpty(pLine)))
+			if (IS_FALSE(SysString::IsEmpty(pLine)))
 			{
 				switch (pLine[0])
 				{
@@ -128,10 +128,10 @@ bool CIni::Load(const s8 *strFileName)
 						if (nLen > 2)
 						{
 							s8* pTokeniserRecord;
-							s8* pTitle = String::Strtok(pLine, "\r\n", pTokeniserRecord);
-							if (IS_FALSE(String::IsEmpty(pTitle)))
+							s8* pTitle = SysString::Strtok(pLine, "\r\n", pTokeniserRecord);
+							if (IS_FALSE(SysString::IsEmpty(pTitle)))
 							{
-								size_t nTitleLen = String::Strlen(pTitle);
+								size_t nTitleLen = SysString::Strlen(pTitle);
 								if (pTitle[nTitleLen-1] == ']')
 								{
 									//-- Line starts with [ and ends with ]. This is a group header.
@@ -155,11 +155,11 @@ bool CIni::Load(const s8 *strFileName)
 						if (IS_PTR(pCurrentGroup))
 						{
 							s8* pTokeniserRecord;
-							s8* pName = String::Strtok(pLine, "=\r\n", pTokeniserRecord);
-							if (IS_FALSE(String::IsEmpty(pName)))
+							s8* pName = SysString::Strtok(pLine, "=\r\n", pTokeniserRecord);
+							if (IS_FALSE(SysString::IsEmpty(pName)))
 							{
-								s8* pValue = String::Strtok(NULL, "\r\n", pTokeniserRecord);
-								if (IS_FALSE(String::IsEmpty(pValue)))
+								s8* pValue = SysString::Strtok(NULL, "\r\n", pTokeniserRecord);
+								if (IS_FALSE(SysString::IsEmpty(pValue)))
 								{
 									WriteString(pCurrentGroup->m_strName.ConstBuffer(), pName, pValue);
 								}
@@ -260,7 +260,7 @@ CIni::SIniGroup* CIni::FindGroup(const s8* strGroupName)
 		SIniGroup* pGroup = &(*it);
 		if (IS_PTR(pGroup))
 		{
-			if (!String::Strncmp(pGroup->m_strName.ConstBuffer(), strGroupName, pGroup->m_strName.Size()))
+			if (!SysString::Strncmp(pGroup->m_strName.ConstBuffer(), strGroupName, pGroup->m_strName.Size()))
 			{
 				//-- Found
 				gDebugLog.Printf("Found existing group: \"%s\"", pGroup->m_strName.ConstBuffer());
@@ -295,7 +295,7 @@ CIni::SIniGroup* CIni::CreateGroup(const s8* strGroupName)
 		pGroup->m_IniTupleList.clear();
 
 		pGroup->m_strName.Set(strGroupName);
-		if (pGroup->m_strName.Length() != String::Strlen(strGroupName))
+		if (pGroup->m_strName.Length() != SysString::Strlen(strGroupName))
 		{
 			gDebugLog.Printf("Group name \"%s\" truncated to \"%s\".", strGroupName, pGroup->m_strName.ConstBuffer());
 		}
@@ -325,7 +325,7 @@ void CIni::RemoveGroup(const s8* strGroupName)
 		SIniGroup* pGroup = &(*it);
 		if (IS_PTR(pGroup))
 		{
-			if (!String::Strncmp(pGroup->m_strName.ConstBuffer(), strGroupName, pGroup->m_strName.Size()))
+			if (!SysString::Strncmp(pGroup->m_strName.ConstBuffer(), strGroupName, pGroup->m_strName.Size()))
 			{
 				//-- Found a matching group, destroy the tuple list
 				pGroup->m_IniTupleList.clear();
@@ -361,7 +361,7 @@ CIni::SIniTuple* CIni::FindTuple(CIni::SIniGroup* pGroup, const s8* strVariableN
 			SIniTuple* pTuple= &(*it);
 			if (IS_PTR(pTuple))
 			{
-				if (!String::Strncmp(pTuple->m_strVariableName.ConstBuffer(), strVariableName, pTuple->m_strVariableName.Size()))
+				if (!SysString::Strncmp(pTuple->m_strVariableName.ConstBuffer(), strVariableName, pTuple->m_strVariableName.Size()))
 				{
 					//-- Found
 					gDebugLog.Printf("Found existing tuple: \"%s\"", pTuple->m_strVariableName.ConstBuffer());
@@ -397,13 +397,13 @@ CIni::SIniTuple* CIni::CreateTuple(CIni::SIniGroup* pGroup, const s8* strVariabl
 		if (IS_PTR(pTuple))
 		{
 			pTuple->m_strVariableName.Set(strVariableName);
-			if (pTuple->m_strVariableName.Length() != String::Strlen(strVariableName))
+			if (pTuple->m_strVariableName.Length() != SysString::Strlen(strVariableName))
 			{
 				gDebugLog.Printf("Tuple name \"%s\" truncated to \"%s\".", strVariableName, pTuple->m_strVariableName.ConstBuffer());
 			}
 
 			pTuple->m_strValue.Set(strValue);
-			if (pTuple->m_strValue.Length() != String::Strlen(strValue))
+			if (pTuple->m_strValue.Length() != SysString::Strlen(strValue))
 			{
 				gDebugLog.Printf("Tuple value \"%s\" truncated to \"%s\".", strValue, pTuple->m_strValue.ConstBuffer());
 			}
@@ -453,7 +453,7 @@ void CIni::RemoveTuple(CIni::SIniGroup* pGroup, const s8* strVariableName)
 			SIniTuple* pTuple= &(*it);
 			if (IS_PTR(pTuple))
 			{
-				if (!String::Strncmp(pTuple->m_strVariableName.ConstBuffer(), strVariableName, pTuple->m_strVariableName.Size()))
+				if (!SysString::Strncmp(pTuple->m_strVariableName.ConstBuffer(), strVariableName, pTuple->m_strVariableName.Size()))
 				{
 					//-- Found a matching group, destroy the tuple list
 					pGroup->m_IniTupleList.erase(it);
@@ -504,7 +504,7 @@ f32 CIni::ReadFloat(const s8* strGroupName, const s8* strVariableName)
 
 	gDebugLog.Printf("Completed.");
 
-	if (IS_FALSE(String::IsEmpty(strValue)))
+	if (IS_FALSE(SysString::IsEmpty(strValue)))
 	{
 		const u32 nTrueWords = 6;
 		s8* strTrueWordList[] = {"TRUE", "True", "true", "YES", "Yes", "yes"};
@@ -512,20 +512,20 @@ f32 CIni::ReadFloat(const s8* strGroupName, const s8* strVariableName)
 		s8* strFalseWordList[] = {"FALSE", "False", "false", "NO", "No", "no"};
 		for (u32 i = 0; i < nTrueWords; ++i)
 		{
-			if (!String::Strncmp(strValue, strTrueWordList[i], INI_MAX_TUPLE_VALUE_LENGTH))
+			if (!SysString::Strncmp(strValue, strTrueWordList[i], INI_MAX_TUPLE_VALUE_LENGTH))
 			{
 				return 1.0f;
 			}
 		}
 		for (u32 j = 0; j < nFalseWords; ++j)
 		{
-			if (!String::Strncmp(strValue, strFalseWordList[j], INI_MAX_TUPLE_VALUE_LENGTH))
+			if (!SysString::Strncmp(strValue, strFalseWordList[j], INI_MAX_TUPLE_VALUE_LENGTH))
 			{
 				return 0.0f;
 			}
 		}
 
-		f32 fValue = String::Atof(strValue);
+		f32 fValue = SysString::Atof(strValue);
 		return fValue;
 	}
 
@@ -579,7 +579,7 @@ void CIni::WriteInt(const s8* strGroupName, const s8* strVariableName, s32 nValu
 
 	FixedString<INI_MAX_TUPLE_VALUE_LENGTH> strBuffer;
 
-	String::Sprintf(strBuffer.Buffer(), strBuffer.Size(), "%d", nValue);
+	SysString::Sprintf(strBuffer.Buffer(), strBuffer.Size(), "%d", nValue);
 
 	WriteString(strGroupName, strVariableName, strBuffer.ConstBuffer());
 
@@ -602,7 +602,7 @@ void CIni::WriteFloat(const s8* strGroupName, const s8* strVariableName, f32 fVa
 
 	FixedString<INI_MAX_TUPLE_VALUE_LENGTH> strBuffer;
 
-	String::Sprintf(strBuffer.Buffer(), strBuffer.Size(), "%f", fValue);
+	SysString::Sprintf(strBuffer.Buffer(), strBuffer.Size(), "%f", fValue);
 
 	WriteString(strGroupName, strVariableName, strBuffer.ConstBuffer());
 

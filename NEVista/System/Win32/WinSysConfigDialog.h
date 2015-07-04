@@ -12,7 +12,9 @@
 //----------------------------------------------------------//
 
 
-#include "../Ini.h"
+#include "Types.h"
+#include "Ini.h"
+#include "WinSysRollupContainer.h"
 
 
 //----------------------------------------------------------//
@@ -26,10 +28,6 @@
 //----------------------------------------------------------//
 // FORWARD REFERENCES
 //----------------------------------------------------------//
-
-
-class CWinSysRollupContainer;
-
 
 //----------------------------------------------------------//
 // STRUCTS
@@ -124,6 +122,10 @@ class CWinSysConfigDialog
 
 		const s8*					GetServerAddress(void);
 		void						SetServerAddress(const s8* strAddress);
+		const s8*					GetServerLoginEmail(void);
+		void						SetServerLoginEmail(const s8* strEmail);
+		const s8*					GetServerLoginPassword(void);
+		void						SetServerLoginPassword(const s8* strPassword);
 
 	private:
 

@@ -1,5 +1,6 @@
 #ifndef _SYS_MEMORY_H_
 #define _SYS_MEMORY_H_
+#pragma once
 
 //----------------------------------------------------------//
 // SYSMEMORY.H
@@ -7,6 +8,10 @@
 //-- Description
 // Wrapper for memory access.
 //----------------------------------------------------------//
+
+
+#include "Types.h"
+
 
 //----------------------------------------------------------//
 // DEFINES
@@ -25,7 +30,7 @@
 //----------------------------------------------------------//
 
 
-class Memory
+class SysMemory
 {
 	public:
 
@@ -48,8 +53,8 @@ class Memory
 
 	private:
 		
-		Memory();
-		~Memory();
+		SysMemory();
+		~SysMemory();
 };
 
 

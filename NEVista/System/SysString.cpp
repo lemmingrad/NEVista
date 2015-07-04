@@ -7,13 +7,11 @@
 //----------------------------------------------------------//
 
 
-#include <stdarg.h>
-#include <string.h>
-#include <string>
-
+#include "SysString.h"
 #include "Types.h"
 #include "SysMemory.h"
-#include "SysString.h"
+#include <cstring>
+#include <string>
 
 
 //----------------------------------------------------------//
@@ -31,7 +29,7 @@
 
 
 //-- dictionary 0 is always default recognised base64 dictionary - [A-Z][a-z][0-9]+/
-const std::string String::KeyDictionary[NUM_KEY_DICTIONARIES] = { 
+const std::string SysString::KeyDictionary[NUM_KEY_DICTIONARIES] = { 
 	"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/",
 	"AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz0123456789+/",
 	"A1B2C3D4E5F6G7H8I9J0KLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz+/",
@@ -40,24 +38,24 @@ const std::string String::KeyDictionary[NUM_KEY_DICTIONARIES] = {
 
 
 //----------------------------------------------------------//
-// String::Strlen
+// SysString::Strlen
 //----------------------------------------------------------//
 //-- Description
 // Get the length of s string
 //----------------------------------------------------------//
-size_t String::Strlen(const s8* strSrc)
+size_t SysString::Strlen(const s8* strSrc)
 {
 	return strlen(strSrc);
 }
 
 
 //----------------------------------------------------------//
-// String::Strcpy
+// SysString::Strcpy
 //----------------------------------------------------------//
 //-- Description
 // Copy one string buffer to another
 //----------------------------------------------------------//
-s8* String::Strcpy(s8* strDest, size_t nDestSize, const s8* strSrc)
+s8* SysString::Strcpy(s8* strDest, size_t nDestSize, const s8* strSrc)
 {
 #if defined(SYSSTRING_USES_SAFE_STRINGS)
 
@@ -92,13 +90,13 @@ s8* String::Strcpy(s8* strDest, size_t nDestSize, const s8* strSrc)
 
 
 //----------------------------------------------------------//
-// String::Strncpy
+// SysString::Strncpy
 //----------------------------------------------------------//
 //-- Description
 // Copy one string buffer to another, up to a maximum
 // number of characters.
 //----------------------------------------------------------//
-s8* String::Strncpy(s8* strDest, size_t nDestSize, const s8* strSrc, size_t nSrcSize)
+s8* SysString::Strncpy(s8* strDest, size_t nDestSize, const s8* strSrc, size_t nSrcSize)
 {
 #if defined(SYSSTRING_USES_SAFE_STRINGS)
     
@@ -106,11 +104,11 @@ s8* String::Strncpy(s8* strDest, size_t nDestSize, const s8* strSrc, size_t nSrc
 	errno_t nError = strncpy_s(strDest, nDestSize, strSrc, nSrcSize);
 	if (IS_ZERO(nError))
 	{
-			return strDest;
+		return strDest;
 	}
 	else
 	{
-			return NULL;
+		return NULL;
 	}
 
 #else
@@ -143,12 +141,12 @@ s8* String::Strncpy(s8* strDest, size_t nDestSize, const s8* strSrc, size_t nSrc
 
 
 //----------------------------------------------------------//
-// String::Strcat
+// SysString::Strcat
 //----------------------------------------------------------//
 //-- Description
 // Append one string to another
 //----------------------------------------------------------//
-s8* String::Strcat(s8* strDest, size_t nDestSize, const s8* strSrc)
+s8* SysString::Strcat(s8* strDest, size_t nDestSize, const s8* strSrc)
 {
 #if defined(SYSSTRING_USES_SAFE_STRINGS)
 
@@ -195,66 +193,66 @@ s8* String::Strcat(s8* strDest, size_t nDestSize, const s8* strSrc)
 
 
 //----------------------------------------------------------//
-// String::Strcmp
+// SysString::Strcmp
 //----------------------------------------------------------//
 //-- Description
 // Compares the contents of a string with another string
 // and returns 0 if they match exactly
 //----------------------------------------------------------//
-s32 String::Strcmp(const s8* strOne, const s8* strTwo)
+s32 SysString::Strcmp(const s8* strOne, const s8* strTwo)
 {
 	return (s32)strcmp(strOne, strTwo);
 }
 
 
 //----------------------------------------------------------//
-// String::Strncmp
+// SysString::Strncmp
 //----------------------------------------------------------//
 //-- Description
 // Compares the contents of a string with another string, up
 // to a maximum number of characters, and returns 0 if they 
 // match exactly
 //----------------------------------------------------------//
-s32 String::Strncmp(const s8* strOne, const s8* strTwo, const u32 nCount)
+s32 SysString::Strncmp(const s8* strOne, const s8* strTwo, const u32 nCount)
 {
 	return (s32)strncmp(strOne, strTwo, nCount);
 }
 
 
 //----------------------------------------------------------//
-// String::Stricmp
+// SysString::Stricmp
 //----------------------------------------------------------//
 //-- Description
 // Compares the contents of a string with another string
 // and returns 0 if they match exactly. CASE INDEPENDENT
 //----------------------------------------------------------//
-s32 String::Stricmp(const s8* strOne, const s8* strTwo)
+s32 SysString::Stricmp(const s8* strOne, const s8* strTwo)
 {
 	return (s32)_stricmp(strOne, strTwo);
 }
 
 
 //----------------------------------------------------------//
-// String::Strnicmp
+// SysString::Strnicmp
 //----------------------------------------------------------//
 //-- Description
 // Compares the contents of a string with another string, up
 // to a maximum number of characters, and returns 0 if they 
 // match exactly. CASE INDEPENDENT
 //----------------------------------------------------------//
-s32 String::Strnicmp(const s8* strOne, const s8* strTwo, size_t nCount)
+s32 SysString::Strnicmp(const s8* strOne, const s8* strTwo, size_t nCount)
 {
 	return (s32)_strnicmp(strOne, strTwo, nCount);
 }
 
 
 //----------------------------------------------------------//
-// String::Strtok
+// SysString::Strtok
 //----------------------------------------------------------//
 //-- Description
 // Find the next token in a string.
 //----------------------------------------------------------//
-s8* String::Strtok(s8* strToken, const s8* strDelimiters, s8*& strNextToken)
+s8* SysString::Strtok(s8* strToken, const s8* strDelimiters, s8*& strNextToken)
 {
 #if defined(SYSSTRING_USES_SAFE_STRINGS)
 
@@ -269,25 +267,25 @@ s8* String::Strtok(s8* strToken, const s8* strDelimiters, s8*& strNextToken)
 
 
 //----------------------------------------------------------//
-// String::Strstr
+// SysString::Strstr
 //----------------------------------------------------------//
 //-- Description
 // Find the first occurance of a substring inside a larger
 // string.
 //----------------------------------------------------------//
-const s8* String::Strstr(const s8* strSrc, const s8* strFind)
+const s8* SysString::Strstr(const s8* strSrc, const s8* strFind)
 {
 	return strstr(strSrc, strFind);
 }
 
 
 //----------------------------------------------------------//
-// String::Strstr
+// SysString::Strstr
 //----------------------------------------------------------//
 //-- Description
 // Converts a string to uppercase in place
 //----------------------------------------------------------//
-s8* String::Strupr(s8* strSrc, size_t nSrcSize)
+s8* SysString::Strupr(s8* strSrc, size_t nSrcSize)
 {
 #if defined(SYSSTRING_USES_SAFE_STRINGS)
 
@@ -310,12 +308,12 @@ s8* String::Strupr(s8* strSrc, size_t nSrcSize)
 		
 
 //----------------------------------------------------------//
-// String::Strlwr
+// SysString::Strlwr
 //----------------------------------------------------------//
 //-- Description
 // Converts a string to lowercase in place
 //----------------------------------------------------------//
-s8* String::Strlwr(s8* strSrc, size_t nSrcSize)
+s8* SysString::Strlwr(s8* strSrc, size_t nSrcSize)
 {
 #if defined(SYSSTRING_USES_SAFE_STRINGS)
 
@@ -338,18 +336,18 @@ s8* String::Strlwr(s8* strSrc, size_t nSrcSize)
 
 
 //----------------------------------------------------------//
-// String::Sprintf
+// SysString::Sprintf
 //----------------------------------------------------------//
 //-- Description
 // Writes a formatted multi-parameter string
 //----------------------------------------------------------//
-s32 String::Sprintf(s8* strDest, size_t nDestSize, const s8* strFormating, ...)
+s32 SysString::Sprintf(s8* strDest, size_t nDestSize, const s8* strFormating, ...)
 {
 	s32 nSymbolsConverted = -1;
 
 	if ( IS_NULL_PTR(strDest)
 		|| IS_ZERO(nDestSize) 
-		|| IS_NULL_PTR(strFormating) )
+		|| IS_TRUE(IsEmpty(strFormating)) )
 	{
 		return nSymbolsConverted;
 	}
@@ -364,19 +362,19 @@ s32 String::Sprintf(s8* strDest, size_t nDestSize, const s8* strFormating, ...)
 
 
 //----------------------------------------------------------//
-// String::Vsprintf
+// SysString::Vsprintf
 //----------------------------------------------------------//
 //-- Description
 // Writes a formatted multi-parameter string using existing
 // va_list data.
 //----------------------------------------------------------//
-s32 String::Vsprintf(s8* strDest, size_t nDestSize, const s8* strFormating, va_list ArgList)
+s32 SysString::Vsprintf(s8* strDest, size_t nDestSize, const s8* strFormating, va_list ArgList)
 {
 	s32 nSymbolsConverted = -1;
 	
 	if ( IS_NULL_PTR(strDest)
 		|| IS_ZERO(nDestSize) 
-		|| IS_NULL_PTR(strFormating) )
+		|| IS_TRUE(IsEmpty(strFormating)) )
 	{
 		return nSymbolsConverted;
 	}
@@ -398,33 +396,33 @@ s32 String::Vsprintf(s8* strDest, size_t nDestSize, const s8* strFormating, va_l
 
 
 //----------------------------------------------------------//
-// String::Atof
+// SysString::Atof
 //----------------------------------------------------------//
 //-- Description
 // Converts a string representation of a number into an
 // actual number
 //----------------------------------------------------------//
-f32 String::Atof(const s8* strBuffer)
+f32 SysString::Atof(const s8* strBuffer)
 {
 	return (f32)atof(strBuffer);
 }
 
 
 //----------------------------------------------------------//
-// String::Atoi
+// SysString::Atoi
 //----------------------------------------------------------//
 //-- Description
 // Converts a string representation of a number into an
 // actual number
 //----------------------------------------------------------//
-s32 String::Atoi(const s8* strBuffer)
+s32 SysString::Atoi(const s8* strBuffer)
 {
 	return (s32)atoi(strBuffer);
 }
 
 
 //----------------------------------------------------------//
-// String::GenerateHash
+// SysString::GenerateHash
 //----------------------------------------------------------//
 //-- Description
 // Hashes a string into a unique ID.
@@ -432,9 +430,9 @@ s32 String::Atoi(const s8* strBuffer)
 // so we can probably treat any Hash as unique without 
 // worrying about a conflict.
 //----------------------------------------------------------//
-String::Hash String::GenerateHash(const s8* strBuffer)
+SysString::Hash SysString::GenerateHash(const s8* strBuffer)
 {
-	if (IS_TRUE(String::IsEmpty(strBuffer)))
+	if (IS_TRUE(SysString::IsEmpty(strBuffer)))
 	{
 		//-- 0 length string
 		return INVALID_HASH;
@@ -484,46 +482,46 @@ String::Hash String::GenerateHash(const s8* strBuffer)
 
 
 //----------------------------------------------------------//
-// String::GenerateKey
+// SysString::GenerateKey
 //----------------------------------------------------------//
 //-- Description
 // Create a string encryption key from 2 base parts.
 // Note that GenerateKey(0,0) will produce a key that
 // uses the default base64 dictionary of [A-Z][a-z][0-9]+/. 
 //----------------------------------------------------------//
-String::Key String::GenerateKey(u8 part1, u8 part2)
+SysString::Key SysString::GenerateKey(u8 part1, u8 part2)
 {
 	return Key(((part1 % NUM_KEY_DICTIONARIES) << 8) | (part2 % 64));
 }
 
 
 //----------------------------------------------------------//
-// String::Base64Encode
+// SysString::Base64Encode
 //----------------------------------------------------------//
 //-- Description
 // Convert a byte buffer into a base64 string using standard 
 // convention [A-Z][a-z][0-9]+/ and padded with '='.
 //----------------------------------------------------------//
-size_t String::Base64Encode(s8* strBuffer, size_t strBufferSize, const void* pDataBuffer, size_t dataSize)
+size_t SysString::Base64Encode(s8* strBuffer, size_t strBufferSize, const void* pDataBuffer, size_t dataSize)
 {
 	return KeyEncode(strBuffer, strBufferSize, pDataBuffer, dataSize, GenerateKey(0, 0));
 }
 
 
 //----------------------------------------------------------//
-// String::Base64Decode
+// SysString::Base64Decode
 //----------------------------------------------------------//
 //-- Description
 // Convert a standard format base64 string into a byte buffer.
 //----------------------------------------------------------//
-size_t String::Base64Decode(void* pDataBuffer, size_t dataBufferSize, const s8* strBuffer, size_t strLength)
+size_t SysString::Base64Decode(void* pDataBuffer, size_t dataBufferSize, const s8* strBuffer, size_t strLength)
 {
 	return KeyDecode(pDataBuffer, dataBufferSize, strBuffer, strLength, GenerateKey(0, 0));
 }
 
 
 //----------------------------------------------------------//
-// String::KeyEncode
+// SysString::KeyEncode
 //----------------------------------------------------------//
 //-- Description
 // Convert a byte buffer into a base64 string using
@@ -533,12 +531,12 @@ size_t String::Base64Decode(void* pDataBuffer, size_t dataBufferSize, const s8* 
 // Results are always padded with '=' up to blocks of
 // 4 characters.
 //----------------------------------------------------------//
-size_t String::KeyEncode(s8* strBuffer, size_t strBufferSize, const void* pDataBuffer, size_t dataSize, String::Key key)
+size_t SysString::KeyEncode(s8* strBuffer, size_t strBufferSize, const void* pDataBuffer, size_t dataSize, SysString::Key key)
 {
 	if ( IS_NULL_PTR(pDataBuffer)
 		|| IS_ZERO(dataSize) 
 		|| IS_NULL_PTR(strBuffer)
-		|| (strBufferSize < 1) )
+		|| IS_ZERO(strBufferSize) )
 	{
 		return 0;
 	}
@@ -558,7 +556,7 @@ size_t String::KeyEncode(s8* strBuffer, size_t strBufferSize, const void* pDataB
 	dictionary.append(&(dictionaryRef.c_str()[keyrotation]));
 	dictionary.append(dictionaryRef.c_str());
 
-	Memory::Memset(strBuffer, '=', base64Len);
+	SysMemory::Memset(strBuffer, '=', base64Len);
 
 	const u8* pDataBytes = (const u8*)pDataBuffer;
 	size_t byteCount = 0;
@@ -601,12 +599,12 @@ size_t String::KeyEncode(s8* strBuffer, size_t strBufferSize, const void* pDataB
 
 
 //----------------------------------------------------------//
-// String::KeyDecode
+// SysString::KeyDecode
 //----------------------------------------------------------//
 //-- Description
 // Convert a non-standard base64 string into a byte buffer.
 //----------------------------------------------------------//
-size_t String::KeyDecode(void* pDataBuffer, size_t dataBufferSize, const s8* strBuffer, size_t strLength, String::Key key)
+size_t SysString::KeyDecode(void* pDataBuffer, size_t dataBufferSize, const s8* strBuffer, size_t strLength, SysString::Key key)
 {
 	if ( IS_NULL_PTR(strBuffer)
 		|| IS_ZERO(strLength) 
@@ -642,7 +640,7 @@ size_t String::KeyDecode(void* pDataBuffer, size_t dataBufferSize, const s8* str
 	dictionary.append(&(dictionaryRef.c_str()[keyrotation]));
 	dictionary.append(dictionaryRef.c_str());
 
-	Memory::Memclear(pDataBuffer, bufShrunk);
+	SysMemory::Memclear(pDataBuffer, bufShrunk);
 
 	u8* pDataBytes = (u8*)pDataBuffer;
 	size_t charIndex = 0;
@@ -685,12 +683,51 @@ size_t String::KeyDecode(void* pDataBuffer, size_t dataBufferSize, const s8* str
 
 
 //----------------------------------------------------------//
-// String::IsEmpty
+// SysString::FourCC
+//----------------------------------------------------------//
+//-- Description
+// Convert u32 FourCC value into a string
+//----------------------------------------------------------//
+s8* SysString::FourCC(s8* strDest, size_t nDestSize, u32 nFourCC)
+{
+    //-- 
+	if ( IS_NULL_PTR(strDest) 
+		|| (nDestSize < 5) )
+	{
+		//-- Failed.
+		return NULL;
+	}
+
+	if (IS_TRUE(SysMemory::IsSystemBigEndian()))
+	{
+		//-- Big-endian system
+		strDest[0] = (nFourCC) & 0xff;
+		strDest[1] = (nFourCC >> 8) & 0xff;
+		strDest[2] = (nFourCC >> 16) & 0xff;
+		strDest[3] = (nFourCC >> 24) & 0xff;
+	}
+	else
+	{
+		//-- Little-endian system
+		strDest[0] = (nFourCC >> 24) & 0xff;
+		strDest[1] = (nFourCC >> 16) & 0xff;
+		strDest[2] = (nFourCC >> 8) & 0xff;
+		strDest[3] = (nFourCC) & 0xff;
+	}
+
+	//-- Success.
+	strDest[4] = '\0';
+	return strDest;
+}
+
+
+//----------------------------------------------------------//
+// SysString::IsEmpty
 //----------------------------------------------------------//
 //-- Description
 // Very basic test for empty string
 //----------------------------------------------------------//
-bool String::IsEmpty(const s8* strBuffer)
+bool SysString::IsEmpty(const s8* strBuffer)
 {
 	if ( IS_NULL_PTR(strBuffer)
 		|| ('\0' == strBuffer[0]) )

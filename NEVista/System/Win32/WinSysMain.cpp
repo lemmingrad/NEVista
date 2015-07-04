@@ -6,13 +6,10 @@
 //----------------------------------------------------------//
 
 
-//#include "Version.h"
-#include "../SystemIncludes.h"
-//#include "MathsIncludes.h"
-//#include "InputIncludes.h"
-#include "../../../DS3D/Win32/Game.h"
-
 #include "WinSysIncludes.h"
+#include "Types.h"
+#include "Log.h"
+#include "Win32/Game.h"
 
 
 //----------------------------------------------------------//

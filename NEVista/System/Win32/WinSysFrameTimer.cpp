@@ -6,8 +6,9 @@
 //----------------------------------------------------------//
 
 
-#include "../SystemIncludes.h"
 #include "WinSysIncludes.h"
+#include "Types.h"
+#include "SysString.h"
 
 
 //----------------------------------------------------------//
@@ -145,7 +146,7 @@ if (m_nFrameCount == 60)
 		m_nFrameCount = 0;
 
 		s8 strBuffer[64] = {0};
-		String::Sprintf(strBuffer, 64, GAME_TITLE" - FPS: %.2f, Time: %.1fms, Mul: %.5f", m_fFPS, m_fFrameTime, m_fFrameMultiplier);
+		SysString::Sprintf(strBuffer, 64, GAME_TITLE" - FPS: %.2f, Time: %.1fms, Mul: %.5f", m_fFPS, m_fFrameTime, m_fFrameMultiplier);
 
 		gWinSysGLWindow.SetWindowTitle(strBuffer);
 	}

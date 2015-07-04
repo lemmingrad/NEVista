@@ -16,10 +16,9 @@ processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 
 #include "resource.h"
 
-#include "../SystemIncludes.h"
-#include "../../../DS3D/Win32/Game.h"
-
 #include "WinSysIncludes.h"
+#include "Types.h"
+#include "Win32/Game.h"
 
 
 //----------------------------------------------------------//
@@ -37,6 +36,8 @@ processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 #define WINSYS_CONFIG_BPP						"BPP"
 #define WINSYS_CONFIG_SECTION_NETWORK			"Network"
 #define WINSYS_CONFIG_SERVER					"Server"
+#define WINSYS_CONFIG_LOGIN_EMAIL				"Email"
+#define WINSYS_CONFIG_LOGIN_PASSWORD			"Password"
 
 
 //----------------------------------------------------------//
@@ -223,6 +224,8 @@ s32 CWinSysConfigDialog::Initialise(void)
 	SetDesiredResolution(DesiredResolution::Res640x480);
 	SetDesiredBPP(DesiredBPP::Bpp32);
 	SetServerAddress("192.168.1.100:1234");
+	SetServerLoginEmail("a@b.com");
+	SetServerLoginPassword("ABC123");
 
 	if (IS_FALSE(m_ConfigIni.Load(WINSYS_CONFIG_SAVE_FILE)))
 	{
@@ -497,6 +500,54 @@ const s8* CWinSysConfigDialog::GetServerAddress(void)
 void CWinSysConfigDialog::SetServerAddress(const s8* strAddress)
 {
 	m_ConfigIni.WriteString(WINSYS_CONFIG_SECTION_NETWORK, WINSYS_CONFIG_SERVER, strAddress);
+}
+
+
+//----------------------------------------------------------//
+// CWinSysConfigDialog::GetServerLoginEmail
+//----------------------------------------------------------//
+//-- Description
+// Returns the desired config server login email
+//----------------------------------------------------------//
+const s8* CWinSysConfigDialog::GetServerLoginEmail(void)
+{
+	return m_ConfigIni.ReadString(WINSYS_CONFIG_SECTION_NETWORK, WINSYS_CONFIG_LOGIN_EMAIL);
+}
+
+
+//----------------------------------------------------------//
+// CWinSysConfigDialog::SetServerLoginEmail
+//----------------------------------------------------------//
+//-- Description
+// Sets the desired config server login email
+//----------------------------------------------------------//
+void CWinSysConfigDialog::SetServerLoginEmail(const s8* strEmail)
+{
+	m_ConfigIni.WriteString(WINSYS_CONFIG_SECTION_NETWORK, WINSYS_CONFIG_LOGIN_EMAIL, strEmail);
+}
+
+
+//----------------------------------------------------------//
+// CWinSysConfigDialog::GetServerLoginPassword
+//----------------------------------------------------------//
+//-- Description
+// Returns the desired config server login password
+//----------------------------------------------------------//
+const s8* CWinSysConfigDialog::GetServerLoginPassword(void)
+{
+	return m_ConfigIni.ReadString(WINSYS_CONFIG_SECTION_NETWORK, WINSYS_CONFIG_LOGIN_PASSWORD);
+}
+
+
+//----------------------------------------------------------//
+// CWinSysConfigDialog::SetServerLoginPassword
+//----------------------------------------------------------//
+//-- Description
+// Sets the desired config server login password
+//----------------------------------------------------------//
+void CWinSysConfigDialog::SetServerLoginPassword(const s8* strPassword)
+{
+	m_ConfigIni.WriteString(WINSYS_CONFIG_SECTION_NETWORK, WINSYS_CONFIG_LOGIN_PASSWORD, strPassword);
 }
 
 

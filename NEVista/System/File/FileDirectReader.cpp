@@ -14,8 +14,10 @@
 //----------------------------------------------------------//
 
 
-#include "../SystemIncludes.h"
 #include "FileDirectReader.h"
+#include "FileData.h"
+#include "Types.h"
+#include "SysFileIO.h"
 
 
 //----------------------------------------------------------//
@@ -54,7 +56,7 @@ bool CFileAccessorDirectReader::IsOpen(void) const
 {
 	if (IS_TRUE(ValidateData()))
 	{
-		return (FileIO::INVALID_HANDLE != m_pData->m_DirectReaderData.m_pFile);
+		return (SysFileIO::INVALID_HANDLE != m_pData->m_DirectReaderData.m_pFile);
 	}
 
 	//-- Not open
@@ -77,7 +79,7 @@ size_t CFileAccessorDirectReader::Read(size_t nRequestedSize, s8* pDstBuffer, si
 		&& IS_PTR(pDstBuffer)
 		&& (nDstBufferSize >= nRequestedSize) )
 	{
-		return FileIO::Fread(m_pData->m_DirectReaderData.m_pFile, 1, nRequestedSize, pDstBuffer, nDstBufferSize);
+		return SysFileIO::Fread(m_pData->m_DirectReaderData.m_pFile, 1, nRequestedSize, pDstBuffer, nDstBufferSize);
 	}
 
 	return 0;
@@ -111,7 +113,7 @@ bool CFileProcessorDirectReader::IsOpen(void) const
 {
 	if (IS_TRUE(ValidateData()))
 	{
-		return (FileIO::INVALID_HANDLE != m_pData->m_DirectReaderData.m_pFile);
+		return (SysFileIO::INVALID_HANDLE != m_pData->m_DirectReaderData.m_pFile);
 	}
 
 	//-- Not open
@@ -123,7 +125,7 @@ CFileProcessor::Error::Enum CFileProcessorDirectReader::Open(void)
 {
 	if (IS_TRUE(ValidateData()))
 	{
-		m_pData->m_DirectReaderData.m_pFile = FileIO::INVALID_HANDLE;
+		m_pData->m_DirectReaderData.m_pFile = SysFileIO::INVALID_HANDLE;
 		m_pData->m_DirectReaderData.m_nSize = 0;
 
 		return Error::Ok;
@@ -139,7 +141,7 @@ CFileProcessor::Error::Enum CFileProcessorDirectReader::Close(void)
 	{
 		if (IS_TRUE(IsOpen()))
 		{
-			FileIO::Fclose(m_pData->m_DirectReaderData.m_pFile);
+			SysFileIO::Fclose(m_pData->m_DirectReaderData.m_pFile);
 		}
 		m_pData->m_DirectReaderData.m_nSize = 0;
 

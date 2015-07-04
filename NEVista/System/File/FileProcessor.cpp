@@ -6,8 +6,9 @@
 //----------------------------------------------------------//
 
 
-#include "../SystemIncludes.h"
 #include "FileProcessor.h"
+#include "FileData.h"
+#include "Types.h"
 
 
 //----------------------------------------------------------//

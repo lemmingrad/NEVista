@@ -7,12 +7,12 @@
 //----------------------------------------------------------//
 
 
-#include <windows.h>
-#include <malloc.h>
-
-#include "Types.h"
-
 #include "SysMemory.h"
+#include "Types.h"
+#include <windows.h>
+#include <cstdio>
+#include <cstdlib>
+#include <memory.h>
 
 
 //----------------------------------------------------------//
@@ -36,13 +36,13 @@
 //----------------------------------------------------------//
 
 //----------------------------------------------------------//
-// Memory::Memcpy
+// SysMemory::Memcpy
 //----------------------------------------------------------//
 //-- Description
 // Copies a number of bytes from one address to another 
 // address
 //----------------------------------------------------------//
-void* Memory::Memcpy(void* pDest, size_t nDestSize, const void* pSrc, size_t nSrcSize)
+void* SysMemory::Memcpy(void* pDest, size_t nDestSize, const void* pSrc, size_t nSrcSize)
 {
 #if defined(SYSMEMORY_USES_SAFE_MEMORY)
 
@@ -91,14 +91,14 @@ void* Memory::Memcpy(void* pDest, size_t nDestSize, const void* pSrc, size_t nSr
 
 
 //----------------------------------------------------------//
-// Memory::Memmove
+// SysMemory::Memmove
 //----------------------------------------------------------//
 //-- Description
 // Move a number of bytes from one address to another 
 // address. Should safely handle cases where src and dest
 // overlap in memory.
 //----------------------------------------------------------//
-void* Memory::Memmove(void* pDest, size_t nDestSize, const void* pSrc, size_t nSrcSize)
+void* SysMemory::Memmove(void* pDest, size_t nDestSize, const void* pSrc, size_t nSrcSize)
 {
 #if defined(SYSMEMORY_USES_SAFE_MEMORY)
 
@@ -147,12 +147,12 @@ void* Memory::Memmove(void* pDest, size_t nDestSize, const void* pSrc, size_t nS
 
 
 //----------------------------------------------------------//
-// Memory::Memset
+// SysMemory::Memset
 //----------------------------------------------------------//
 //-- Description
 // Sets each byte in a block of memory to a specific value
 //----------------------------------------------------------//
-void* Memory::Memset(void* pMem, s8 nValue, size_t nByteCount)
+void* SysMemory::Memset(void* pMem, s8 nValue, size_t nByteCount)
 {
     if ( IS_NULL_PTR(pMem)
 		|| IS_ZERO(nByteCount) )
@@ -174,12 +174,12 @@ void* Memory::Memset(void* pMem, s8 nValue, size_t nByteCount)
 
 
 //----------------------------------------------------------//
-// Memory::Memclear
+// SysMemory::Memclear
 //----------------------------------------------------------//
 //-- Description
 // Sets a block of memory to 0
 //----------------------------------------------------------//
-void* Memory::Memclear(void* pMem, size_t nByteCount)
+void* SysMemory::Memclear(void* pMem, size_t nByteCount)
 {
     if ( IS_NULL_PTR(pMem)
 		|| IS_ZERO(nByteCount) )
@@ -201,13 +201,13 @@ void* Memory::Memclear(void* pMem, size_t nByteCount)
 
 
 //----------------------------------------------------------//
-// Memory::EndianSwapValue
+// SysMemory::EndianSwapValue
 //----------------------------------------------------------//
 //-- Description
 // Reverses the order of a block of bytes.
 // Like switching the bytes in a s32, etc.
 //----------------------------------------------------------//
-void Memory::EndianSwap(void* pMem, size_t nSizeofEntity)
+void SysMemory::EndianSwap(void* pMem, size_t nSizeofEntity)
 {
 	//-- size must be even
 	assert((nSizeofEntity >= 2) && ((nSizeofEntity & 1) == 0));
@@ -225,13 +225,13 @@ void Memory::EndianSwap(void* pMem, size_t nSizeofEntity)
 
 
 //----------------------------------------------------------//
-// Memory::EndianSwapArray
+// SysMemory::EndianSwapArray
 //----------------------------------------------------------//
 //-- Description
 // Reverses the bytes for a number of entries in an array
 // for example, endian swapping an array of s32, etc.
 //----------------------------------------------------------//
-void Memory::EndianSwapArray(void *pMem, size_t nSizeofEntity, u32 nEntityCount)
+void SysMemory::EndianSwapArray(void *pMem, size_t nSizeofEntity, u32 nEntityCount)
 {
 	//-- size must be even
 	assert((nSizeofEntity >= 2) && ((nSizeofEntity & 1) == 0));
@@ -241,37 +241,37 @@ void Memory::EndianSwapArray(void *pMem, size_t nSizeofEntity, u32 nEntityCount)
 	u8* acBytes = (u8*)pMem;
 	for (u32 i = 0; i < nEntityCount; ++i, acBytes += nSizeofEntity)
 	{
-		Memory::EndianSwap((void*)acBytes, nSizeofEntity);
+		SysMemory::EndianSwap((void*)acBytes, nSizeofEntity);
 	}
 }
 
 
 //----------------------------------------------------------//
-// Memory::EndianCopyValue
+// SysMemory::EndianCopyValue
 //----------------------------------------------------------//
 //-- Description
 // Copies a value, reversing the endian.
 //----------------------------------------------------------//
-void Memory::EndianSwapCopy(void* pDest, const void* pSrc, size_t nSizeofEntity)
+void SysMemory::EndianSwapCopy(void* pDest, const void* pSrc, size_t nSizeofEntity)
 {
 	//-- size must be even
 	assert((nSizeofEntity >= 2) && ((nSizeofEntity & 1) == 0));
 	//-- limit to 8 bytes max.
 	assert(nSizeofEntity <= sizeof(u64));
 
-	Memory::Memcpy(pDest, nSizeofEntity, pSrc, nSizeofEntity);
-	Memory::EndianSwap(pDest, nSizeofEntity);
+	SysMemory::Memcpy(pDest, nSizeofEntity, pSrc, nSizeofEntity);
+	SysMemory::EndianSwap(pDest, nSizeofEntity);
 }
 
 
 //----------------------------------------------------------//
-// Memory::EndianCopyArray
+// SysMemory::EndianCopyArray
 //----------------------------------------------------------//
 //-- Description
 // Copies a block of values, reversing the endian of 
 // each value.
 //----------------------------------------------------------//
-void Memory::EndianSwapArrayCopy(void* pDest, const void* pSrc, size_t nSizeofEntity, u32 nEntityCount)
+void SysMemory::EndianSwapArrayCopy(void* pDest, const void* pSrc, size_t nSizeofEntity, u32 nEntityCount)
 {
 	//-- size must be even
 	assert((nSizeofEntity >= 2) && ((nSizeofEntity & 1) == 0));
@@ -280,18 +280,18 @@ void Memory::EndianSwapArrayCopy(void* pDest, const void* pSrc, size_t nSizeofEn
 
 	size_t nTotalSize = nSizeofEntity * nEntityCount;
 
-	Memory::Memcpy(pDest, nTotalSize, pSrc, nTotalSize);
-	Memory::EndianSwapArray(pDest, nSizeofEntity, nEntityCount);
+	SysMemory::Memcpy(pDest, nTotalSize, pSrc, nTotalSize);
+	SysMemory::EndianSwapArray(pDest, nSizeofEntity, nEntityCount);
 }
 
 
 //----------------------------------------------------------//
-// Memory::IsSystemBigEndian
+// SysMemory::IsSystemBigEndian
 //----------------------------------------------------------//
 //-- Description
 // Determines if a system is big or little endian
 //----------------------------------------------------------//
-bool Memory::IsSystemBigEndian(void)
+bool SysMemory::IsSystemBigEndian(void)
 {
     s32 nInt = 1;
     s8* pcTemp = (s8*)&nInt;
@@ -300,13 +300,13 @@ bool Memory::IsSystemBigEndian(void)
 
 
 //----------------------------------------------------------//
-// Memory::Align
+// SysMemory::Align
 //----------------------------------------------------------//
 //-- Description
 // Given a pointer, aligns the pointer to the nearest byte
 // boundary specified and returns a new pointer
 //----------------------------------------------------------//
-void* Memory::Align(const void* pMem, size_t nAlignment)
+void* SysMemory::Align(const void* pMem, size_t nAlignment)
 {
 	uintptr_t nAddress = (uintptr_t)pMem;
 	--nAlignment;
@@ -318,13 +318,13 @@ void* Memory::Align(const void* pMem, size_t nAlignment)
 
 
 //----------------------------------------------------------//
-// Memory::Pad
+// SysMemory::Pad
 //----------------------------------------------------------//
 //-- Description
 // Given a size, pads the size to the nearest byte
 // boundary specified and returns a new size
 //----------------------------------------------------------//
-size_t Memory::Pad(size_t nSize, size_t nAlignment)
+size_t SysMemory::Pad(size_t nSize, size_t nAlignment)
 {
 	size_t nPadded = nSize;
 	--nAlignment;

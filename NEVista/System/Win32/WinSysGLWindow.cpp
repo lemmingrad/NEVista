@@ -4,14 +4,12 @@
 //-- Description			
 //----------------------------------------------------------//
 
-#include "../SystemIncludes.h"
-#include "../../../DS3D/Win32/Game.h"
+#include "WinSysIncludes.h"
+#include "Types.h"
+#include "Win32/Game.h"
 //#include "MathsIncludes.h"
 //#include "InputIncludes.h"
-
 //#include "NEVista.h"
-
-#include "WinSysIncludes.h"
 
 
 //----------------------------------------------------------//

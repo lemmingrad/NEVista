@@ -14,8 +14,10 @@
 //----------------------------------------------------------//
 
 
-#include "../SystemIncludes.h"
 #include "FileDirectWriter.h"
+#include "FileData.h"
+#include "Types.h"
+#include "SysFileIO.h"
 
 
 //----------------------------------------------------------//
@@ -54,7 +56,7 @@ bool CFileAccessorDirectWriter::IsOpen(void) const
 {
 	if (IS_TRUE(ValidateData()))
 	{
-		return (FileIO::INVALID_HANDLE != m_pData->m_DirectWriterData.m_pFile);
+		return (SysFileIO::INVALID_HANDLE != m_pData->m_DirectWriterData.m_pFile);
 	}
 
 	//-- Not open
@@ -77,8 +79,8 @@ size_t CFileAccessorDirectWriter::Write(size_t nRequestedSize, s8* pSrcBuffer, s
 		&& IS_PTR(pSrcBuffer)
 		&& (nSrcBufferSize >= nRequestedSize) )
 	{
-		size_t nBytes = FileIO::Fwrite(m_pData->m_DirectWriterData.m_pFile, 1, nRequestedSize, pSrcBuffer, nSrcBufferSize);
-		FileIO::Fflush(m_pData->m_DirectWriterData.m_pFile);
+		size_t nBytes = SysFileIO::Fwrite(m_pData->m_DirectWriterData.m_pFile, 1, nRequestedSize, pSrcBuffer, nSrcBufferSize);
+		SysFileIO::Fflush(m_pData->m_DirectWriterData.m_pFile);
 		return nBytes;
 	}
 
@@ -113,7 +115,7 @@ bool CFileProcessorDirectWriter::IsOpen(void) const
 {
 	if (IS_TRUE(ValidateData()))
 	{
-		return (FileIO::INVALID_HANDLE != m_pData->m_DirectWriterData.m_pFile);
+		return (SysFileIO::INVALID_HANDLE != m_pData->m_DirectWriterData.m_pFile);
 	}
 
 	//-- Not open
@@ -125,7 +127,7 @@ CFileProcessor::Error::Enum CFileProcessorDirectWriter::Open(void)
 {
 	if (IS_TRUE(ValidateData()))
 	{
-		m_pData->m_DirectWriterData.m_pFile = FileIO::INVALID_HANDLE;
+		m_pData->m_DirectWriterData.m_pFile = SysFileIO::INVALID_HANDLE;
 		m_pData->m_DirectWriterData.m_nWritten = 0;
 
 		return Error::Ok;
@@ -141,7 +143,7 @@ CFileProcessor::Error::Enum CFileProcessorDirectWriter::Close(void)
 	{
 		if (IS_TRUE(IsOpen()))
 		{
-			FileIO::Fclose(m_pData->m_DirectWriterData.m_pFile);
+			SysFileIO::Fclose(m_pData->m_DirectWriterData.m_pFile);
 		}
 		m_pData->m_DirectWriterData.m_nWritten = 0;
 

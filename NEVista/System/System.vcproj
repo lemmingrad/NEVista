@@ -41,8 +41,8 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories=""
-				PreprocessorDefinitions="WIN32;_DEBUG;_LIB"
+				AdditionalIncludeDirectories="E:\Programming\GitRoot\DS3D;E:\Programming\GitRoot\NEVista\System"
+				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;WIN32_LEAN_AND_MEAN"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -166,6 +166,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\SysSocket.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\SysString.cpp"
 				>
 			</File>
@@ -252,11 +256,19 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Serializer.h"
+				>
+			</File>
+			<File
 				RelativePath=".\SysFileIO.h"
 				>
 			</File>
 			<File
 				RelativePath=".\SysMemory.h"
+				>
+			</File>
+			<File
+				RelativePath=".\SysSocket.h"
 				>
 			</File>
 			<File

@@ -10,7 +10,7 @@
 //----------------------------------------------------------//
 
 
-#include "FileData.h"
+#include "Types.h"
 
 
 //----------------------------------------------------------//
@@ -24,6 +24,14 @@
 //----------------------------------------------------------//
 // STRUCTS
 //----------------------------------------------------------//
+
+//----------------------------------------------------------//
+// FORWARD REFERENCES
+//----------------------------------------------------------//
+
+
+class CFileData;
+
 
 //----------------------------------------------------------//
 // CLASSES
@@ -50,6 +58,9 @@ class CFileProcessor
 
 		CFileProcessor(CFileData* pData);
 		virtual ~CFileProcessor();
+
+		virtual bool							ValidateData(void) const = 0;
+		virtual bool							IsOpen(void) const = 0;
 
 		virtual Error::Enum						Open(void) = 0;
 		virtual Error::Enum						Close(void) = 0;

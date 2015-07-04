@@ -10,8 +10,10 @@
 //----------------------------------------------------------//
 
 
-#include "../SystemIncludes.h"
 #include "FileDirectTextReader.h"
+#include "FileData.h"
+#include "Types.h"
+#include "SysFileIO.h"
 
 
 //----------------------------------------------------------//
@@ -78,7 +80,7 @@ s8* CFileAccessorDirectTextReader::GetString(s8* pDstBuffer, size_t nDstBufferSi
 		&& IS_PTR(pDstBuffer)
 		&& (nDstBufferSize > 0) )
 	{
-		return FileIO::Fgets(m_pData->m_DirectReaderData.m_pFile, pDstBuffer, nDstBufferSize);
+		return SysFileIO::Fgets(m_pData->m_DirectReaderData.m_pFile, pDstBuffer, nDstBufferSize);
 	}
 
 	return NULL;
@@ -131,16 +133,16 @@ CFileProcessor::Error::Enum CFileProcessorDirectTextReader::Open(void)
 		Error::Enum eResult = CFileProcessorDirectReader::Open();
 		if (Error::Ok == eResult)
 		{
-			m_pData->m_DirectReaderData.m_pFile = FileIO::Fopen(m_pData->m_strFileName.ConstBuffer(), "rt");
+			m_pData->m_DirectReaderData.m_pFile = SysFileIO::Fopen(m_pData->m_strFileName.ConstBuffer(), "rt");
 			if (IS_FALSE(IsOpen()))
 			{
 				//-- Failed to open file
 				return Error::Failed;
 			}
 
-			FileIO::Fseek(m_pData->m_DirectReaderData.m_pFile, 0, SEEK_END);
-			m_pData->m_DirectReaderData.m_nSize = FileIO::Ftell(m_pData->m_DirectReaderData.m_pFile);
-			FileIO::Fseek(m_pData->m_DirectReaderData.m_pFile, 0, SEEK_SET);
+			SysFileIO::Fseek(m_pData->m_DirectReaderData.m_pFile, 0, SEEK_END);
+			m_pData->m_DirectReaderData.m_nSize = SysFileIO::Ftell(m_pData->m_DirectReaderData.m_pFile);
+			SysFileIO::Fseek(m_pData->m_DirectReaderData.m_pFile, 0, SEEK_SET);
 
 			return Error::Ok;
 		}

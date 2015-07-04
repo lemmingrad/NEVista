@@ -1,5 +1,5 @@
-#ifndef _WINSYSERRORS_H_
-#define _WINSYSERRORS_H_
+#ifndef _WINSYS_ERRORS_H_
+#define _WINSYS_ERRORS_H_
 #pragma once
 
 //----------------------------------------------------------//
@@ -66,4 +66,4 @@
 // EOF
 //----------------------------------------------------------//
 
-#endif //_WINSYSERRORS_H_
+#endif //_WINSYS_ERRORS_H_

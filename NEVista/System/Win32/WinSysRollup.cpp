@@ -8,10 +8,8 @@
 //----------------------------------------------------------//
 
 #include "resource.h"
-
-#include "../SystemIncludes.h"
-
 #include "WinSysIncludes.h"
+#include "Types.h"
 
 
 //----------------------------------------------------------//
@@ -162,6 +160,14 @@ INT_PTR CWinSysRollup::DlgEventProc(HWND hWnd, UINT nMsg, WPARAM wParam, LPARAM 
 			HWND hServerAddress = GetDlgItem(hWnd, IDC_EDIT_SERVER_ADDRESS);
 			Edit_SetText(hServerAddress, TEXT(strServerAddress));		
 
+			const s8* strServerEmail = GetParentConfigDialog()->GetServerLoginEmail();
+			HWND hServerEmail = GetDlgItem(hWnd, IDC_EDIT_LOGIN_EMAIL);
+			Edit_SetText(hServerEmail, TEXT(strServerEmail));		
+
+			const s8* strServerPass = GetParentConfigDialog()->GetServerLoginPassword();
+			HWND hServerPass = GetDlgItem(hWnd, IDC_EDIT_LOGIN_PASSWORD);
+			Edit_SetText(hServerPass, TEXT(strServerPass));		
+
 			bool bValidScreenMode = true; 
 			if (IS_TRUE(bValidScreenMode))
 			{
@@ -237,6 +243,36 @@ INT_PTR CWinSysRollup::DlgEventProc(HWND hWnd, UINT nMsg, WPARAM wParam, LPARAM 
 						if (Edit_GetText((HWND)lParam, strServerAddress.Buffer(), strServerAddress.Size()) > 0)
 						{
 							GetParentConfigDialog()->SetServerAddress(strServerAddress.ConstBuffer());
+						}
+						return true;
+					}
+				}
+				break;
+
+				case IDC_EDIT_LOGIN_EMAIL:
+				{
+					FixedString<256> strServerEmail;
+
+					if (EN_CHANGE == HIWORD(wParam))
+					{
+						if (Edit_GetText((HWND)lParam, strServerEmail.Buffer(), strServerEmail.Size()) > 0)
+						{
+							GetParentConfigDialog()->SetServerLoginEmail(strServerEmail.ConstBuffer());
+						}
+						return true;
+					}
+				}
+				break;
+
+				case IDC_EDIT_LOGIN_PASSWORD:
+				{
+					FixedString<256> strServerPass;
+
+					if (EN_CHANGE == HIWORD(wParam))
+					{
+						if (Edit_GetText((HWND)lParam, strServerPass.Buffer(), strServerPass.Size()) > 0)
+						{
+							GetParentConfigDialog()->SetServerLoginPassword(strServerPass.ConstBuffer());
 						}
 						return true;
 					}

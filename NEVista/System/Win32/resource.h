@@ -8,7 +8,6 @@
 #define IDD_ROLLUP_MESSAGES             104
 #define IDD_ROLLUP_GL_SETTINGS          105
 #define IDD_ROLLUP_NETWORK              106
-#define IDD_ROLLUP_MESSAGES1            107
 #define IDD_ROLLUP_CREDITS              107
 #define IDS_MODE_WINDOWED               501
 #define IDS_MODE_BORDERLESS             502
@@ -36,14 +35,16 @@
 #define IDC_MESSAGES                    1007
 #define IDC_EDIT_SERVER_ADDRESS         1008
 #define IDC_CREDITS                     1009
+#define IDC_EDIT_LOGIN_PASSWORD         1010
+#define IDC_EDIT_LOGIN_EMAIL            1011
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        107
+#define _APS_NEXT_RESOURCE_VALUE        108
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1010
+#define _APS_NEXT_CONTROL_VALUE         1012
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

@@ -6,8 +6,10 @@
 //----------------------------------------------------------//
 
 
-#include "../SystemIncludes.h"
 #include "FileAccessor.h"
+#include "FileData.h"
+#include "Types.h"
+#include "SysString.h"
 
 
 //----------------------------------------------------------//
@@ -53,14 +55,14 @@ const s8* CFileAccessor::GetFileName(void) const
 //----------------------------------------------------------//
 // CFileAccessor::GetFileName
 //----------------------------------------------------------//
-String::Hash CFileAccessor::GetHash(void) const
+SysString::Hash CFileAccessor::GetHash(void) const
 {
 	if (IS_PTR(m_pData))
 	{
 		return m_pData->GetHash();
 	}
 
-	return String::INVALID_HASH;
+	return SysString::INVALID_HASH;
 }
 
 

@@ -8,10 +8,8 @@
 //----------------------------------------------------------//
 
 #include "resource.h"
-
-#include "../SystemIncludes.h"
-
 #include "WinSysIncludes.h"
+#include "Types.h"
 
 
 //----------------------------------------------------------//

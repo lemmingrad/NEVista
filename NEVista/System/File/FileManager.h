@@ -11,6 +11,8 @@
 //----------------------------------------------------------//
 
 
+#include "Types.h"
+#include "FileData.h"
 #include <list>
 
 
@@ -62,11 +64,11 @@ class CFileManager
 		const CFileData*				Open(s8* strFileName, CFileData::Type::Enum eType, CFileData::AccessMethod::Enum eAccess);
 
 		Error::Enum						Close(const CFileData* pFile);
-		Error::Enum						Close(String::Hash nHash);
+		Error::Enum						Close(SysString::Hash nHash);
 		Error::Enum						Close(const s8* strFileName);
 
 		bool							Exists(const CFileData* pFile) const;
-		const CFileData*				Find(String::Hash nHash) const;
+		const CFileData*				Find(SysString::Hash nHash) const;
 		const CFileData*				Find(const s8* strFileName) const;
 
 	private:

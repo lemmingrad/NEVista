@@ -1,5 +1,6 @@
 #ifndef _WINSYS_ROLLUP_H_
 #define _WINSYS_ROLLUP_H_
+#pragma once
 
 //----------------------------------------------------------//
 // WINSYSROLLUP.H
@@ -9,6 +10,11 @@
 // Rollups can be added to a rollup container and displayed
 // inside another dialog.
 //----------------------------------------------------------//
+
+
+#include "Types.h"
+#include "SysString.h"
+
 
 //----------------------------------------------------------//
 // DEFINES
@@ -27,13 +33,17 @@
 //----------------------------------------------------------//
 
 //----------------------------------------------------------//
-// CLASSES
+// FORWARD REFERENCES
 //----------------------------------------------------------//
 
 
-//-- Forward referencing
 class CWinSysConfigDialog;
 class CWinSysRollupContainer;
+
+
+//----------------------------------------------------------//
+// CLASSES
+//----------------------------------------------------------//
 
 
 class CWinSysRollup
@@ -96,4 +106,4 @@ class CWinSysRollup
 // EOF
 //----------------------------------------------------------//
 
-#endif
+#endif //_WINSYS_ROLLUP_

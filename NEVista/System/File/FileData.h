@@ -14,7 +14,9 @@
 //----------------------------------------------------------//
 
 
-#include "../SysFileIO.h"
+#include "Types.h"
+#include "SysString.h"
+#include "SysFileIO.h"
 
 
 //----------------------------------------------------------//
@@ -106,25 +108,25 @@ class CFileData
 
 		struct SFileDirectReaderData
 		{
-			FileIO::Handle					m_pFile;
+			SysFileIO::Handle					m_pFile;
 			size_t							m_nSize;
 		};
 		struct SFileDirectWriterData
 		{
-			FileIO::Handle					m_pFile;
+			SysFileIO::Handle					m_pFile;
 			size_t							m_nWritten;
 		};
 
 		struct SFileBufferedReaderData
 		{
-			FileIO::Handle					m_pFile;
+			SysFileIO::Handle					m_pFile;
 			size_t							m_nSize;
 			size_t							m_nRead;
 			SAttachedBuffer					m_Buffer;
 		};
 		struct SFileBufferedWriterData
 		{
-			FileIO::Handle					m_pFile;
+			SysFileIO::Handle					m_pFile;
 			size_t							m_nSize;
 			size_t							m_nWritten;
 			SAttachedBuffer					m_Buffer;
@@ -140,7 +142,7 @@ class CFileData
 
 //		struct SArchiveFileReaderData
 //		{
-//			FileIO::Handle					m_pFile;
+//			SysFileIO::Handle					m_pFile;
 //			size_t							m_nSize;
 //			size_t							m_nRead;
 //			size_t							m_nHeaderTOCSize;
@@ -170,7 +172,7 @@ class CFileData
 		};
 
 		FixedString<FILE_MAX_FILENAME_LENGTH> m_strFileName;
-		String::Hash						m_nHash;
+		SysString::Hash						m_nHash;
 		Type::Enum							m_eFileType;
 		AccessMethod::Enum					m_eAccessMethod;
 
@@ -184,7 +186,7 @@ class CFileData
 		Type::Enum							GetFileType(void) const;
 		AccessMethod::Enum					GetAccessMethod(void) const;
 		const s8*							GetFileName(void) const;
-		String::Hash						GetHash(void) const;
+		SysString::Hash						GetHash(void) const;
 
 	friend CFileAccessor;
 	friend CFileAccessorDirectReader;

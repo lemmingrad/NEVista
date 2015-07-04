@@ -10,8 +10,11 @@
 //----------------------------------------------------------//
 
 
-#include "../SystemIncludes.h"
 #include "FileDirectTextWriter.h"
+#include "FileData.h"
+#include "Types.h"
+#include "SysString.h"
+#include "SysFileIO.h"
 
 
 //----------------------------------------------------------//
@@ -75,7 +78,7 @@ size_t CFileAccessorDirectTextWriter::Printf(const s8* strFormatting, ...)
 
 	va_list ArgList;
 	va_start(ArgList, strFormatting);
-	String::Vsprintf(m_strWorkingBuffer.Buffer(), FILE_WORKING_TEXT_BUFFER_SIZE, strFormatting, ArgList);
+	SysString::Vsprintf(m_strWorkingBuffer.Buffer(), m_strWorkingBuffer.Size(), strFormatting, ArgList);
 	va_end(ArgList);
 
 	return PutString(m_strWorkingBuffer.ConstBuffer());
@@ -94,8 +97,8 @@ size_t CFileAccessorDirectTextWriter::PutString(const s8* strSrcBuffer)
 		&& IS_TRUE(IsOpen())
 		&& strSrcBuffer )
 	{
-		size_t nBytes = FileIO::Fputs(m_pData->m_DirectWriterData.m_pFile, strSrcBuffer);
-		FileIO::Fflush(m_pData->m_DirectWriterData.m_pFile);
+		size_t nBytes = SysFileIO::Fputs(m_pData->m_DirectWriterData.m_pFile, strSrcBuffer);
+		SysFileIO::Fflush(m_pData->m_DirectWriterData.m_pFile);
 		return nBytes;
 	}
 
@@ -149,7 +152,7 @@ CFileProcessor::Error::Enum CFileProcessorDirectTextWriter::Open(void)
 		Error::Enum eResult = CFileProcessorDirectWriter::Open();
 		if (Error::Ok == eResult)
 		{
-			m_pData->m_DirectWriterData.m_pFile = FileIO::Fopen(m_pData->m_strFileName.ConstBuffer(), "wt");
+			m_pData->m_DirectWriterData.m_pFile = SysFileIO::Fopen(m_pData->m_strFileName.ConstBuffer(), "wt");
 			if (IS_FALSE(IsOpen()))
 			{
 				//-- Failed to open file

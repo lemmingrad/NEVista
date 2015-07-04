@@ -5,11 +5,14 @@
 // Creates a log file for writing out useful information.
 //----------------------------------------------------------//
 
+
+#include "Log.h"
 #include "Types.h"
 #include "SysTime.h"
 #include "SysString.h"
-#include "Log.h"
-#include "../../DS3D/Win32/Game.h"
+#include "File/FileData.h"
+#include "File/FileDirectTextWriter.h"
+#include "Win32/Game.h"
 
 
 //----------------------------------------------------------//
@@ -85,7 +88,7 @@ bool CLog::Initialise(const s8* strFileName)
 
 	time(&m_nStartTime);
 	FixedString<SYSTIME_BUFFER_SIZE> strTime;
-	Time::Ctime(strTime.Buffer(), SYSTIME_BUFFER_SIZE, &m_nStartTime);
+	SysTime::Ctime(strTime.Buffer(), strTime.Size(), &m_nStartTime);
 
 	m_FileAccessor.Printf("%s ver %s log created %s\n", Game_Title(), Game_Version(), strTime.ConstBuffer());
 
@@ -104,7 +107,7 @@ bool CLog::Shutdown(void)
 	time_t nLogTime;
 	time(&nLogTime);
 	FixedString<SYSTIME_BUFFER_SIZE> strTime;
-	Time::Ctime(strTime.Buffer(), SYSTIME_BUFFER_SIZE, &nLogTime);
+	SysTime::Ctime(strTime.Buffer(), strTime.Size(), &nLogTime);
 
 	if (IS_TRUE(m_FileAccessor.IsOpen()))
 	{
@@ -426,7 +429,7 @@ void CLog::EndFormatted(s8 cMarkup, const s8* strText)
 			case '!':
 			{
 				//-- End of block.
-				if (IS_FALSE(String::IsEmpty(strText)))
+				if (IS_FALSE(SysString::IsEmpty(strText)))
 				{
 					PrintLineFront(-1);
 					m_FileAccessor.Printf("%s\n", strText);
@@ -472,16 +475,16 @@ void CLog::PrintFormatted(const s8* strText)
 	if (IS_TRUE(m_FileAccessor.IsOpen()))
 	{
 		s8* next_token1 = NULL;
-		s8* strLine = String::Strtok((s8*)strText, "\n", next_token1);
+		s8* strLine = SysString::Strtok((s8*)strText, "\n", next_token1);
 		while (IS_PTR(strLine))
 		{
-			if (IS_FALSE(String::IsEmpty(strLine)))
+			if (IS_FALSE(SysString::IsEmpty(strLine)))
 			{
 				PrintLineFront();
 				m_FileAccessor.Printf("%s\n", strLine);
 			}
 
-			strLine = String::Strtok(NULL, "\n", next_token1);
+			strLine = SysString::Strtok(NULL, "\n", next_token1);
 		}
 	}
 }
@@ -505,7 +508,7 @@ void CLog::Printf(const s8 *strText, ...)
 
 		va_list ArgList;
 		va_start(ArgList, strText);
-		String::Vsprintf(pBuffer, LOG_WORKING_BUFFER_SIZE, strText, ArgList);
+		SysString::Vsprintf(pBuffer, LOG_WORKING_BUFFER_SIZE, strText, ArgList);
 		va_end(ArgList);
 
 		if (IS_FALSE(m_strWorkingBuffer.IsEmpty()))
@@ -575,7 +578,7 @@ void CLog::AddTimeStamp(void)
 		time_t nLogTime;
 		time(&nLogTime);
 		FixedString<SYSTIME_BUFFER_SIZE> strTime;
-		Time::Ctime(strTime.Buffer(), SYSTIME_BUFFER_SIZE, &nLogTime);
+		SysTime::Ctime(strTime.Buffer(), strTime.Size(), &nLogTime);
 		
 		m_FileAccessor.Printf("[%s]\n", strTime.ConstBuffer());
 	}

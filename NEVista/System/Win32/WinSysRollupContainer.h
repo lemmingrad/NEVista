@@ -1,5 +1,6 @@
 #ifndef _WINSYS_ROLLUP_CONTAINER_H_
 #define _WINSYS_ROLLUP_CONTAINER_H_
+#pragma once
 
 //----------------------------------------------------------//
 // WINSYSROLLUPCONTAINER.H
@@ -11,7 +12,7 @@
 //----------------------------------------------------------//
 
 
-#include "../Ini.h"
+#include "Types.h"
 #include <vector>
 
 
@@ -105,4 +106,4 @@ class CWinSysRollupContainer
 // EOF
 //----------------------------------------------------------//
 
-#endif
+#endif //_WINSYS_ROLLUP_CONTAINER_H_

@@ -6,9 +6,8 @@
 //----------------------------------------------------------//
 
 
-#include "Types.h"
-
 #include "SysTime.h"
+#include "Types.h"
 
 
 //----------------------------------------------------------//
@@ -25,12 +24,12 @@
 //----------------------------------------------------------//
 
 //----------------------------------------------------------//
-// Time::Ctime
+// SysTime::Ctime
 //----------------------------------------------------------//
 //-- Description
 // Wrapper around ctime function
 //----------------------------------------------------------//
-s8* Time::Ctime(s8* strDest, size_t nDestSize, const time_t* pTime)
+s8* SysTime::Ctime(s8* strDest, size_t nDestSize, const time_t* pTime)
 {
 #if defined(SYSTIME_USES_SAFE_TIME)
 
@@ -53,7 +52,7 @@ s8* Time::Ctime(s8* strDest, size_t nDestSize, const time_t* pTime)
 		return NULL;
 	}
 
-	String::Strcpy(strDest, nDestSize, ctime(pTime), nDestSize);
+	SysString::Strcpy(strDest, nDestSize, ctime(pTime), nDestSize);
 	return strDest;
 
 #endif

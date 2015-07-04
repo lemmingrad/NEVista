@@ -7,9 +7,10 @@
 //----------------------------------------------------------//
 
 
-#include "../SystemIncludes.h"
-#include "FileData.h"
 #include "FileManager.h"
+#include "FileData.h"
+#include "Types.h"
+#include "SysString.h"
 
 
 //----------------------------------------------------------//
@@ -150,9 +151,9 @@ const CFileData* CFileManager::Open(s8* strFileName, CFileData::Type::Enum eType
 //-- Description			
 // Close an open file.
 //----------------------------------------------------------//
-CFileManager::Error::Enum CFileManager::Close(String::Hash nHash)
+CFileManager::Error::Enum CFileManager::Close(SysString::Hash nHash)
 {
-	if (String::INVALID_HASH != nHash)
+	if (SysString::INVALID_HASH != nHash)
 	{
 		for (TFileList::const_iterator cit = m_DirectFiles.begin(); cit != m_DirectFiles.end(); ++cit)
 		{
@@ -188,7 +189,7 @@ CFileManager::Error::Enum CFileManager::Close(const CFileData* pFile)
 
 CFileManager::Error::Enum CFileManager::Close(const s8* strFileName)
 {
-	return Close(String::GenerateHash(strFileName));
+	return Close(SysString::GenerateHash(strFileName));
 }
 
 
@@ -226,9 +227,9 @@ bool CFileManager::Exists(const CFileData* pFile) const
 //-- Description			
 // Find and return a file from the manager.
 //----------------------------------------------------------//
-const CFileData* CFileManager::Find(String::Hash nHash) const
+const CFileData* CFileManager::Find(SysString::Hash nHash) const
 {
-	if (String::INVALID_HASH != nHash)
+	if (SysString::INVALID_HASH != nHash)
 	{
 		for (TFileList::const_iterator cit = m_DirectFiles.begin(); cit != m_DirectFiles.end(); ++cit)
 		{
@@ -252,5 +253,5 @@ const CFileData* CFileManager::Find(String::Hash nHash) const
 
 const CFileData* CFileManager::Find(const s8* strFileName) const
 {
-	return Find(String::GenerateHash(strFileName));
+	return Find(SysString::GenerateHash(strFileName));
 }

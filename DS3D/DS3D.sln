@@ -4,9 +4,15 @@ Microsoft Visual Studio Solution File, Format Version 10.00
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DS3D", "DS3D.vcproj", "{79BA542E-08D1-43F1-A7AF-162385DBA8A1}"
 	ProjectSection(ProjectDependencies) = postProject
 		{71495028-5ECE-47A9-AD8D-6B019102C24D} = {71495028-5ECE-47A9-AD8D-6B019102C24D}
+		{57A52384-E6DC-4B6E-B750-AAEE8CA51710} = {57A52384-E6DC-4B6E-B750-AAEE8CA51710}
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "System", "..\NEVista\System\System.vcproj", "{71495028-5ECE-47A9-AD8D-6B019102C24D}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Network", "..\NEVista\Networking\Network.vcproj", "{57A52384-E6DC-4B6E-B750-AAEE8CA51710}"
+	ProjectSection(ProjectDependencies) = postProject
+		{71495028-5ECE-47A9-AD8D-6B019102C24D} = {71495028-5ECE-47A9-AD8D-6B019102C24D}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -22,6 +28,10 @@ Global
 		{71495028-5ECE-47A9-AD8D-6B019102C24D}.Debug|Win32.Build.0 = Debug|Win32
 		{71495028-5ECE-47A9-AD8D-6B019102C24D}.Release|Win32.ActiveCfg = Release|Win32
 		{71495028-5ECE-47A9-AD8D-6B019102C24D}.Release|Win32.Build.0 = Release|Win32
+		{57A52384-E6DC-4B6E-B750-AAEE8CA51710}.Debug|Win32.ActiveCfg = Debug|Win32
+		{57A52384-E6DC-4B6E-B750-AAEE8CA51710}.Debug|Win32.Build.0 = Debug|Win32
+		{57A52384-E6DC-4B6E-B750-AAEE8CA51710}.Release|Win32.ActiveCfg = Release|Win32
+		{57A52384-E6DC-4B6E-B750-AAEE8CA51710}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

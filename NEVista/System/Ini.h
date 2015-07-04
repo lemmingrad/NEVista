@@ -12,6 +12,8 @@
 //----------------------------------------------------------//
 
 
+#include "Types.h"
+#include "SysString.h"
 #include <list>
 
 

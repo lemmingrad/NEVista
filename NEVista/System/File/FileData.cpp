@@ -10,8 +10,9 @@
 //----------------------------------------------------------//
 
 
-#include "../SystemIncludes.h"
 #include "FileData.h"
+#include "Types.h"
+#include "SysString.h"
 
 
 //----------------------------------------------------------//
@@ -28,12 +29,12 @@
 //----------------------------------------------------------//
 CFileData::CFileData(const s8* strFileName, CFileData::Type::Enum eType, CFileData::AccessMethod::Enum eAccess)
 : m_strFileName()
-, m_nHash(String::INVALID_HASH)
+, m_nHash(SysString::INVALID_HASH)
 , m_eFileType(eType)
 , m_eAccessMethod(eAccess)
 {
 	m_strFileName.Set(strFileName);
-	m_nHash = String::GenerateHash(strFileName);
+	m_nHash = SysString::GenerateHash(strFileName);
 }
 
 
@@ -50,7 +51,7 @@ CFileData::~CFileData()
 //----------------------------------------------------------//
 bool CFileData::Validate(CFileData::Type::Enum eType, CFileData::AccessMethod::Enum eAccess) const
 {
-	if (String::INVALID_HASH != GetHash())
+	if (SysString::INVALID_HASH != GetHash())
 	{
 		switch (eType)
 		{
@@ -117,7 +118,7 @@ const s8* CFileData::GetFileName(void) const
 //----------------------------------------------------------//
 // CFileData::GetHash
 //----------------------------------------------------------//
-String::Hash CFileData::GetHash(void) const
+SysString::Hash CFileData::GetHash(void) const
 {
 	return m_nHash;
 }

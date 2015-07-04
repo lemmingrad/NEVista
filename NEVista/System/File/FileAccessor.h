@@ -10,6 +10,7 @@
 //----------------------------------------------------------//
 
 
+#include "Types.h"
 #include "FileData.h"
 
 
@@ -23,6 +24,10 @@
 
 //----------------------------------------------------------//
 // STRUCTS
+//----------------------------------------------------------//
+
+//----------------------------------------------------------//
+// FORWARD REFERENCES
 //----------------------------------------------------------//
 
 //----------------------------------------------------------//
@@ -42,18 +47,12 @@ class CFileAccessor
 		virtual ~CFileAccessor();
 	
 		const s8*						GetFileName(void) const;
-		String::Hash					GetHash(void) const;
+		SysString::Hash					GetHash(void) const;
 		CFileData::Type::Enum			GetFileType(void) const;
 		CFileData::AccessMethod::Enum	GetAccessMethod(void) const;
 
 		virtual bool					ValidateData(void) const = 0;
 		virtual bool					IsOpen(void) const = 0;
-
-//		size_t							Read(size_t nRequestedSize, void* pDstBuffer, size_t nDstBufferSize);
-//		s8*								GetString(s8* pDstBuffer, size_t nDstBufferSize);
-//		size_t							Write(size_t nRequestedSize, const void* pSrcBuffer, size_t nSrcBufferSize);
-//		size_t							Printf(const s8* strFormatting, ...);
-//		size_t							PutString(const s8* strSrcBuffer);
 };
 
 

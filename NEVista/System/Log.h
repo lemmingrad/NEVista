@@ -10,6 +10,9 @@
 //----------------------------------------------------------//
 
 
+#include "Types.h"
+#include "SysString.h"
+#include "File/FileData.h"
 #include "File/FileDirectTextWriter.h"
 
 

@@ -1,5 +1,6 @@
-#ifndef _WINSYSROLLUPMAIN_H_
-#define _WINSYSROLLUPMAIN_H_
+#ifndef _WINSYS_MAIN_H_
+#define _WINSYS_MAIN_H_
+#pragma once
 
 //----------------------------------------------------------//
 // WINSYSMAIN.H
@@ -8,7 +9,9 @@
 //----------------------------------------------------------//
 
 
-#include "WinSysIncludes.h"
+#include "Types.h"
+#include "Log.h"
+#include <windows.h>
 
 
 //----------------------------------------------------------//
@@ -58,4 +61,4 @@ extern CLog gDebugLog;
 // EOF
 //----------------------------------------------------------//
 
-#endif
+#endif //_WINSYS_MAIN_
