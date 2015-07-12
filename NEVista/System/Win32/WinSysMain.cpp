@@ -8,6 +8,7 @@
 
 #include "WinSysIncludes.h"
 #include "Types.h"
+#include "SysSocket.h"
 #include "Log.h"
 #include "Win32/Game.h"
 
@@ -62,6 +63,9 @@ s32 WinSys_Initialise(void)
 		return WINSYS_INIT_INPUT_FAIL;	
 	}
 */
+	
+	//-- Initialise system sockets
+	SysSocket::SystemInitialise();
 
 	CWinSysConfigDialog configDialog;
 	nReturnStatus = configDialog.Initialise();
@@ -184,6 +188,8 @@ s32 WinSys_Shutdown(void)
 {
 	//-- Shutdown the GL window if it exists
 	gWinSysGLWindow.Shutdown();
+	//-- and sockets
+	SysSocket::SystemShutdown();
 	//-- and Input
 //	gInput.Shutdown();
 	//-- and the timer
@@ -208,10 +214,9 @@ s32 WinSys_Shutdown(void)
 //----------------------------------------------------------//
 s32 WinSys_Update(void)
 {
-	MSG msg;
-
 //	gInput.RemoveEvents();
 
+	MSG msg;
 	while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE) > 0)
 	{
 		if (msg.message == WM_QUIT)

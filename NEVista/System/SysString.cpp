@@ -606,7 +606,7 @@ size_t SysString::KeyEncode(s8* strBuffer, size_t strBufferSize, const void* pDa
 //----------------------------------------------------------//
 size_t SysString::KeyDecode(void* pDataBuffer, size_t dataBufferSize, const s8* strBuffer, size_t strLength, SysString::Key key)
 {
-	if ( IS_NULL_PTR(strBuffer)
+	if ( IS_TRUE(SysString::IsEmpty(strBuffer))
 		|| IS_ZERO(strLength) 
 		|| IS_NULL_PTR(pDataBuffer) 
 		|| IS_ZERO(dataBufferSize) 

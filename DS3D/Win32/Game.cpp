@@ -7,11 +7,15 @@
 
 
 #include "Game.h"
+#include "VersionInfo.h"
 #include "SystemIncludes.h"
 #include "Win32/WinSysIncludes.h"
-#include "VersionInfo.h"
-#include "PacketSerializer.h"
+#include "Log.h"
+#include "TCPConnection.h"
 
+
+#include "SimpleBuffer.h"
+#include "PacketSerializer.h"
 #include "GL/gl.h"
 #include "GL/glu.h"
 
@@ -23,6 +27,11 @@
 //----------------------------------------------------------//
 // GLOBALS
 //----------------------------------------------------------//
+
+
+CLog				gGameLog;
+CTCPConnection		gConnection;
+
 
 //----------------------------------------------------------//
 // WinMain
@@ -66,9 +75,24 @@ const s8* Game_Version(void)
 //----------------------------------------------------------//
 bool Game_Initialise(void)
 {
-	u8 buf[1024];
+	gDebugLog.Printf("Game_Initialise:");
+	SCOPED_LOG_INDENT(gDebugLog);
 
-	CPacketSerializer ser(CSerializer::Mode::Serializing, buf, 1024, 0);
+	//-- Initialise a game log
+	if (IS_FALSE(gGameLog.Initialise("GameLog.txt")))
+	{
+		gDebugLog.Printf("Failed to open Game Log.");
+		return false;
+	}
+
+	gGameLog.Printf("Game_Initialise:");
+	SCOPED_LOG_INDENT(gGameLog);
+
+	gConnection.Initialise();
+
+	CSimpleBuffer<1024> buf;
+
+	CPacketSerializer ser(CSerializer::Mode::Serializing, buf.Buffer(), buf.Size(), 0);
 
 	f32 fv2, fv = 100.0f;
 	ser.SerializeF32(fv);
@@ -81,7 +105,7 @@ bool Game_Initialise(void)
 
 	f32 breakhere = 0.0f;
 
-	CPacketSerializer serb(CSerializer::Mode::Deserializing, buf, 1024, 0);
+	CPacketSerializer serb(CSerializer::Mode::Deserializing, buf.Buffer(), buf.Size(), 0);
 
 	serb.SerializeF32(fv2);
 	serb.SerializeBytes(bytes2, 20);
@@ -93,7 +117,8 @@ bool Game_Initialise(void)
 	breakhere = 0.0f;
 
 
-
+	gGameLog.Printf("Complete (OK)");
+	gDebugLog.Printf("Complete (OK)");
 
 	return true;
 }
@@ -106,6 +131,20 @@ bool Game_Initialise(void)
 //----------------------------------------------------------//
 bool Game_Shutdown(void)
 {
+	gDebugLog.Printf("Game_Shutdown:");
+	SCOPED_LOG_INDENT(gDebugLog);
+	gGameLog.Printf("Game_Shutdown:");
+	SCOPED_LOG_INDENT(gGameLog);
+
+	//-- Shutdown connection
+	gConnection.Shutdown();
+
+	//-- Close game log
+	gGameLog.Printf("Complete (OK)");
+	gGameLog.Shutdown();
+
+	gDebugLog.Printf("Complete (OK)");
+
 	return true;
 }
 

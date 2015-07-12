@@ -9,6 +9,7 @@
 
 #include "SysSocket.h"
 #include "Types.h"
+#include "Win32/WinSysMain.h"
 
 #if defined(SYSSOCKET_USES_WINSOCK)
 # include <WS2tcpip.h>
@@ -37,6 +38,46 @@ const SysSocket::Socket SysSocket::INVALID_SOCK = (SysSocket::Socket)INVALID_SOC
 #else
 const SysSocket::Socket SysSocket::INVALID_SOCK = (SysSocket::Socket)-1;
 #endif //SYSSOCKET_USES_WINSOCK
+
+
+//----------------------------------------------------------//
+//
+//----------------------------------------------------------//
+//-- Description
+//----------------------------------------------------------//
+void SysSocket::SystemInitialise(void)
+{
+#if defined(SYSSOCKET_USES_WINSOCK)
+	WSADATA wsaData;	
+
+	gDebugLog.Printf("SysSocket::SystemInitialise:");
+	SCOPED_LOG_INDENT(gDebugLog);
+
+	if (SYS_SOCKET_NO_ERROR == WSAStartup(MAKEWORD(2,2), &wsaData))
+	{
+		//-- Success
+		gDebugLog.Printf("Desc: %s", wsaData.szDescription);
+		gDebugLog.Printf("Status: %s", wsaData.szSystemStatus);
+		return;
+	}
+
+	//-- Failed.
+	gDebugLog.Printf("WSAStartup failed.");
+#endif //SYSSOCKET_USES_WINSOCK
+}
+
+
+//----------------------------------------------------------//
+//
+//----------------------------------------------------------//
+//-- Description
+//----------------------------------------------------------//
+void SysSocket::SystemShutdown(void)
+{
+#if defined(SYSSOCKET_USES_WINSOCK)
+	WSACleanup();
+#endif //SYSSOCKET_USES_WINSOCK
+}
 
 
 //----------------------------------------------------------//

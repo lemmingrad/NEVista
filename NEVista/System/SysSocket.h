@@ -84,6 +84,9 @@ class SysSocket
 		typedef struct pollfd				PollFd;
 #endif //SYSSOCKET_USES_WINSOCK
 
+		static void			SystemInitialise(void);
+		static void			SystemShutdown(void);
+
 		static s32			GetAddrInfo(const s8* strName, const s8* strPort, const AddrInfo* pHints, AddrInfo** pResults);
 		static void			FreeAddrInfo(AddrInfo* pResults);
 

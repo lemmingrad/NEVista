@@ -24,7 +24,7 @@
 #define LOG_WORKING_BUFFER_SIZE				(16 * 1024)
 #define LOG_MARKUP_HISTORY_SIZE				(64)
 
-#define SCOPED_LOG_INDENT(x)				CScopedLogIndent scopedLogIndent(&(x)) 
+#define SCOPED_LOG_INDENT(x)				CScopedLogIndent x##_scopedLogIndent(&(x))
 
 
 //----------------------------------------------------------//

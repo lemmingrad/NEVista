@@ -3,6 +3,7 @@
 
 # Log
 DebugLog.txt
+GameLog.txt
 
 # User-specific files
 *.suo
