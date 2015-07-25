@@ -9,18 +9,36 @@
 
 #include "SysSocket.h"
 #include "Types.h"
-#include "Win32/WinSysMain.h"
+#include "SysDebugLog.h"
 
 #if defined(SYSSOCKET_USES_WINSOCK)
-# include <WS2tcpip.h>
-# include <winsock2.h>
+	
+#	include <WS2tcpip.h>
+#	include <winsock2.h>
+
 #else
-# include <errno.h>
-# include <sys/types.h>
-# include <sys/socket.h>
-# if defined(SYSSOCKET_USES_IOCTL)
-#  include <sys/ioctl.h>
-# endif //SYSSOCKET_USES_IOCTL
+
+//-- Define this to use ioctl instead of fcntl on non-winsock platforms
+//#	define SYSSOCKET_USES_IOCTL
+
+#	include <errno.h>
+#	include <poll.h>
+#	include <sys/types.h>
+#	include <sys/socket.h>
+#	include <arpa/inet.h>
+#	include <netinet/in.h>
+#	include <netdb.h>
+
+#	if defined(SYSSOCKET_USES_IOCTL)
+
+#		include <sys/ioctl.h>
+
+#	else
+
+#		include <fcntl.h>
+
+#	endif //SYSSOCKET_USES_IOCTL
+
 #endif //SYSSOCKET_USES_WINSOCK
 
 
@@ -34,9 +52,9 @@
 
 
 #if defined(SYSSOCKET_USES_WINSOCK)
-const SysSocket::Socket SysSocket::INVALID_SOCK = (SysSocket::Socket)INVALID_SOCKET;
+	const SysSocket::Socket SysSocket::INVALID_SOCK = (SysSocket::Socket)INVALID_SOCKET;
 #else
-const SysSocket::Socket SysSocket::INVALID_SOCK = (SysSocket::Socket)-1;
+	const SysSocket::Socket SysSocket::INVALID_SOCK = (SysSocket::Socket)-1;
 #endif //SYSSOCKET_USES_WINSOCK
 
 
@@ -48,6 +66,7 @@ const SysSocket::Socket SysSocket::INVALID_SOCK = (SysSocket::Socket)-1;
 void SysSocket::SystemInitialise(void)
 {
 #if defined(SYSSOCKET_USES_WINSOCK)
+
 	WSADATA wsaData;	
 
 	gDebugLog.Printf("SysSocket::SystemInitialise:");
@@ -63,6 +82,7 @@ void SysSocket::SystemInitialise(void)
 
 	//-- Failed.
 	gDebugLog.Printf("WSAStartup failed.");
+
 #endif //SYSSOCKET_USES_WINSOCK
 }
 
@@ -75,7 +95,9 @@ void SysSocket::SystemInitialise(void)
 void SysSocket::SystemShutdown(void)
 {
 #if defined(SYSSOCKET_USES_WINSOCK)
+
 	WSACleanup();
+
 #endif //SYSSOCKET_USES_WINSOCK
 }
 
@@ -85,7 +107,7 @@ void SysSocket::SystemShutdown(void)
 //----------------------------------------------------------//
 //-- Description
 //----------------------------------------------------------//
-s32 SysSocket::GetAddrInfo(const s8* strName, const s8* strPort, const SysSocket::AddrInfo* pHints, SysSocket::AddrInfo** pResults)
+s32 SysSocket::GetInfo(const s8* strName, const s8* strPort, const SysSocket::AddrInfo* pHints, SysSocket::AddrInfo** pResults)
 {
 	return ::getaddrinfo(strName, strPort, pHints, pResults);
 }
@@ -96,7 +118,7 @@ s32 SysSocket::GetAddrInfo(const s8* strName, const s8* strPort, const SysSocket
 //----------------------------------------------------------//
 //-- Description
 //----------------------------------------------------------//
-void SysSocket::FreeAddrInfo(SysSocket::AddrInfo* pResults)
+void SysSocket::FreeInfo(SysSocket::AddrInfo* pResults)
 {
 	::freeaddrinfo(pResults);
 }
@@ -134,17 +156,22 @@ s32 SysSocket::Connect(SysSocket::Socket nSocket, const SysSocket::SockAddr* pAd
 	s32 nRet = ::connect(nSocket, pAddress, nAddressSize);
 	if (SYS_SOCKET_ERROR == nRet)
 	{
-#if defined(SYSSOCKET_USES_WINSOCK)
-		if (SYS_SOCKET_WOULD_BLOCK == WSAGetLastError())
-		{
-			nRet = SYS_SOCKET_NO_ERROR;
-		}
-#else
-		if (SYS_SOCKET_IN_PROGRESS == errno)
-		{
-			nRet = SYS_SOCKET_NO_ERROR;
-		}
-#endif //SYSSOCKET_USES_WINSOCK
+#		if defined(SYSSOCKET_USES_WINSOCK)
+
+			int er = WSAGetLastError();
+			if (SYS_SOCKET_WOULD_BLOCK == er)
+			{
+				nRet = SYS_SOCKET_NO_ERROR;
+			}
+
+#		else
+
+			if (SYS_SOCKET_IN_PROGRESS == errno)
+			{
+				nRet = SYS_SOCKET_NO_ERROR;
+			}
+
+#		endif //SYSSOCKET_USES_WINSOCK
 	}
 
 	return nRet;
@@ -169,7 +196,15 @@ s32 SysSocket::Listen(SysSocket::Socket nSocket, s32 nBacklog)
 //----------------------------------------------------------//
 SysSocket::Socket SysSocket::Accept(SysSocket::Socket nSocket, SysSocket::SockAddr* pAddress, size_t* pAddressSize)
 {
+#if defined(SYSSOCKET_USES_WINSOCK)
+
 	return ::accept(nSocket, pAddress, (int*)pAddressSize);
+
+#else
+
+	return ::accept(nSocket, pAddress, (socklen_t*)pAddressSize);
+
+#endif
 }
 
 
@@ -197,6 +232,7 @@ s32 SysSocket::Select(s32 nLargestFD,
 s32	SysSocket::Poll(SysSocket::PollFd* pFds, u32 nFds, s32 nTimeout)
 {
 #if defined(SYSSOCKET_USES_WINSOCK)
+
 	FdSet ReadSet;
 	FdSet WriteSet;
 	FdSet ExceptionSet;
@@ -272,9 +308,12 @@ s32	SysSocket::Poll(SysSocket::PollFd* pFds, u32 nFds, s32 nTimeout)
 	}
 
 	return SYS_SOCKET_ERROR;
+
 #else
+
 	return ::poll(pFds, nFds, nTimeout);
-#endif
+
+#endif //SYSSOCKET_USES_WINSOCK
 }
 
 
@@ -298,9 +337,13 @@ s32 SysSocket::Shutdown(SysSocket::Socket nSocket, s32 nHow)
 s32 SysSocket::CloseSocket(SysSocket::Socket nSocket)
 {
 #if defined(SYSSOCKET_USES_WINSOCK)
+
 	return ::closesocket(nSocket);
+
 #else
+
 	return ::close(nSocket);
+
 #endif //SYSSOCKET_USES_WINSOCK
 }
 
@@ -313,29 +356,37 @@ s32 SysSocket::CloseSocket(SysSocket::Socket nSocket)
 s32 SysSocket::SetNonblocking(SysSocket::Socket nSocket, bool bIsNonblocking)
 {
 #if defined(SYSSOCKET_USES_WINSOCK)
+
 	s32 nIsNonblocking = bIsNonblocking;
 	return ::ioctlsocket(nSocket, FIONBIO, (u_long*)&nIsNonblocking);
-#else
-# if defined(SYSSOCKET_USES_IOCTL)
-	s8 nIsNonblocking = bIsNonblocking;
-	return ::ioctl(nSocket, FIONBIO, (char*)&nIsNonblocking);
-#else
-	s32 nFlags = ::fcntl(nSocket, F_GETFL, 0);
-	if (nFlags < 0) 
-	{
-		return SYS_SOCKET_ERROR;
-	}
 
-	if (IS_TRUE(bIsNonBlocking))
-	{
-		SET_FLAG(nFlags, O_NONBLOCK);
-	}else
-	{
-		CLEAR_FLAG(nFlags, O_NONBLOCK);
-	}
-			
-	return ::fcntl(nSocket, F_SETFL, nFlags);
-# endif //SYSSOCKET_USES_IOCTL
+#else
+
+#	if defined(SYSSOCKET_USES_IOCTL)
+	
+		s8 nIsNonblocking = bIsNonblocking;
+		return ::ioctl(nSocket, FIONBIO, (char*)&nIsNonblocking);
+
+#	else
+
+		s32 nFlags = ::fcntl(nSocket, F_GETFL, 0);
+		if (nFlags < 0) 
+		{
+			return SYS_SOCKET_ERROR;
+		}
+
+		if (IS_TRUE(bIsNonblocking))
+		{
+			SET_FLAG(nFlags, O_NONBLOCK);
+		}else
+		{
+			CLEAR_FLAG(nFlags, O_NONBLOCK);
+		}
+				
+		return ::fcntl(nSocket, F_SETFL, nFlags);
+
+#	endif //SYSSOCKET_USES_IOCTL
+
 #endif //SYSSOCKET_USES_WINSOCK
 }
 
@@ -403,19 +454,30 @@ u32 SysSocket::Htonl(u32 nValue)
 //----------------------------------------------------------//
 s32 SysSocket::Send(SysSocket::Socket nSocket, const s8* pBuffer, size_t nBufferSize)
 {
+#if defined(SYSSOCKET_USES_WINSOCK)
+
 	s32 nRet = send(nSocket, pBuffer, nBufferSize, 0);
 	if (SYS_SOCKET_ERROR == nRet)
 	{
-#if defined(SYSSOCKET_USES_WINSOCK)
 		if (SYS_SOCKET_WOULD_BLOCK == WSAGetLastError())
-#else
-		if ( (SYS_SOCKET_WOULD_BLOCK == errno)
-			|| (SYS_SOCKET_AGAIN == errno) )
-#endif //SYSSOCKET_USES_WINSOCK
 		{
 			nRet = 0;
 		}
 	}
+
+#else
+
+	s32 nRet = send(nSocket, pBuffer, nBufferSize, 0);
+	if (SYS_SOCKET_ERROR == nRet)
+	{
+		if ( (SYS_SOCKET_WOULD_BLOCK == errno)
+			|| (SYS_SOCKET_AGAIN == errno) )
+		{
+			nRet = 0;
+		}
+	}
+
+#endif //SYSSOCKET_USES_WINSOCK
 
 	return nRet;
 }
@@ -429,19 +491,30 @@ s32 SysSocket::Send(SysSocket::Socket nSocket, const s8* pBuffer, size_t nBuffer
 s32 SysSocket::Sendto(SysSocket::Socket nSocket, const s8* pBuffer, size_t nBufferSize, 
 					  const SysSocket::SockAddr* pAddr, size_t nAddrSize)
 {
+#if defined(SYSSOCKET_USES_WINSOCK)
+
 	s32 nRet = sendto(nSocket, pBuffer, nBufferSize, 0, pAddr, nAddrSize);
 	if (SYS_SOCKET_ERROR == nRet)
 	{
-#if defined(SYSSOCKET_USES_WINSOCK)
 		if (SYS_SOCKET_WOULD_BLOCK == WSAGetLastError())
-#else
-		if ( (SYS_SOCKET_WOULD_BLOCK == errno)
-			|| (SYS_SOCKET_AGAIN == errno) )
-#endif //SYSSOCKET_USES_WINSOCK
 		{
 			nRet = 0;
 		}
 	}
+
+#else
+
+	s32 nRet = sendto(nSocket, pBuffer, nBufferSize, 0, pAddr, nAddrSize);
+	if (SYS_SOCKET_ERROR == nRet)
+	{
+		if ( (SYS_SOCKET_WOULD_BLOCK == errno)
+			|| (SYS_SOCKET_AGAIN == errno) )
+		{
+			nRet = 0;
+		}
+	}
+
+#endif //SYSSOCKET_USES_WINSOCK
 
 	return nRet;
 }
@@ -454,19 +527,30 @@ s32 SysSocket::Sendto(SysSocket::Socket nSocket, const s8* pBuffer, size_t nBuff
 //----------------------------------------------------------//
 s32 SysSocket::Recv(SysSocket::Socket nSocket, s8* pBuffer, size_t nBufferSize)
 {
+#if defined(SYSSOCKET_USES_WINSOCK)
+
 	s32 nRet = recv(nSocket, pBuffer, nBufferSize, 0);
 	if (SYS_SOCKET_ERROR == nRet)
 	{
-#if defined(SYSSOCKET_USES_WINSOCK)
 		if (SYS_SOCKET_WOULD_BLOCK == WSAGetLastError())
-#else
-		if ( (SYS_SOCKET_WOULD_BLOCK == errno)
-			|| (SYS_SOCKET_AGAIN == errno) )
-#endif //SYSSOCKET_USES_WINSOCK
 		{
 			nRet = 0;
 		}
 	}
+
+#else 
+
+	s32 nRet = recv(nSocket, pBuffer, nBufferSize, 0);
+	if (SYS_SOCKET_ERROR == nRet)
+	{
+		if ( (SYS_SOCKET_WOULD_BLOCK == errno)
+			|| (SYS_SOCKET_AGAIN == errno) )
+		{
+			nRet = 0;
+		}
+	}
+
+#endif //SYSSOCKET_USES_WINSOCK
 
 	return nRet;
 }
@@ -480,19 +564,30 @@ s32 SysSocket::Recv(SysSocket::Socket nSocket, s8* pBuffer, size_t nBufferSize)
 s32 SysSocket::Recvfrom(SysSocket::Socket nSocket, s8* pBuffer, size_t nBufferSize, 
 						SysSocket::SockAddr* pAddr, size_t* pAddrSize)
 {
+#if defined(SYSSOCKET_USES_WINSOCK)
+
 	s32 nRet = recvfrom(nSocket, pBuffer, nBufferSize, 0, pAddr, (int*)pAddrSize);
 	if (SYS_SOCKET_ERROR == nRet)
 	{
-#if defined(SYSSOCKET_USES_WINSOCK)
 		if (SYS_SOCKET_WOULD_BLOCK == WSAGetLastError())
-#else
-		if ( (SYS_SOCKET_WOULD_BLOCK == errno)
-			|| (SYS_SOCKET_AGAIN == errno) )
-#endif //SYSSOCKET_USES_WINSOCK
 		{
 			nRet = 0;
 		}
 	}
+
+#else
+	
+	s32 nRet = recvfrom(nSocket, pBuffer, nBufferSize, 0, pAddr, (socklen_t*)pAddrSize);
+	if (SYS_SOCKET_ERROR == nRet)
+	{
+		if ( (SYS_SOCKET_WOULD_BLOCK == errno)
+			|| (SYS_SOCKET_AGAIN == errno) )
+		{
+			nRet = 0;
+		}
+	}
+
+#endif //SYSSOCKET_USES_WINSOCK
 
 	return nRet;
 }

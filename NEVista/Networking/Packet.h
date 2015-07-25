@@ -1,19 +1,85 @@
-#ifndef _PACKET_HEADER_H_
-#define _PACKET_HEADER_H_
+#ifndef _PACKET_H_
+#define _PACKET_H_
 #pragma once
 
 
+//----------------------------------------------------------//
+// PACKET.H
+//----------------------------------------------------------//
+//-- Description			
+// A packet class. 
+// Groups of messages are sent across the connection in a 
+// packet. Each packet may or may not be encrypted and/or
+// compressed. Packets are guaranteed to contain at least
+// one message, and all messages must be complete.
+//----------------------------------------------------------//
+
+
 #include "Types.h"
-#include "Serialized.h"
+#include "SysSmartPtr.h"
+#include "SimpleBuffer.h"
+#include <list>
+
+
+//----------------------------------------------------------//
+// DEFINES
+//----------------------------------------------------------//
+
+
+#define PACKET_DATA_BUFFER_MAX_SIZE			(1024)
+
+
+//----------------------------------------------------------//
+// ENUMS
+//----------------------------------------------------------//
+
+//----------------------------------------------------------//
+// FORWARD REFERENCES
+//----------------------------------------------------------//
 
 
 class CSerializer;
+class CPacketSerializer;
+class CMessage;
 
 
-class CPacketHeader : public CSerialized
+//----------------------------------------------------------//
+// STRUCTS
+//----------------------------------------------------------//
+
+//----------------------------------------------------------//
+// CLASSES
+//----------------------------------------------------------//
+
+
+class CPacket
 {
 	public:
 	
+		struct Error
+		{
+			enum Enum
+			{
+				//-- Not so bad fails
+				SerializerFull				= 0x80000000,
+				SerializerEmpty				= 0x80000001,
+				CopyFailed					= 0x80000002,
+				DataBufferFull				= 0x80000003,
+				DataBufferEmpty				= 0x80000004,
+
+				//-- Bad fails
+				UnknownVersion				= 0x80000010,
+				ProtocolMismatch			= 0x80000011,
+				EncryptionFailed			= 0x80000012,
+				SanityFail					= 0x80000013,
+				
+				BadFail						= -1,
+
+				//-- Success
+				Ok							= 0
+			};
+		};
+
 		struct Version
 		{
 			enum Enum
@@ -35,149 +101,45 @@ class CPacketHeader : public CSerialized
 
 		struct HeaderV1
 		{
-			u8							m_nVersion;						//-- version number
 			u8							m_nFlags;						//-- flags
-			u16							m_nSize;						//-- size (bytes) of packet data, not including the header
 			u16							m_nMessages;					//-- number of messages in packet
+			u16							m_nDataSize;					//-- size (bytes) of packet payload data, not including the header
 		};
 
+		CPacket(u8 nFlags = 0);
+		virtual ~CPacket();
 
-		CPacketHeader() : CSerialized() {};
-		virtual ~CPacketHeader() {};
+		static size_t					GetMinimumReadSize(void);
 
-		static size_t				GetMaxHeaderSize(void)
-		{
-			return sizeof(HeaderV1);
-		}
+		size_t							GetHeaderSize(void) const;
+		Version::Enum					Validate(void) const;
 
-		size_t							GetHeaderSize(void) const
-		{
-			switch (m_Header.m_nVersion)
-			{
-				case Version::V1:
-				{
-					return sizeof(HeaderV1);
-				}
-				break;
+		bool							IsEncrypted(void) const;
+		bool							IsCompressed(void) const;
+		u16								GetMessageCount(void) const;
+		size_t							GetDataSize(void) const;
 
-				default:
-				break;
-			}
-			
-			return 0;
-		}
+		Error::Enum						Serialize(CPacketSerializer& serializer);
 
-		Version::Enum					Validate(void) const
-		{
-			switch (m_Header.m_nVersion)
-			{
-				case Version::V1:
-				{
-					if ( (GetDataSize() > 0)
-						&& (GetMessageCount() > 0) )
-					{
-						return (Version::Enum)m_Header.m_nVersion;
-					}
-				}
-				break;
-
-				default:
-				break;
-			}
-
-			return Version::Unknown;
-		}
-
-		bool							IsEncrypted(void) const
-		{
-			switch (m_Header.m_nVersion)
-			{
-				case Version::V1:
-				{
-					return TEST_FLAG(m_Header.m_nFlags, Flag::Encrypted);
-				}
-				break;
-
-				default:
-				break;
-			}
-
-			return false;
-		}
-
-		bool							IsCompressed(void) const
-		{
-			switch (m_Header.m_nVersion)
-			{
-				case Version::V1:
-				{
-					return TEST_FLAG(m_Header.m_nFlags, Flag::Compressed);
-				}
-				break;
-
-				default:
-				break;
-			}
-
-			return false;
-		}
-
-		u16								GetMessageCount(void) const
-		{
-			switch (m_Header.m_nVersion)
-			{
-				case Version::V1:
-				{
-					return m_Header.m_nMessages;
-				}
-				break;
-
-				default:
-				break;
-			}
-
-			return 0;
-		}
-		void							SetMessageCount(u16 nCount)
-		{
-			//-- Version::V1
-			m_Header.m_nMessages = nCount;
-		}
-
-		size_t							GetDataSize(void) const
-		{
-			switch (m_Header.m_nVersion)
-			{
-				case Version::V1:
-				{
-					return m_Header.m_nSize;
-				}
-				break;
-
-				default:
-				break;
-			}
-
-			return 0;
-		}
-
-		void							SetDataSize(size_t nSize)
-		{
-			//-- Version::V1
-			m_Header.m_nSize = nSize;
-		}
-
-		virtual void					Serialize(CSerializer& Serializer)
-		{
-			m_Header.m_nFlags;
-		}
+		//-- AddMessage()
+		//-- GetMessages();
 
 	private:
 
-		HeaderV1						m_Header;
+		CSimpleBuffer<PACKET_DATA_BUFFER_MAX_SIZE>	m_DataBuffer;
+		std::list< SysSmartPtr<CMessage> >			m_MessageList;
+
+		HeaderV1						m_HeaderV1;
+		u8								m_nVersion;						//-- version number
 };
 
 
+//----------------------------------------------------------//
+// EXTERNALS
+//----------------------------------------------------------//
 
+//----------------------------------------------------------//
+// EOF
+//----------------------------------------------------------//
 
-#endif //_PACKET_HEADER_H_
+#endif //_PACKET_H_

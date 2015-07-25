@@ -54,13 +54,17 @@ class CSimpleBuffer
 		{
 			return m_Buffer;
 		}
-		size_t UsedSize(void)
-		{
-			return m_nFilledSize;
-		}
 		size_t Size(void) const
 		{
 			return S;
+		}
+		size_t UsedSize(void) const
+		{
+			return m_nFilledSize;
+		}
+		size_t UnusedSize(void) const
+		{
+			return Size() - UsedSize();
 		}
 
 		void Clear(void)

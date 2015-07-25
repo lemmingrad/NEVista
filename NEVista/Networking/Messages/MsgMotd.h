@@ -3,25 +3,30 @@
 #pragma once
 
 #include "Types.h"
-#include "SysString.h"
-#include "Serialized.h"
+#include "FixedString.h"
+#include "Message.h"
 
 
 #define MSG_MOTD_MAX_SIZE (980)
 
 
-class CPacketSerializer;
+class CSerializer;
 
 
-class CMsgMotd : public CSerialized
+class CMsgMotd : public CMessage
 {
 	public:
 
 		CMsgMotd();
-		~CMsgMotd();
+		virtual ~CMsgMotd();
 
-		//-- CSerialized
-		virtual void						Serialize(CPacketSerializer& Serializer);
+		//-- CMessage
+		virtual size_t						Serialize(CSerializer& serializer);
+
+		void Set(const s8* strBuffer)
+		{
+			m_strMotd.Set(strBuffer);
+		}
 
 	private:
 

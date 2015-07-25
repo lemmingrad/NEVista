@@ -11,7 +11,8 @@
 
 
 CMsgClientKeyExchange::CMsgClientKeyExchange()
-: m_nClientKey(0)
+: CMessage(Type::MsgClientKeyExchange)
+, m_nClientKey(0)
 {
 }
 
@@ -19,9 +20,11 @@ CMsgClientKeyExchange::~CMsgClientKeyExchange()
 {
 }
 
-void CMsgClientKeyExchange::Serialize(CPacketSerializer& Serializer)
+size_t CMsgClientKeyExchange::Serialize(CSerializer& serializer)
 {
-	Serializer.SerializeU16(m_nClientKey, 'ckey');
+	size_t nSize = 0;
+	nSize += serializer.SerializeU16(m_nClientKey, 'ckey');
+	return nSize;
 }
 
 void CMsgClientKeyExchange::SetKey(u16 nClientKey)

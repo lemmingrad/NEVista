@@ -3,6 +3,7 @@
 
 #include "TCPConnection.h"
 #include "Types.h"
+#include "SysSocket.h"
 #include "Packet.h"
 #include "PacketSerializer.h"
 #include "SimpleBuffer.h"
@@ -11,12 +12,6 @@
 
 CTCPConnection::CTCPConnection()
 : m_eState(State::Unknown)
-, m_nRecvMessages(0)
-, m_nSendMessages(0)
-, m_MessageRecvBuffer()
-, m_MessageSendBuffer()
-, m_PacketRecvBuffer()
-, m_PacketSendBuffer()
 {
 }
 
@@ -74,46 +69,31 @@ CTCPConnection::Error::Enum CTCPConnection::Update(void)
 
 CTCPConnection::Error::Enum CTCPConnection::UpdateRecv(void)
 {
+	//-- Check for socket recv
+
 	//-- Check for TCP received data.
 	//-- If enough data is present, decrypt and copy received messages/contents as necessary.
 
-	CPacketSerializer serializer(CSerializer::Mode::Deserializing, m_PacketRecvBuffer.Buffer(), m_PacketRecvBuffer.UsedSize(), 0);
-
-	while (m_PacketRecvBuffer.UsedSize() >= CPacketHeader::GetMaxHeaderSize())
+	while (m_RecvBuffer.UsedSize() >= CPacket::GetMinimumReadSize())
 	{
-		//-- Enough bytes available to fill in a header.
+		CPacket packet;
+		CPacketSerializer packetDeserializer(CSerializer::Mode::Deserializing, m_RecvBuffer.Buffer(), m_RecvBuffer.UsedSize());
 
-		Error::Enum eError = Error::Ok;
-
-		CPacketHeader header;
-		header.Serialize(serializer);
-
-		switch (header.Validate())
+		CPacket::Error::Enum eError = packet.Serialize(packetDeserializer);
+		switch (eError)
 		{
-			case CPacketHeader::Version::V1:
+			case CPacket::Error::Ok:
 			{
-				eError = UpdateRecvV1(header);
-				if (Error::Ok != eError)
-				{
-					//-- Failed. 
-					//-- Might be a bad fail, or it might just be a full or empty buffer
-					//-- we can re-test next time.
-					return eError;
-				}
-			}
-			break;
+				//-- Success.
+				//-- Add packet to packet list
+				//-- Strip head off PacketRecvBuffer
+				m_RecvBuffer.StripHead(packetDeserializer.GetOffset());
 
-			case CPacketHeader::Version::Unknown:
-			default:
-			{
-				//-- Bad fail.
-				return Error::UnknownVersion;
-			}
-			break;
-		}
-	}
 
-	//-- Sanity tests
+
+
+/*
+//-- Sanity tests
 	if ( (m_nRecvMessages > 0) 
 		&& (IS_ZERO(m_MessageRecvBuffer.UsedSize())) )
 	{
@@ -126,11 +106,35 @@ CTCPConnection::Error::Enum CTCPConnection::UpdateRecv(void)
 		//-- Mismatch. Number of messages is 0, but MessageRecvBuffer is not empty.
 		return Error::SanityFail;
 	}
+*/
+			}
+			break;
+
+			//-- Other fail
+			case CPacket::Error::DataBufferFull:
+			{
+				//-- Non-fatal error, maybe a full or empty buffer.
+				//-- Do NOT strip head off PacketRecvBuffer, so we can try again next time.
+				return Error::Ok;
+			}
+			break;
+
+			//-- Bad fail
+			case CPacket::Error::BadFail:
+			default:
+			{
+				//-- Fatal error. Should force a connection reset.
+				//-- Do NOT strip head off PacketRecvBuffer.
+				return Error::BadFail;
+			}
+			break;
+		}
+	}
 
 	return Error::Ok;
 }
 
-
+/*
 CTCPConnection::Error::Enum CTCPConnection::UpdateRecvV1(CPacketHeader& header)
 {
 	size_t nRequiredBytes = header.GetHeaderSize() + header.GetDataSize();
@@ -210,12 +214,35 @@ CTCPConnection::Error::Enum CTCPConnection::UpdateRecvV1(CPacketHeader& header)
 
 	return Error::Ok;
 }
+*/
 
 
 
-
-CTCPConnection::Error::Enum CTCPConnection::Open(const s8* strHostname, u16 nHostPort)
+CTCPConnection::Error::Enum CTCPConnection::Open(const s8* strHostname, const s8* strPort)
 {
+	SysSocket::AddrInfo hints;
+	SysSocket::AddrInfo* pRes;
+
+	SysMemory::Memclear(&hints, sizeof(hints));
+	hints.ai_family = AF_INET;
+	hints.ai_socktype = SOCK_STREAM;
+
+	if (SYS_SOCKET_NO_ERROR != SysSocket::GetInfo(strHostname, strPort, &hints, &pRes))
+	{
+		return Error::BadFail;
+	}
+
+	SysSocket::Socket aSocket = SysSocket::OpenSocket(pRes->ai_family, pRes->ai_socktype, pRes->ai_protocol);
+	if (SysSocket::INVALID_SOCK == aSocket)
+	{
+		return Error::BadFail;
+	}
+
+	if (SYS_SOCKET_NO_ERROR != SysSocket::Connect(aSocket, pRes->ai_addr, pRes->ai_addrlen))
+	{
+		return Error::BadFail;
+	}
+
 	return Error::Ok;
 }
 

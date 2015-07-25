@@ -11,7 +11,6 @@
 
 
 #include "Types.h"
-#include "SysString.h"
 
 
 //----------------------------------------------------------//
@@ -39,7 +38,7 @@ class CSerializer
 		{
 			enum Enum 
 			{
-				Unknown = 0,
+				Unknown					= 0,
 				Serializing,
 				Deserializing
 			};
@@ -61,7 +60,7 @@ class CSerializer
 		virtual	size_t			SerializeBitfield(bitfield& nFlags, u32 nFourCC = 'bits') = 0; 
 		virtual size_t			SerializeBytes(u8* pData, size_t nDataSize, u32 nFourCC = 'data') = 0;
 
-		Mode::Enum				GetMode(void) { return m_eMode; }
+		Mode::Enum				GetMode(void) const { return m_eMode; }
 
 	protected:
 

@@ -15,6 +15,7 @@
 
 
 #include "SimpleBuffer.h"
+#include "Packet.h"
 #include "PacketSerializer.h"
 #include "GL/gl.h"
 #include "GL/glu.h"
@@ -84,38 +85,30 @@ bool Game_Initialise(void)
 		gDebugLog.Printf("Failed to open Game Log.");
 		return false;
 	}
+	gGameLog.Printf("Title: %s, Version: %s", Game_Title(), Game_Version());
 
 	gGameLog.Printf("Game_Initialise:");
 	SCOPED_LOG_INDENT(gGameLog);
 
 	gConnection.Initialise();
+	gConnection.Open("192.168.1.36", "5555");
+
 
 	CSimpleBuffer<1024> buf;
 
-	CPacketSerializer ser(CSerializer::Mode::Serializing, buf.Buffer(), buf.Size(), 0);
+	CPacketSerializer ser(CSerializer::Mode::Serializing, buf.Buffer(), buf.Size());
 
-	f32 fv2, fv = 100.0f;
-	ser.SerializeF32(fv);
-
-	u8 bytes2[20], bytes[20] = "hello test";
-	ser.SerializeBytes(bytes, 20);
-
-	s32 nv2, nv = 24000;
-	ser.SerializeS32(nv);
+	CPacket packetIn;
+	CPacket::Error::Enum eError = packetIn.Serialize(ser);
 
 	f32 breakhere = 0.0f;
 
-	CPacketSerializer serb(CSerializer::Mode::Deserializing, buf.Buffer(), buf.Size(), 0);
+	CPacketSerializer serb(CSerializer::Mode::Deserializing, buf.Buffer(), buf.Size());
 
-	serb.SerializeF32(fv2);
-	serb.SerializeBytes(bytes2, 20);
-	serb.SerializeS32(nv2);
-
-	FixedString<5> fcc;
-	SysString::FourCC(fcc.Buffer(), fcc.Size(), 'intb');
+	CPacket packetOut;
+	eError = packetOut.Serialize(serb);
 
 	breakhere = 0.0f;
-
 
 	gGameLog.Printf("Complete (OK)");
 	gDebugLog.Printf("Complete (OK)");

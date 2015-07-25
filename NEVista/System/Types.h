@@ -51,6 +51,9 @@
 #define SET_BIT(bitField,bit)			((bitField) |= BIT(bit))
 #define CLEAR_BIT(bitField,bit)			((bitField) &= ~BIT(bit))
 
+#define SAFE_DELETE(p)					if (IS_PTR(p)) { delete p; p = NULL; }
+#define SAFE_DELETE_ARRAY(p)			if (IS_PTR(p)) { delete [] p; p = NULL; }
+
 
 //----------------------------------------------------------//
 // ENUMS
@@ -62,19 +65,39 @@
 
 
 #if defined(BOOL_AS_INT)
-typedef	int				bool;
+	typedef	int					bool;
 #endif //BOOL_AS_INT
-typedef float			f32;
-typedef double			f64;
-typedef int				s32;
-typedef unsigned int	u32;
-typedef char			s8;
-typedef unsigned char	u8;
-typedef short			s16;
-typedef unsigned short	u16;
-typedef long long		s64;
-typedef unsigned long long u64;
-typedef unsigned int	bitfield;
+
+#if defined(WIN32)
+
+	typedef float				f32;
+	typedef double				f64;
+	typedef int					s32;
+	typedef unsigned int		u32;
+	typedef char				s8;
+	typedef unsigned char		u8;
+	typedef short				s16;
+	typedef unsigned short		u16;
+	typedef long long			s64;
+	typedef unsigned long long	u64;
+	typedef unsigned int		bitfield;
+
+#elif defined(LINUX)
+
+	typedef float				f32;
+	typedef double				f64;
+	typedef int					s32;
+	typedef unsigned int		u32;
+	typedef char				s8;
+	typedef unsigned char		u8;
+	typedef short				s16;
+	typedef unsigned short		u16;
+	typedef long long			s64;
+	typedef unsigned long long	u64;
+	typedef unsigned int		bitfield;
+	typedef size_t				uintptr_t;
+
+#endif
 
 
 //----------------------------------------------------------//

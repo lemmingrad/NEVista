@@ -158,6 +158,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\SysDebugLog.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\SysFileIO.cpp"
 				>
 			</File>
@@ -248,6 +252,10 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
+				RelativePath=".\FixedString.h"
+				>
+			</File>
+			<File
 				RelativePath=".\Ini.h"
 				>
 			</File>
@@ -268,11 +276,19 @@
 				>
 			</File>
 			<File
+				RelativePath=".\SysDebugLog.h"
+				>
+			</File>
+			<File
 				RelativePath=".\SysFileIO.h"
 				>
 			</File>
 			<File
 				RelativePath=".\SysMemory.h"
+				>
+			</File>
+			<File
+				RelativePath=".\SysSmartPtr.h"
 				>
 			</File>
 			<File

@@ -6,6 +6,7 @@
 
 #include "WinSysIncludes.h"
 #include "Types.h"
+#include "SysDebugLog.h"
 #include "Win32/Game.h"
 //#include "MathsIncludes.h"
 //#include "InputIncludes.h"

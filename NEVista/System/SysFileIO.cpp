@@ -16,9 +16,13 @@
 //----------------------------------------------------------//
 
 
-//-- Define this to use safer fileIO functions in VC8 and VC9
-#define SYSFILEIO_USES_SAFE_FILEIO
+#if defined(WIN32)
 
+//-- Define this to use safer fileIO functions in VC8 and VC9
+#	define SYSFILEIO_USES_SAFE_FILEIO
+
+#endif //WIN32
+ 
 
 //----------------------------------------------------------//
 // GLOBALS
@@ -53,7 +57,7 @@ SysFileIO::Handle SysFileIO::Fopen(const s8* strFilename, const s8* strMode)
  
 	return fopen(strFilename, strMode);
 
-#endif
+#endif //SYSFILEIO_USES_SAFE_FILEIO
 }
 
 
@@ -144,7 +148,7 @@ s32 SysFileIO::Fprintf(SysFileIO::Handle pFile, const s8* strFormatting, ...)
 
 	nSymbolsConverted = vfprintf(pFile, strFormatting, ArgList);
 
-#endif
+#endif //SYSFILEIO_USES_SAFE_FILEIO
 
 	va_end(ArgList);
 

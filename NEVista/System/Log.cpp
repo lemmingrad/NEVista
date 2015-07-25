@@ -12,7 +12,6 @@
 #include "SysString.h"
 #include "File/FileData.h"
 #include "File/FileDirectTextWriter.h"
-#include "Win32/Game.h"
 
 
 //----------------------------------------------------------//
@@ -89,8 +88,7 @@ bool CLog::Initialise(const s8* strFileName)
 	time(&m_nStartTime);
 	FixedString<SYSTIME_BUFFER_SIZE> strTime;
 	SysTime::Ctime(strTime.Buffer(), strTime.Size(), &m_nStartTime);
-
-	m_FileAccessor.Printf("%s ver %s log created %s\n", Game_Title(), Game_Version(), strTime.ConstBuffer());
+	m_FileAccessor.Printf("Log created %s\n", strTime.ConstBuffer());
 
 	return true;
 }
@@ -104,14 +102,14 @@ bool CLog::Initialise(const s8* strFileName)
 //----------------------------------------------------------//
 bool CLog::Shutdown(void)
 {
-	time_t nLogTime;
-	time(&nLogTime);
-	FixedString<SYSTIME_BUFFER_SIZE> strTime;
-	SysTime::Ctime(strTime.Buffer(), strTime.Size(), &nLogTime);
-
 	if (IS_TRUE(m_FileAccessor.IsOpen()))
 	{
+		time_t nLogTime;
+		time(&nLogTime);
+		FixedString<SYSTIME_BUFFER_SIZE> strTime;
+		SysTime::Ctime(strTime.Buffer(), strTime.Size(), &nLogTime);
 		m_FileAccessor.Printf("\n\nLog closed %s", strTime.ConstBuffer());
+
 		m_FileProcessor.Close();
 	}
 

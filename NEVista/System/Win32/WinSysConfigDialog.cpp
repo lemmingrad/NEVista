@@ -18,6 +18,7 @@ processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 
 #include "WinSysIncludes.h"
 #include "Types.h"
+#include "SysDebugLog.h"
 #include "Win32/Game.h"
 
 

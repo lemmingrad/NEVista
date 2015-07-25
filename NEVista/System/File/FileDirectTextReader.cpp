@@ -47,9 +47,6 @@ CFileAccessorDirectTextReader::~CFileAccessorDirectTextReader()
 //----------------------------------------------------------//
 bool CFileAccessorDirectTextReader::ValidateData(void) const
 {
-	assert(IS_PTR(m_pData));
-	assert(IS_TRUE(m_pData->Validate(CFileData::Type::Text, CFileData::AccessMethod::DirectRead)));
-	
 	if (IS_PTR(m_pData))
 	{
 		if (IS_TRUE(m_pData->Validate(CFileData::Type::Text, CFileData::AccessMethod::DirectRead)))
@@ -109,9 +106,6 @@ CFileProcessorDirectTextReader::~CFileProcessorDirectTextReader()
 //----------------------------------------------------------//
 bool CFileProcessorDirectTextReader::ValidateData(void) const
 {
-	assert(IS_PTR(m_pData));
-	assert(IS_TRUE(m_pData->Validate(CFileData::Type::Text, CFileData::AccessMethod::DirectRead)));
-	
 	if (IS_PTR(m_pData))
 	{
 		if (IS_TRUE(m_pData->Validate(CFileData::Type::Text, CFileData::AccessMethod::DirectRead)))

@@ -5,19 +5,20 @@
 
 #include "Types.h"
 #include "SimpleBuffer.h"
+#include <list>
+
 
 #define MAX_PACKET_SIZE				(1500)
-#define MAX_MESSAGE_SIZE			(1200)
 #define TCP_RECV_BUFFER_SIZE		(MAX_PACKET_SIZE * 4)
 #define TCP_SEND_BUFFER_SIZE		(MAX_PACKET_SIZE * 4)
-#define MSG_RECV_BUFFER_SIZE		(MAX_MESSAGE_SIZE * 4)
-#define MSG_SEND_BUFFER_SIZE		(MAX_MESSAGE_SIZE * 4)
 
 
 
 class CTCPConnection
 {
 	public:
+
+//		typedef std::list<CMessage*> TMessageList;
 
 		struct Error
 		{
@@ -53,7 +54,7 @@ class CTCPConnection
 				KeyExchange,
 				Encrypted,
 				Active,
-				Closing,
+				Closing
 			};
 		};
 
@@ -65,27 +66,21 @@ class CTCPConnection
 		Error::Enum			Shutdown(void);
 		Error::Enum			Update(void);
 
-		Error::Enum			Open(const s8* strHostname, u16 nHostPort);
+		Error::Enum			Open(const s8* strHostname, const s8* strHostPort);
 		Error::Enum			Close(void);
 
 	private:
 
 		Error::Enum			UpdateRecv(void);
-		Error::Enum			UpdateRecvV1(CPacketHeader& header);
 
 
-
-		CSimpleBuffer<TCP_RECV_BUFFER_SIZE>			m_PacketRecvBuffer;
-		CSimpleBuffer<TCP_SEND_BUFFER_SIZE>			m_PacketSendBuffer;
-
-		CSimpleBuffer<MSG_RECV_BUFFER_SIZE>			m_MessageRecvBuffer;
-		CSimpleBuffer<MSG_SEND_BUFFER_SIZE>			m_MessageSendBuffer;
-		u32											m_nRecvMessages;
-		u32											m_nSendMessages;
+		CSimpleBuffer<TCP_RECV_BUFFER_SIZE>			m_RecvBuffer;
+		CSimpleBuffer<TCP_SEND_BUFFER_SIZE>			m_SendBuffer;
+	
+//		TMessageList								m_RecvMessages;
+//		TMessageList								m_SendMessages;
 
 		State::Enum									m_eState;
-
-
 };
 
 

@@ -10,14 +10,24 @@
 //----------------------------------------------------------//
 
 
-#define SYSSOCKET_USES_WINSOCK
+#if defined(WIN32)
 
-#if defined(SYSSOCKET_USES_WINSOCK)
-# include <WS2tcpip.h>
-# include <winsock2.h>
-#else
-# include <poll.h>
-#endif //SYSSOCKET_USES_WINSOCK
+#	define SYSSOCKET_USES_WINSOCK
+#	include <WS2tcpip.h>
+#	include <winsock2.h>
+
+#elif defined(LINUX)
+
+#	define SYSSOCKET_USES_BSD
+#	include <errno.h>
+#	include <poll.h>
+#	include <sys/types.h>
+#	include <sys/socket.h>
+#	include <arpa/inet.h>
+#	include <netinet/in.h>
+#	include <netdb.h>
+
+#endif
 
 #include "Types.h"
 
@@ -27,17 +37,22 @@
 //----------------------------------------------------------//
 
 
-#define SYS_SOCKET_NO_ERROR			(0)
+#define SYS_SOCKET_NO_ERROR				(0)
+
 #if defined(SYSSOCKET_USES_WINSOCK)
-# define SYS_SOCKET_ERROR			(SOCKET_ERROR)
-# define SYS_SOCKET_WOULD_BLOCK		(WSAEWOULDBLOCK)
-# define SYS_SOCKET_AGAIN			(WSAEWOULDBLOCK)
-# define SYS_SOCKET_IN_PROGRESS		(WSAEINPROGRESS)
+
+#	define SYS_SOCKET_ERROR				(SOCKET_ERROR)
+#	define SYS_SOCKET_WOULD_BLOCK		(WSAEWOULDBLOCK)
+#	define SYS_SOCKET_AGAIN				(WSAEWOULDBLOCK)
+#	define SYS_SOCKET_IN_PROGRESS		(WSAEINPROGRESS)
+
 #else
-# define SYS_SOCKET_ERROR			(-1)
-# define SYS_SOCKET_WOULD_BLOCK		(EWOULDBLOCK)
-# define SYS_SOCKET_AGAIN			(EAGAIN)
-# define SYS_SOCKET_IN_PROGRESS		(EINPROGRESS)
+
+#	define SYS_SOCKET_ERROR				(-1)
+#	define SYS_SOCKET_WOULD_BLOCK		(EWOULDBLOCK)
+#	define SYS_SOCKET_AGAIN				(EAGAIN)
+#	define SYS_SOCKET_IN_PROGRESS		(EINPROGRESS)
+
 #endif //SYSSOCKET_USES_WINSOCK
 
 
@@ -87,8 +102,8 @@ class SysSocket
 		static void			SystemInitialise(void);
 		static void			SystemShutdown(void);
 
-		static s32			GetAddrInfo(const s8* strName, const s8* strPort, const AddrInfo* pHints, AddrInfo** pResults);
-		static void			FreeAddrInfo(AddrInfo* pResults);
+		static s32			GetInfo(const s8* strName, const s8* strPort, const AddrInfo* pHints, AddrInfo** pResults);
+		static void			FreeInfo(AddrInfo* pResults);
 
 		static Socket		OpenSocket(s32 nAF, s32 nType, s32 nProtocol);
 		static s32			Bind(Socket nSocket, const SockAddr* pAddress, size_t nAddressSize);

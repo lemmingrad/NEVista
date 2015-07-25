@@ -11,7 +11,8 @@
 
 
 CMsgServerKeyExchange::CMsgServerKeyExchange()
-: m_nServerKey(0)
+: CMessage(Type::MsgServerKeyExchange)
+, m_nServerKey(0)
 {
 }
 
@@ -19,9 +20,11 @@ CMsgServerKeyExchange::~CMsgServerKeyExchange()
 {
 }
 
-void CMsgServerKeyExchange::Serialize(CPacketSerializer& Serializer)
+size_t CMsgServerKeyExchange::Serialize(CSerializer& serializer)
 {
-	Serializer.SerializeU16(m_nServerKey, 'skey');
+	size_t nSize = 0;
+	nSize += serializer.SerializeU16(m_nServerKey, 'skey');
+	return nSize;
 }
 
 void CMsgServerKeyExchange::SetKey(u16 nServerKey)

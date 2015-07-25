@@ -9,10 +9,12 @@
 
 #include "SysMemory.h"
 #include "Types.h"
-#include <windows.h>
 #include <cstdio>
 #include <cstdlib>
 #include <memory.h>
+#if defined(WIN32)
+#	include <windows.h>
+#endif //WIN32
 
 
 //----------------------------------------------------------//
@@ -20,15 +22,20 @@
 //----------------------------------------------------------//
 
 
-//-- enable for big endian mode
+//-- Enable for big endian mode
+//-- Both PC and Raspberry are little-endian.
 //#define SYSMEMORY_BIG_ENDIAN
 
-//-- use safe memory functions, as seen in VC8 and beyond.
-//-- NOTE this will override the optimised functions if used below.
-#define SYSMEMORY_USES_SAFE_MEMORY
+#if defined(WIN32)
 
-//-- define this to use Windows optimised functions like ZeroMemory instead of memset, etc.
-#define SYSMEMORY_USES_WINDOWS_MEMORY_OPTIMISATION
+//-- Define this to use safe memory functions, as seen in VC8 and beyond.
+//#	define SYSMEMORY_USES_SAFE_MEMORY
+
+//-- Define this to use Windows optimised functions like ZeroMemory instead of memset, etc.
+//-- In some places, safe memory functions may override this.
+//#	define SYSMEMORY_USES_WINDOWS_MEMORY_OPTIMISATION
+
+#endif //WIN32
 
 
 //----------------------------------------------------------//
@@ -84,9 +91,9 @@ void* SysMemory::Memcpy(void* pDest, size_t nDestSize, const void* pSrc, size_t 
 
 		return memcpy(pDest, pSrc, nSrcSize);
 
-#	endif
+#	endif //SYSMEMORY_USES_WINDOWS_MEMORY_OPTIMISATION
 
-#endif
+#endif //SYSMEMORY_USES_SAFE_MEMORY
 }
 
 
@@ -140,9 +147,9 @@ void* SysMemory::Memmove(void* pDest, size_t nDestSize, const void* pSrc, size_t
 
 		return memmove(pDest, pSrc, nSrcSize);
 
-#	endif
+#	endif //SYSMEMORY_USES_WINDOWS_MEMORY_OPTIMISATION
 
-#endif
+#endif //SYSMEMORY_USES_SAFE_MEMORY
 }
 
 
@@ -169,7 +176,7 @@ void* SysMemory::Memset(void* pMem, s8 nValue, size_t nByteCount)
 
 		return memset(pMem, nValue, nByteCount);
 
-#	endif
+#	endif //SYSMEMORY_USES_WINDOWS_MEMORY_OPTIMISATION
 }
 
 
@@ -196,7 +203,7 @@ void* SysMemory::Memclear(void* pMem, size_t nByteCount)
 
 		return memset(pMem, 0, nByteCount);
 
-#	endif
+#	endif //SYSMEMORY_USES_WINDOWS_MEMORY_OPTIMISATION
 }
 
 
@@ -210,7 +217,7 @@ void* SysMemory::Memclear(void* pMem, size_t nByteCount)
 void SysMemory::EndianSwap(void* pMem, size_t nSizeofEntity)
 {
 	//-- size must be even
-	assert((nSizeofEntity >= 2) && ((nSizeofEntity & 1) == 0));
+	assert( (nSizeofEntity >= 2) && IS_ZERO(nSizeofEntity & 1) );
 	//-- limit to 8 bytes max.
 	assert(nSizeofEntity <= sizeof(u64));
 
@@ -234,7 +241,7 @@ void SysMemory::EndianSwap(void* pMem, size_t nSizeofEntity)
 void SysMemory::EndianSwapArray(void *pMem, size_t nSizeofEntity, u32 nEntityCount)
 {
 	//-- size must be even
-	assert((nSizeofEntity >= 2) && ((nSizeofEntity & 1) == 0));
+	assert( (nSizeofEntity >= 2) && IS_ZERO(nSizeofEntity & 1) );
 	//-- limit to 8 bytes max.
 	assert(nSizeofEntity <= sizeof(u64));
 
@@ -255,7 +262,7 @@ void SysMemory::EndianSwapArray(void *pMem, size_t nSizeofEntity, u32 nEntityCou
 void SysMemory::EndianSwapCopy(void* pDest, const void* pSrc, size_t nSizeofEntity)
 {
 	//-- size must be even
-	assert((nSizeofEntity >= 2) && ((nSizeofEntity & 1) == 0));
+	assert( (nSizeofEntity >= 2) && IS_ZERO(nSizeofEntity & 1) );
 	//-- limit to 8 bytes max.
 	assert(nSizeofEntity <= sizeof(u64));
 
@@ -274,7 +281,7 @@ void SysMemory::EndianSwapCopy(void* pDest, const void* pSrc, size_t nSizeofEnti
 void SysMemory::EndianSwapArrayCopy(void* pDest, const void* pSrc, size_t nSizeofEntity, u32 nEntityCount)
 {
 	//-- size must be even
-	assert((nSizeofEntity >= 2) && ((nSizeofEntity & 1) == 0));
+	assert( (nSizeofEntity >= 2) && IS_ZERO(nSizeofEntity & 1) );
 	//-- limit to 8 bytes max.
 	assert(nSizeofEntity <= sizeof(u64));
 

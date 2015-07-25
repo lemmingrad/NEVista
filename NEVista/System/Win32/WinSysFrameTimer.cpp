@@ -9,6 +9,7 @@
 #include "WinSysIncludes.h"
 #include "Types.h"
 #include "SysString.h"
+#include "SysDebugLog.h"
 
 
 //----------------------------------------------------------//

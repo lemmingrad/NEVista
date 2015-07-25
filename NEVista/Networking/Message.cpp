@@ -1,16 +1,18 @@
-#ifndef _SERIALIZED_H_
-#define _SERIALIZED_H_
-#pragma once
-
 //----------------------------------------------------------//
-// SERIALIZED.H
+// MESSAGE.CPP
 //----------------------------------------------------------//
 //-- Description			
-// Base class definition for a serialised class
+// A message class. 
+// Groups of messages are sent across the connection in a 
+// packet. Each packet may or may not be encrypted and/or
+// compressed. Packets are guaranteed to contain at least
+// one message, and all messages must be complete.
 //----------------------------------------------------------//
 
 
+#include "Message.h"
 #include "Types.h"
+#include "Messages/MsgMotd.h"
 
 
 //----------------------------------------------------------//
@@ -22,31 +24,42 @@
 //----------------------------------------------------------//
 
 //----------------------------------------------------------//
-// FORWARD REFERENCES
-//----------------------------------------------------------//
-
-
-class CSerializer;
-
-
-//----------------------------------------------------------//
 // STRUCTS
 //----------------------------------------------------------//
 
-//----------------------------------------------------------//
-// CLASSES
-//----------------------------------------------------------//
 
-
-class CSerialized
+//----------------------------------------------------------//
+// CMessage::CreateType
+//----------------------------------------------------------//
+//--Description
+// Static factory function to create a message of a given type.
+//----------------------------------------------------------//
+CMessage* CMessage::CreateType(CMessage::Type::Enum eType)
 {
-	public:
+	switch (eType)
+	{
+		case 'motd':
+		{
+			return new CMsgMotd();
+		}
+		break;
 
-		CSerialized() {};
-		virtual ~CSerialized() {};
+		default:
+		break;
+	}
 
-		virtual size_t Serialize(CSerializer& Serializer) = 0;
-};
+	return NULL;
+}
+
+
+CMessage::CMessage(CMessage::Type::Enum eType)
+: m_eType(eType)
+{
+}
+
+CMessage::~CMessage()
+{
+}
 
 
 //----------------------------------------------------------//
@@ -56,5 +69,3 @@ class CSerialized
 //----------------------------------------------------------//
 // EOF
 //----------------------------------------------------------//
-
-#endif //_SERIALIZER_H_

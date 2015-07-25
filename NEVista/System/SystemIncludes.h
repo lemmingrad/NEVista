@@ -9,6 +9,7 @@
 #include "SysString.h"
 #include "SysTime.h"
 #include "SysSocket.h"
+#include "SysDebugLog.h"
 /*#include "SysMaths.h"
 #include "BlockAllocLinkedList.h"
 #include "BlockAllocBinaryTree.h"

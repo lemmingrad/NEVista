@@ -9,7 +9,7 @@
 #include "WinSysIncludes.h"
 #include "Types.h"
 #include "SysSocket.h"
-#include "Log.h"
+#include "SysDebugLog.h"
 #include "Win32/Game.h"
 
 
@@ -20,10 +20,6 @@
 //----------------------------------------------------------//
 // GLOBALS
 //----------------------------------------------------------//
-
-
-CLog gDebugLog;
-
 
 //----------------------------------------------------------//
 // WinSys_Initialise
@@ -41,6 +37,7 @@ s32 WinSys_Initialise(void)
 	{
 		MessageBox(NULL, "Debug Log cannot be created. Logging disabled.", TEXT(Game_Title()), MB_OK|MB_ICONEXCLAMATION);
 	}
+	gDebugLog.Printf("Title: %s, Version: %s", Game_Title(), Game_Version());
 /*
 	//-- Initialise Mem Manager
 	if (IS_FALSE(gMemMgr.Initialise())

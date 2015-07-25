@@ -8,6 +8,8 @@
 
 #include "SysTime.h"
 #include "Types.h"
+#include <ctime>
+#include "SysString.h"
 
 
 //----------------------------------------------------------//
@@ -15,8 +17,19 @@
 //----------------------------------------------------------//
 
 
+#if defined(WIN32)
+
 //-- Define this to use safer time functions in VC8 and beyond
-#define SYSTIME_USES_SAFE_TIME
+//-- Will override ctime_r if defined below.
+//#	define SYSTIME_USES_SAFE_TIME
+
+#elif defined(LINUX)
+
+//-- Define this to use re-entrant ctime_r() instead of ctime()
+//-- Ignored if using the safe time functions defined above.
+//#	define SYSTIME_USES_CTIME_R
+
+#endif
 
 
 //----------------------------------------------------------//
@@ -46,16 +59,24 @@ s8* SysTime::Ctime(s8* strDest, size_t nDestSize, const time_t* pTime)
 #else
 
 	if ( IS_NULL_PTR(strDest) 
-		|| IS_ZERO(nDestSize) )
+		|| (nDestSize < 26) 
+		|| (IS_NULL_PTR(pTime)) )
 	{
 		//-- Be consistent with the behavior of ctime_s.
 		return NULL;
 	}
 
-	SysString::Strcpy(strDest, nDestSize, ctime(pTime), nDestSize);
-	return strDest;
+#	if defined(SYSTIME_USES_CTIME_R)
 
-#endif
+		return ctime_r(pTime, strDest);
+
+#	else
+	
+		return SysString::Strncpy(strDest, nDestSize, ctime(pTime), nDestSize);
+
+#	endif //SYSTIME_USES_CTIME_R
+
+#endif //SYSTIME_USES_SAFE_TIME
 }
 
 

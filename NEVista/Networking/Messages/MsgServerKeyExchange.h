@@ -4,26 +4,28 @@
 
 #include "Types.h"
 #include "SysString.h"
+#include "Message.h"
 
 
-class CPacketSerializer;
+class CSerializer;
 
 
-class CMsgServerKeyExchange
+class CMsgServerKeyExchange : public CMessage
 {
 	public:
 
 		CMsgServerKeyExchange();
-		~CMsgServerKeyExchange();
+		virtual ~CMsgServerKeyExchange();
 
-		void	Serialize(CPacketSerializer& Serailizer);
+		//-- CMessage
+		virtual size_t			Serialize(CSerializer& serializer);
 
-		void	SetKey(u16 nServerKey);
-		u16		GetKey(void);
+		void					SetKey(u16 nServerKey);
+		u16						GetKey(void);
 
 	private:
 
-		u16				m_nServerKey;
+		u16						m_nServerKey;
 
 };
 

@@ -28,6 +28,10 @@
 //----------------------------------------------------------//
 
 //----------------------------------------------------------//
+// FORWARD REFERENCES
+//----------------------------------------------------------//
+
+//----------------------------------------------------------//
 // STRUCTS
 //----------------------------------------------------------//
 
@@ -40,11 +44,30 @@ class CPacketSerializer : public CSerializer
 {
 	public:
 
+		struct Error
+		{
+			enum Enum
+			{
+				CopyFailed				= -5,
+				BadParameter			= -4,
+				FourCCMismatch			= -3,
+				EndReached				= -2,
+				Fail					= -1,
+				Ok						= 0
+			};
+		};
+
 		CPacketSerializer(Mode::Enum eMode, u8* pBuffer, size_t nBufferSize, size_t nOffset = 0);
 		virtual ~CPacketSerializer();
 
-		size_t					GetOffset(void);
-	
+		u8*						GetBuffer(void);
+		size_t					GetSize(void) const;
+		size_t					GetOffset(void) const;
+		Error::Enum				GetError(void) const;
+
+		u8*						SerializeReserve(size_t nReservedSize);
+
+		//-- CSerializer
 		virtual	size_t			SerializeF32(f32& fValue, u32 nFourCC = 'f32 '); 
 		virtual	size_t			SerializeF64(f64& fValue, u32 nFourCC = 'f64 '); 
 		virtual	size_t			SerializeS32(s32& nValue, u32 nFourCC = 's32 '); 
@@ -113,10 +136,10 @@ class CPacketSerializer : public CSerializer
 		};
 #endif //PACKET_SERIALIZER_USES_DEBUG_FOURCC
 
-
 		u8*						m_pBuffer;
 		size_t					m_nSize;
 		size_t					m_nOffset;
+		Error::Enum				m_eError;
 };
 
 

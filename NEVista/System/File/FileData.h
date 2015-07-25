@@ -16,6 +16,7 @@
 
 #include "Types.h"
 #include "SysString.h"
+#include "FixedString.h"
 #include "SysFileIO.h"
 
 
@@ -188,21 +189,21 @@ class CFileData
 		const s8*							GetFileName(void) const;
 		SysString::Hash						GetHash(void) const;
 
-	friend CFileAccessor;
-	friend CFileAccessorDirectReader;
-	friend CFileAccessorDirectTextReader;
-//	friend CFileAccessorDirectBinaryReader;
-	friend CFileAccessorDirectWriter;
-	friend CFileAccessorDirectTextWriter;
-//	friend CFileAccessorDirectBinaryWriter;
-
-	friend CFileProcessor;
-	friend CFileProcessorDirectReader;
-	friend CFileProcessorDirectTextReader;
-//	friend CFileProcessorDirectBinaryReader;
-	friend CFileProcessorDirectWriter;
-	friend CFileProcessorDirectTextWriter;
-//	friend CFileProcessorDirectBinaryWriter;
+	friend class CFileAccessor;
+	friend class CFileAccessorDirectReader;
+	friend class CFileAccessorDirectTextReader;
+//	friend class CFileAccessorDirectBinaryReader;
+	friend class CFileAccessorDirectWriter;
+	friend class CFileAccessorDirectTextWriter;
+//	friend class CFileAccessorDirectBinaryWriter;
+ 
+	friend class CFileProcessor;
+	friend class CFileProcessorDirectReader;
+	friend class CFileProcessorDirectTextReader;
+//	friend class CFileProcessorDirectBinaryReader;
+	friend class CFileProcessorDirectWriter;
+	friend class CFileProcessorDirectTextWriter;
+//	friend class CFileProcessorDirectBinaryWriter;
 };
 
 

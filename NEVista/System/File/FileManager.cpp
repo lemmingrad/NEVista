@@ -155,20 +155,28 @@ CFileManager::Error::Enum CFileManager::Close(SysString::Hash nHash)
 {
 	if (SysString::INVALID_HASH != nHash)
 	{
-		for (TFileList::const_iterator cit = m_DirectFiles.begin(); cit != m_DirectFiles.end(); ++cit)
+#if defined(WIN32)
+		for (TFileList::const_iterator it = m_DirectFiles.begin(); it != m_DirectFiles.end(); ++it)
+#elif defined(LINUX)
+		for (TFileList::iterator it = m_DirectFiles.begin(); it != m_DirectFiles.end(); ++it)
+#endif
 		{
-			if (cit->GetHash() == nHash)
+			if (it->GetHash() == nHash)
 			{
-				m_DirectFiles.erase(cit);
+				m_DirectFiles.erase(it);
 				return Error::Ok;
 			}
 		}
 
-		for (TFileList::const_iterator cit = m_BufferedFiles.begin(); cit != m_BufferedFiles.end(); ++cit)
+#if defined(WIN32)
+		for (TFileList::const_iterator it = m_BufferedFiles.begin(); it != m_BufferedFiles.end(); ++it)
+#elif defined(LINUX)
+		for (TFileList::iterator it = m_BufferedFiles.begin(); it != m_BufferedFiles.end(); ++it)
+#endif
 		{
-			if (cit->GetHash() == nHash)
+			if (it->GetHash() == nHash)
 			{
-				m_BufferedFiles.erase(cit);
+				m_BufferedFiles.erase(it);
 				return Error::Ok;
 			}
 		}

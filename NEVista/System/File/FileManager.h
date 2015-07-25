@@ -51,7 +51,7 @@ class CFileManager
 				
 				
 				Failed = -1,
-				Ok = 0,
+				Ok = 0
 			};
 		};
 

@@ -74,11 +74,13 @@ class SysString
 
 		static Key			GenerateKey(u8 part1, u8 part2);
 
-		static size_t		Base64Encode(s8* strBuffer, size_t strBufferSize, const void* pDataBuffer, size_t dataSize);
-		static size_t 		Base64Decode(void* pDataBuffer, size_t strDataSize, const s8* strBuffer, size_t strBufferSize);
+		static size_t		Base64Encode(s8* strBuffer, size_t nStrBufferSize, const void* pDataBuffer, size_t nDataBufferSize);
+		static size_t 		Base64Decode(void* pDataBuffer, size_t nDataBufferSize, const s8* strEncoded, size_t nStrLength);
+		static size_t		Base64EncodedSize(size_t nDataSize);
+		static size_t 		Base64DecodedSize(const s8* strEncoded, size_t nStrLength);
 
-		static size_t		KeyEncode(s8* strBuffer, size_t strBufferSize, const void* pDataBuffer, size_t dataSize, Key key);
-		static size_t		KeyDecode(void* pDataBuffer, size_t dataBufferSize, const s8* strBuffer, size_t strLength, SysString::Key key);
+		static size_t		KeyEncode(s8* strBuffer, size_t nStrBufferSize, const void* pDataBuffer, size_t nDataBufferSize, Key key);
+		static size_t		KeyDecode(void* pDataBuffer, size_t nDataBufferSize, const s8* strEncoded, size_t nStrLength, SysString::Key key);
 
 		static s8*			FourCC(s8* strDest, size_t nDestSize, u32 nFourCC);
 
@@ -90,95 +92,6 @@ class SysString
 
 		SysString();
 		~SysString();
-};
-
-template <size_t S>
-class FixedString
-{
-	public:
-
-		FixedString()
-		{
-			Clear();
-		}
-		FixedString(const s8* strIn)
-		{
-			Clear();
-			Set(strIn);
-		}
-		template <size_t S2> FixedString(FixedString<S2>& in)
-		{
-			Clear();
-			Set(in);
-		}
-
-		~FixedString() {};
-		
-		s8* Buffer(void)
-		{
-			return m_strBuffer;
-		}
-		const s8* ConstBuffer(void) const
-		{
-			return m_strBuffer;
-		}
-		size_t Length(void)
-		{
-			return SysString::Strlen(m_strBuffer);
-		}
-		size_t Size(void) const
-		{
-			return S;
-		}
-
-		SysString::Hash GenerateHash(void) const
-		{
-			return SysString::GenerateHash(m_strBuffer);
-		}
-
-		void Clear(void)
-		{
-			m_strBuffer[0] = 0;
-		}
-
-		bool IsEmpty(void)
-		{
-			return SysString::IsEmpty(m_strBuffer);
-		}
-
-		s8* Set(const s8* strIn)
-		{
-			return SysString::Strcpy(m_strBuffer, S, strIn);
-		}
-		s8* Set(const s8* strIn, size_t nStrInLength)
-		{
-			return SysString::Strncpy(m_strBuffer, S, strIn, nStrInLength);
-		}
-		template <size_t S2> s8* Set(FixedString<S2>& in)
-		{
-			return Set(in.Buffer(), in.Length());
-		}
-
-		s8* Append(const s8* strIn)
-		{
-			return SysString::Strcat(m_strBuffer, S, strIn);
-		}
-		s8* operator+=(const s8* strIn)
-		{
-			return Append(strIn);
-		}
-		template <size_t S2> s8* Append(FixedString<S2>& in)
-		{
-			return Append(in.Buffer());
-		}
-		template <size_t S2> s8* operator+=(FixedString<S2>& in)
-		{
-			return Append(in);
-		}
-	
-	private:
-
-		s8		m_strBuffer[S];
 };
 
 

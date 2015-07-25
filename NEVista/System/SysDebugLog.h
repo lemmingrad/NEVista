@@ -1,16 +1,17 @@
-#ifndef _SERIALIZED_H_
-#define _SERIALIZED_H_
+#ifndef _SYS_DEBUGLOG_H_
+#define _SYS_DEBUGLOG_H_
 #pragma once
 
 //----------------------------------------------------------//
-// SERIALIZED.H
+// SYSDEBUGLOG.H
 //----------------------------------------------------------//
 //-- Description			
-// Base class definition for a serialised class
+// Debug log.
 //----------------------------------------------------------//
 
 
 #include "Types.h"
+#include "Log.h"
 
 
 //----------------------------------------------------------//
@@ -25,10 +26,6 @@
 // FORWARD REFERENCES
 //----------------------------------------------------------//
 
-
-class CSerializer;
-
-
 //----------------------------------------------------------//
 // STRUCTS
 //----------------------------------------------------------//
@@ -37,24 +34,16 @@ class CSerializer;
 // CLASSES
 //----------------------------------------------------------//
 
-
-class CSerialized
-{
-	public:
-
-		CSerialized() {};
-		virtual ~CSerialized() {};
-
-		virtual size_t Serialize(CSerializer& Serializer) = 0;
-};
-
-
 //----------------------------------------------------------//
 // EXTERNALS
 //----------------------------------------------------------//
+
+
+extern CLog gDebugLog;
+
 
 //----------------------------------------------------------//
 // EOF
 //----------------------------------------------------------//
 
-#endif //_SERIALIZER_H_
+#endif //_SYS_DEBUGLOG_H_
