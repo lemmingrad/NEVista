@@ -83,7 +83,9 @@ class SysSocket
 
 		typedef struct sockaddr				SockAddr;
 		typedef struct sockaddr_in			SockAddrIn;
+		typedef struct in_addr				InAddr;
 		typedef struct sockaddr_in6			SockAddrIn6;
+		typedef struct in6_addr				In6Addr;
 		typedef struct addrinfo				AddrInfo;
 		typedef struct timeval				Timeval;
 		typedef fd_set						FdSet;
@@ -125,6 +127,8 @@ class SysSocket
 		static u16			Htons(u16 nValue);
 		static u32			Ntohl(u32 nValue);
 		static u32			Htonl(u32 nValue);
+		static s32			InetPToN(s32 nType, const s8* strSrc, void* pDest, size_t nDestSize);
+		static const s8*	InetNToP(s32 nType, const void* pSrc, size_t nSrcSize, s8* strDest, size_t nDestSize);
 
 		static s32			Send(Socket nSocket, const s8* pBuffer, size_t nBufferSize);
 		static s32			Sendto(Socket nSocket, const s8* pBuffer, size_t nBufferSize, const SockAddr* pAddr, size_t nAddrSize);

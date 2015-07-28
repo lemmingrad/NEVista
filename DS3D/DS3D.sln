@@ -14,6 +14,13 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Network", "..\NEVista\Netwo
 		{71495028-5ECE-47A9-AD8D-6B019102C24D} = {71495028-5ECE-47A9-AD8D-6B019102C24D}
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SQLite", "..\NEVista\SQLite\SQLite.vcproj", "{E692918F-B936-476C-83B4-275B81DE461A}"
+	ProjectSection(ProjectDependencies) = postProject
+		{71495028-5ECE-47A9-AD8D-6B019102C24D} = {71495028-5ECE-47A9-AD8D-6B019102C24D}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DS3DServer", "..\DS3DServer\DS3DServer.vcproj", "{A212477E-71F5-483F-A8CA-188CE2035D92}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -32,6 +39,13 @@ Global
 		{57A52384-E6DC-4B6E-B750-AAEE8CA51710}.Debug|Win32.Build.0 = Debug|Win32
 		{57A52384-E6DC-4B6E-B750-AAEE8CA51710}.Release|Win32.ActiveCfg = Release|Win32
 		{57A52384-E6DC-4B6E-B750-AAEE8CA51710}.Release|Win32.Build.0 = Release|Win32
+		{E692918F-B936-476C-83B4-275B81DE461A}.Debug|Win32.ActiveCfg = Debug|Win32
+		{E692918F-B936-476C-83B4-275B81DE461A}.Debug|Win32.Build.0 = Debug|Win32
+		{E692918F-B936-476C-83B4-275B81DE461A}.Release|Win32.ActiveCfg = Release|Win32
+		{E692918F-B936-476C-83B4-275B81DE461A}.Release|Win32.Build.0 = Release|Win32
+		{A212477E-71F5-483F-A8CA-188CE2035D92}.Debug|Win32.ActiveCfg = Debug|Win32
+		{A212477E-71F5-483F-A8CA-188CE2035D92}.Release|Win32.ActiveCfg = Release|Win32
+		{A212477E-71F5-483F-A8CA-188CE2035D92}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -136,6 +136,15 @@ class SysSmartPtr
 			}
 			return false;
 		}
+
+		u32 GetRefCount(void)
+		{
+			if (IS_PTR(m_pRefCounter))
+			{
+				return m_pRefCounter->GetCount();
+			}
+			return 0;
+		}
 	
 	private:
 

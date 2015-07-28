@@ -21,6 +21,11 @@
 //-- Define this to use ioctl instead of fcntl on non-winsock platforms
 //#	define SYSSOCKET_USES_IOCTL
 
+//-- Define this to use inet_pton
+#define SYSSOCKET_USES_INET_PTON
+//-- Define this to use inet_ntop
+#define SYSSOCKET_USES_INET_NTOP
+
 #	include <errno.h>
 #	include <poll.h>
 #	include <sys/types.h>
@@ -444,6 +449,145 @@ u32 SysSocket::Ntohl(u32 nValue)
 u32 SysSocket::Htonl(u32 nValue)
 {
 	return htonl(nValue);
+}
+
+
+//----------------------------------------------------------//
+//
+//----------------------------------------------------------//
+//-- Description
+//----------------------------------------------------------//
+s32 SysSocket::InetPToN(s32 nType, const s8* strSrc, void* pDest, size_t nDestSize)
+{
+	if ( IS_TRUE(SysString::IsEmpty(strSrc))
+		|| IS_NULL_PTR(pDest) )
+	{
+		return -1;
+	}
+
+	if ( (AF_INET == nType)
+		&& (nDestSize < sizeof(InAddr)) )
+	{
+		return -1;
+	}
+	else if ( (AF_INET6 == nType)
+		&& (nDestSize < sizeof(In6Addr)) )
+	{
+		return -1;
+	}
+
+#if defined(SYSSOCKET_USES_INET_PTON)
+
+	if ( (AF_INET != nType) 
+		&& (AF_INET6 != nType) )
+	{
+		return -1;
+	}
+
+	//-- returns 0 if invalid string buffer.
+	//-- returns -1 for other errors.
+	//-- returns 1 for success.
+
+#	if	defined(SYSSOCKET_USES_WINSOCK)
+
+		return InetPton(nType, strSrc, pDest);
+
+#	else
+
+		return ::inet_pton(nType, strSrc, pDest);
+
+#	endif
+
+#else
+
+	if (AF_INET != nType) 
+	{
+		return -1;
+	}
+
+	u32 nVal = ::inet_addr(strSrc);
+	if (INADDR_NONE == nVal)
+	{
+		return 0;
+	}
+	
+	InAddr* pAddr = (InAddr*)pDest;
+	pAddr->s_addr = nVal;
+
+	return 1;
+
+#endif
+}
+
+
+//----------------------------------------------------------//
+//
+//----------------------------------------------------------//
+//-- Description
+//----------------------------------------------------------//
+const s8* SysSocket::InetNToP(s32 nType, const void* pSrc, size_t nSrcSize, s8* strDest, size_t nDestSize)
+{
+	if ( IS_NULL_PTR(pSrc)
+		|| IS_NULL_PTR(strDest) )
+	{
+		return NULL;
+	}
+
+	if (AF_INET == nType)
+	{
+		if ( (nSrcSize < sizeof(InAddr))
+			|| (nDestSize < INET_ADDRSTRLEN) )
+		{
+			return NULL;
+		}
+	}
+	else if (AF_INET6 == nType)
+	{
+		if ( (nSrcSize < sizeof(In6Addr))
+			|| (nDestSize < INET6_ADDRSTRLEN) )
+		{
+			return NULL;
+		}
+	}
+
+#if defined(SYSSOCKET_USES_INET_NTOP)
+
+	if ( (AF_INET != nType) 
+		&& (AF_INET6 != nType) )
+	{
+		return NULL;
+	}
+
+	//-- returns NULL if error.
+	//-- returns strDest for success.
+
+#	if	defined(SYSSOCKET_USES_WINSOCK)
+
+		return InetNtop(nType, pSrc, strDest, nDestSize);
+
+#	else
+
+		return ::inet_ntop(nType, pSrc, strDest, (socklen_t)nDestSize);
+
+#	endif
+
+#else
+
+	if (AF_INET != nType) 
+	{
+		return NULL;
+	}
+
+	s8* pAddress = ::inet_ntoa(*((InAddr*)pSrc));
+	if (IS_PTR(pAddress))
+	{
+		SysString::Strcpy(strDest, nDestSize, pAddress);
+		return strDest;
+	}
+
+	return NULL;
+
+#endif
 }
 
 

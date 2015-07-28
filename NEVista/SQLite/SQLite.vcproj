@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
-	Name="Network"
-	ProjectGUID="{57A52384-E6DC-4B6E-B750-AAEE8CA51710}"
-	RootNamespace="Network"
+	Name="SQLite"
+	ProjectGUID="{E692918F-B936-476C-83B4-275B81DE461A}"
+	RootNamespace="SQLite"
 	Keyword="Win32Proj"
 	TargetFrameworkVersion="196613"
 	>
@@ -41,8 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="E:\Programming\GitRoot\NEVista\Networking;E:\Programming\GitRoot\NEVista\System"
-				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;WIN32_LEAN_AND_MEAN"
+				PreprocessorDefinitions="WIN32;_DEBUG;_LIB"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -149,38 +148,6 @@
 			Filter="cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx"
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
-			<File
-				RelativePath=".\Message.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\Packet.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\PacketSerializer.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\TCPConnection.cpp"
-				>
-			</File>
-			<Filter
-				Name="Messages"
-				>
-				<File
-					RelativePath=".\Messages\MsgClientKeyExchange.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\Messages\MsgMotd.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\Messages\MsgServerKeyExchange.cpp"
-					>
-				</File>
-			</Filter>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -188,37 +155,17 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath=".\Message.h"
+				RelativePath=".\SQLiteDatabase.h"
 				>
 			</File>
 			<File
-				RelativePath=".\Packet.h"
+				RelativePath=".\SQLiteRecord.h"
 				>
 			</File>
 			<File
-				RelativePath=".\PacketSerializer.h"
+				RelativePath=".\SQLiteTable.h"
 				>
 			</File>
-			<File
-				RelativePath=".\TCPConnection.h"
-				>
-			</File>
-			<Filter
-				Name="Messages"
-				>
-				<File
-					RelativePath=".\Messages\MsgClientKeyExchange.h"
-					>
-				</File>
-				<File
-					RelativePath=".\Messages\MsgMotd.h"
-					>
-				</File>
-				<File
-					RelativePath=".\Messages\MsgServerKeyExchange.h"
-					>
-				</File>
-			</Filter>
 		</Filter>
 		<Filter
 			Name="Resource Files"

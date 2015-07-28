@@ -6,12 +6,12 @@
 // MAJOR_VERSION, MINOR_VERSION and REVISION_STRING may be manually modified.
 // LAST_BUILD_NUMBER and REVISION_NUMBER are the only bits controlled by the tool.
 //
-// Last update time: Sat Jul 25 01:06:45 2015
+// Last update time: Tue Jul 28 21:37:02 2015
 //
 // These are used to generate game defines.
 // :KEY MAJOR_VERSION 		0
 // :KEY MINOR_VERSION 		1
-// :KEY LAST_BUILD_NUMBER 		932
+// :KEY LAST_BUILD_NUMBER 		956
 // :KEY REVISION_NUMBER 		0
 // :KEY REVISION_STRING 		
 
@@ -22,11 +22,11 @@
 
 
 // These are generated from the values above. DO NOT MANUALLY EDIT.
-#define GAME_VERSION 		"0.1 (Build 931)"
-#define FILEVER 		0,1,931,0
-#define PRODUCTVER 		0,1,931,0
-#define STRFILEVER 		"0, 1, 931, 0\0"
-#define STRPRODUCTVER 		"0, 1, 931, 0\0"
+#define GAME_VERSION 		"0.1 (Build 955)"
+#define FILEVER 		0,1,955,0
+#define PRODUCTVER 		0,1,955,0
+#define STRFILEVER 		"0, 1, 955, 0\0"
+#define STRPRODUCTVER 		"0, 1, 955, 0\0"
 
 
 #endif //_VERSION_INFO_H_
