@@ -93,19 +93,6 @@ bool Game_Initialise(void)
 	gConnection.Initialise();
 	gConnection.Open("192.168.1.36", "5555");
 
-	struct TT
-	{
-		TT() {}
-		~TT() {
-			u32 breakhere = 0;
-		}
-	};
-
-	{
-		SysSmartPtr<TT> p(new TT());
-	}
-
-
 
 
 	CSimpleBuffer<1024> buf;

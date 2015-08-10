@@ -169,6 +169,10 @@
 				Name="Messages"
 				>
 				<File
+					RelativePath=".\Messages\MsgBye.cpp"
+					>
+				</File>
+				<File
 					RelativePath=".\Messages\MsgClientKeyExchange.cpp"
 					>
 				</File>
@@ -206,6 +210,10 @@
 			<Filter
 				Name="Messages"
 				>
+				<File
+					RelativePath=".\Messages\MsgBye.h"
+					>
+				</File>
 				<File
 					RelativePath=".\Messages\MsgClientKeyExchange.h"
 					>

@@ -90,13 +90,17 @@ class CSimpleBuffer
 						{
 							//-- Copy success.
 						}
+						else
+						{
+							//-- Copy failed.
+						}
 					}
 					m_nFilledSize += nInSize;
 					return m_Buffer;
 				}
 			}
 
-			// Failed.
+			//-- Failed.
 			return NULL;
 		}
 
@@ -113,6 +117,10 @@ class CSimpleBuffer
 						if (IS_PTR(SysMemory::Memcpy(pBuf, nRemaining, pIn, nInSize)))
 						{
 							//-- Copy success.
+						}
+						else
+						{
+							//-- Copy failed.
 						}
 					}
 					m_nFilledSize += nInSize;

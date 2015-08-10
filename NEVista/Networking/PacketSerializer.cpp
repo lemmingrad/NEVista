@@ -86,7 +86,7 @@ u8* CPacketSerializer::SerializeReserve(size_t nReservedSize)
 		if (nRemaining >= nReservedSize)
 		{
 			u8* pBuffer = &m_pBuffer[m_nOffset];
-			if (m_eMode == Mode::Serializing)
+			if (Mode::Serializing == m_eMode)
 			{
 				SysMemory::Memclear(pBuffer, nReservedSize);
 			}
@@ -104,6 +104,10 @@ u8* CPacketSerializer::SerializeReserve(size_t nReservedSize)
 	}
 
 	//-- Failed
+	if (Error::Ok == m_eError)
+	{
+		m_Error = Error::Fail;
+	}
 	return NULL;
 }
 
@@ -133,7 +137,7 @@ size_t CPacketSerializer::SerializeBytes(u8* pData, size_t nDataSize, u32 nFourC
 		{
 			u8* pBuffer = &m_pBuffer[m_nOffset];
 
-			if (m_eMode == Mode::Serializing)
+			if (Mode::Serializing == m_eMode)
 			{
 #if defined(PACKET_SERIALIZER_USES_DEBUG_FOURCC)
 				FCC.m_nValue = nFourCC;
@@ -226,6 +230,10 @@ size_t CPacketSerializer::SerializeBytes(u8* pData, size_t nDataSize, u32 nFourC
 	}
 
 	//-- Failed
+	if (Error::Ok == m_eError)
+	{
+		m_Error = Error::Fail;
+	}
 	return 0;
 }
 		
@@ -239,7 +247,7 @@ size_t CPacketSerializer::SerializeF32(f32& fValue, u32 nFourCC)
 
 	size_t nConvertorSize = sizeof(convertor);
 
-	if (m_eMode == Mode::Serializing)
+	if (Mode::Serializing == m_eMode)
 	{	
 		convertor.m_fValue = fValue;
 		
@@ -274,6 +282,10 @@ size_t CPacketSerializer::SerializeF32(f32& fValue, u32 nFourCC)
 	}
 
 	//-- Failed.
+	if (Error::Ok == m_eError)
+	{
+		m_Error = Error::Fail;
+	}
 	return 0;
 }
 
@@ -287,7 +299,7 @@ size_t CPacketSerializer::SerializeF64(f64& fValue, u32 nFourCC)
 
 	size_t nConvertorSize = sizeof(convertor);
 
-	if (m_eMode == Mode::Serializing)
+	if (Mode::Serializing == m_eMode)
 	{	
 		convertor.m_fValue = fValue;
 		
@@ -322,6 +334,10 @@ size_t CPacketSerializer::SerializeF64(f64& fValue, u32 nFourCC)
 	}
 
 	//-- Failed.
+	if (Error::Ok == m_eError)
+	{
+		m_Error = Error::Fail;
+	}
 	return 0;
 }
 
@@ -335,7 +351,7 @@ size_t CPacketSerializer::SerializeS32(s32& nValue, u32 nFourCC)
 
 	size_t nConvertorSize = sizeof(convertor);
 
-	if (m_eMode == Mode::Serializing)
+	if (Mode::Serializing == m_eMode)
 	{	
 		convertor.m_nValue = nValue;
 		
@@ -370,6 +386,10 @@ size_t CPacketSerializer::SerializeS32(s32& nValue, u32 nFourCC)
 	}
 
 	//-- Failed.
+	if (Error::Ok == m_eError)
+	{
+		m_Error = Error::Fail;
+	}
 	return 0;
 }
 
@@ -383,7 +403,7 @@ size_t CPacketSerializer::SerializeU32(u32& nValue, u32 nFourCC)
 
 	size_t nConvertorSize = sizeof(convertor);
 
-	if (m_eMode == Mode::Serializing)
+	if (Mode::Serializing == m_eMode)
 	{	
 		convertor.m_nValue = nValue;
 		
@@ -418,6 +438,10 @@ size_t CPacketSerializer::SerializeU32(u32& nValue, u32 nFourCC)
 	}
 
 	//-- Failed.
+	if (Error::Ok == m_eError)
+	{
+		m_Error = Error::Fail;
+	}
 	return 0;
 }
 
@@ -431,7 +455,7 @@ size_t CPacketSerializer::SerializeS8(s8& nValue, u32 nFourCC)
 
 	size_t nConvertorSize = sizeof(u8);
 
-	if (m_eMode == Mode::Serializing)
+	if (Mode::Serializing == m_eMode)
 	{	
 		return SerializeBytes(pByte, nConvertorSize, nFourCC);
 	}
@@ -449,6 +473,10 @@ size_t CPacketSerializer::SerializeS8(s8& nValue, u32 nFourCC)
 	}
 
 	//-- Failed.
+	if (Error::Ok == m_eError)
+	{
+		m_Error = Error::Fail;
+	}
 	return 0;
 }
 
@@ -462,7 +490,7 @@ size_t CPacketSerializer::SerializeU8(u8& nValue, u32 nFourCC)
 
 	size_t nConvertorSize = sizeof(u8);
 
-	if (m_eMode == Mode::Serializing)
+	if (Mode::Serializing == m_eMode)
 	{	
 		return SerializeBytes(pByte, nConvertorSize, nFourCC);
 	}
@@ -480,6 +508,10 @@ size_t CPacketSerializer::SerializeU8(u8& nValue, u32 nFourCC)
 	}
 
 	//-- Failed.
+	if (Error::Ok == m_eError)
+	{
+		m_Error = Error::Fail;
+	}
 	return 0;
 }
 
@@ -493,7 +525,7 @@ size_t CPacketSerializer::SerializeS16(s16& nValue, u32 nFourCC)
 	
 	size_t nConvertorSize = sizeof(convertor);
 
-	if (m_eMode == Mode::Serializing)
+	if (Mode::Serializing == m_eMode)
 	{	
 		convertor.m_nValue = nValue;
 		
@@ -528,6 +560,10 @@ size_t CPacketSerializer::SerializeS16(s16& nValue, u32 nFourCC)
 	}
 
 	//-- Failed.
+	if (Error::Ok == m_eError)
+	{
+		m_Error = Error::Fail;
+	}
 	return 0;
 }
 
@@ -541,7 +577,7 @@ size_t CPacketSerializer::SerializeU16(u16& nValue, u32 nFourCC)
 
 	size_t nConvertorSize = sizeof(convertor);
 
-	if (m_eMode == Mode::Serializing)
+	if (Mode::Serializing == m_eMode)
 	{	
 		convertor.m_nValue = nValue;
 		
@@ -576,6 +612,10 @@ size_t CPacketSerializer::SerializeU16(u16& nValue, u32 nFourCC)
 	}
 
 	//-- Failed.
+	if (Error::Ok == m_eError)
+	{
+		m_Error = Error::Fail;
+	}
 	return 0;
 }
 
@@ -594,7 +634,7 @@ size_t CPacketSerializer::SerializeS64(s64& nValue, u32 nFourCC)
 	nExpectedSize += sizeof(UBAFourCC);
 #endif //PACKET_SERIALIZER_USES_DEBUG_FOURCC
 
-	if (m_eMode == Mode::Serializing)
+	if (Mode::Serializing == m_eMode)
 	{	
 		convertor.m_nValue = nValue;
 		
@@ -629,6 +669,10 @@ size_t CPacketSerializer::SerializeS64(s64& nValue, u32 nFourCC)
 	}
 
 	//-- Failed.
+	if (Error::Ok == m_eError)
+	{
+		m_Error = Error::Fail;
+	}
 	return 0;
 }
 
@@ -642,7 +686,7 @@ size_t CPacketSerializer::SerializeU64(u64& nValue, u32 nFourCC)
 
 	size_t nConvertorSize = sizeof(convertor);
 
-	if (m_eMode == Mode::Serializing)
+	if (Mode::Serializing == m_eMode)
 	{	
 		convertor.m_nValue = nValue;
 		
@@ -677,6 +721,10 @@ size_t CPacketSerializer::SerializeU64(u64& nValue, u32 nFourCC)
 	}
 
 	//-- Failed.
+	if (Error::Ok == m_eError)
+	{
+		m_Error = Error::Fail;
+	}
 	return 0;
 }
 
@@ -690,7 +738,7 @@ size_t CPacketSerializer::SerializeBitfield(bitfield& nFlags, u32 nFourCC)
 
 	size_t nConvertorSize = sizeof(convertor);
 
-	if (m_eMode == Mode::Serializing)
+	if (Mode::Serializing == m_eMode)
 	{	
 		convertor.m_nValue = nFlags;
 		
@@ -725,6 +773,10 @@ size_t CPacketSerializer::SerializeBitfield(bitfield& nFlags, u32 nFourCC)
 	}
 
 	//-- Failed.
+	if (Error::Ok == m_eError)
+	{
+		m_Error = Error::Fail;
+	}
 	return 0;
 }
 

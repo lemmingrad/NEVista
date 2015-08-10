@@ -38,20 +38,16 @@
 
 
 #define SYS_SOCKET_NO_ERROR				(0)
+#define SYS_SOCKET_RECV_ZERO			(-2)
+#define SYS_SOCKET_WOULD_BLOCK			(-3)
 
 #if defined(SYSSOCKET_USES_WINSOCK)
 
 #	define SYS_SOCKET_ERROR				(SOCKET_ERROR)
-#	define SYS_SOCKET_WOULD_BLOCK		(WSAEWOULDBLOCK)
-#	define SYS_SOCKET_AGAIN				(WSAEWOULDBLOCK)
-#	define SYS_SOCKET_IN_PROGRESS		(WSAEINPROGRESS)
 
 #else
 
 #	define SYS_SOCKET_ERROR				(-1)
-#	define SYS_SOCKET_WOULD_BLOCK		(EWOULDBLOCK)
-#	define SYS_SOCKET_AGAIN				(EAGAIN)
-#	define SYS_SOCKET_IN_PROGRESS		(EINPROGRESS)
 
 #endif //SYSSOCKET_USES_WINSOCK
 
@@ -97,8 +93,26 @@ class SysSocket
 			short		revents;		/* returned events */
 		};
 		typedef SysSocketPollFd				PollFd;
+		struct Shutdown
+		{
+			enum Enum
+			{
+				Read = SD_RECEIVE,
+				Write = SD_SEND,
+				Both = SD_BOTH 
+			};
+		};
 #else
 		typedef struct pollfd				PollFd;
+		struct Shutdown
+		{
+			enum Enum
+			{
+				Read = SHUT_RD,
+				Write = SHUT_WR,
+				Both = SHUT_RDWR 
+			};
+		};
 #endif //SYSSOCKET_USES_WINSOCK
 
 		static void			SystemInitialise(void);

@@ -40,29 +40,13 @@ class CSQLiteDatabase
 {
 	public:
 		
-		CSQLiteDatabase()
-		: m_pDatabase(NULL)
-		{
-		}
-		
-		~CSQLiteDatabase()
-		{
-		}
+		CSQLiteDatabase();
+		~CSQLiteDatabase();
 
-		s32	Open(const s8* strFilename)
-		{
-			return sqlite3_open(strFilename, &m_pDatabase);
-		}
+		s32	Open(const s8* strFilename);
+		s32	Close(void);
 
-		s32	Close(void)
-		{
-			return sqlite3_close(m_pDatabase);
-		}
-
-		sqlite3* GetHandle(void)
-		{
-			return m_pDatabase;
-		}
+		sqlite3* GetHandle(void);
 
 	private:
 

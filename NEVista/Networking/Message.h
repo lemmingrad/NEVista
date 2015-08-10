@@ -52,9 +52,13 @@ class CMessage : public CSerialized
 			enum Enum
 			{
 				Unknown											= 'xxxx',
+				MsgBye											= 'bye ',
 				MsgMotd											= 'motd',
+				MsgLogin										= 'logn',
 				MsgClientKeyExchange							= 'ckey',
-				MsgServerKeyExchange							= 'skey'
+				MsgServerKeyExchange							= 'skey',
+				MsgChat											= 'chat'
+				//-- Add new message IDs here.
 			};
 		};
 
@@ -62,10 +66,11 @@ class CMessage : public CSerialized
 		virtual ~CMessage();
 
 		static CMessage*		CreateType(Type::Enum eType);
-
+		
+		Type::Enum				GetType(void);
 
 		//-- CSerialized
-		virtual size_t			Serialize(CSerializer& Serializer) = 0;
+		virtual size_t			Serialize(CSerializer& Serializer);
 
 	protected:
 

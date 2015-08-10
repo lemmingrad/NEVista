@@ -13,12 +13,15 @@
 
 #include "Types.h"
 #include "FixedString.h"
-#include <vector>
 
 
 //----------------------------------------------------------//
 // DEFINES
 //----------------------------------------------------------//
+
+
+#define SQLITE_RECORD_COLUMN_NAME_SIZE			(32)
+
 
 //----------------------------------------------------------//
 // ENUMS
@@ -37,43 +40,47 @@
 //----------------------------------------------------------//
 
 
-class SQLiteRecord
+class CSQLiteRecord
 {
 	public:
 
-		struct Type
+		struct Meta
 		{
-			enum Enum
+			struct ColumnInfo
 			{
-				Int = 0,
-				Float,
-				Text, 
-				Data
+				struct Type
+				{
+					enum Enum
+					{
+						End = 0,
+						Int,
+						Float,
+						Text, 
+						Data
+					};
+				};
+
+				struct AccessMode
+				{
+					enum Enum
+					{
+						Get = 0,
+						Set
+					};
+				};
+
+				typedef s32 (*ColumnAccessFunc)(void* pThis, AccessMode::Enum eMode, void* pData, size_t& nDataSize);
+
+				FixedString<SQLITE_RECORD_COLUMN_NAME_SIZE>		m_strName;
+				Type::Enum										m_eType;
+				ColumnAccessFunc								m_pFunc;
 			};
+
+			const ColumnInfo* m_pColumns;
 		};
 
-		typedef s32 (*GetFunc)(void* pThis, void* pData, size_t& nDataSize);
-		typedef s32 (*SetFunc)(void* pThis, void* pData, size_t nDataSize);
-
-		struct Info
-		{
-			FixedString<32>		m_strName;
-			Type::Enum			m_eType;
-			GetFunc				m_pGetFunc;
-			SetFunc				m_pSetFunc;
-		};
-
-//		typedef std::vector<Info> TColumnInfoList;
-
-		SQLiteRecord()
-		{
-		}
-
-		virtual ~SQLiteRecord()
-		{
-		}
-
-	protected:
+		CSQLiteRecord() {}
+		virtual ~CSQLiteRecord() {}
 };
 
 

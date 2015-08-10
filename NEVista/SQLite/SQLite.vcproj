@@ -41,6 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
+				AdditionalIncludeDirectories="E:\Programming\GitRoot\NEVista\System"
 				PreprocessorDefinitions="WIN32;_DEBUG;_LIB"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -148,6 +149,14 @@
 			Filter="cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx"
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
+			<File
+				RelativePath=".\SQLiteDatabase.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\SQLiteTable.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -160,6 +169,10 @@
 			</File>
 			<File
 				RelativePath=".\SQLiteRecord.h"
+				>
+			</File>
+			<File
+				RelativePath=".\SQLiteStatement.h"
 				>
 			</File>
 			<File

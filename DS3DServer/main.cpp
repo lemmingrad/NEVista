@@ -5,34 +5,100 @@
 
 #include "SysSocket.h"
 #include "FixedString.h"
+#include "SimpleBuffer.h"
 #include "SQLiteDatabase.h"
 #include "SQLiteTable.h"
 #include "SQLiteRecord.h"
+#include "SQLiteStatement.h"
+
+#include "Message.h"
+#include "MsgMotd.h"
+#include "Packet.h"
+#include "PacketSerializer.h"
+#include <list>
 
 
 #define PORT 		"5555"
 #define BACKLOG 	10
 
 
-void HandleActivity(int newsock, fd_set *set)
+static bool bOnce = false;
+
+void HandleReadActivity(int newsock, fd_set *set)
 {
 	// TODO
 	FD_CLR(newsock, set);
 }
 
+void HandleWriteActivity(int newsock, fd_set *set)
+{
+	// TODO
+	if (bOnce == true)
+	{
+		FD_CLR(newsock, set);
+		return;
+	}
 
-class RowClass : public SQLiteRecord
+	CMsgMotd* pMotd = new CMsgMotd();
+	pMotd->SetText("This is a test.");
+
+	SysSmartPtr<CMessage> message(pMotd);
+
+	CPacket packet;
+	CPacket::Error::Enum ePacketEC = packet.AddMessage(message);
+	if (ePacketEC != CPacket::Error::Ok)
+	{
+		printf("packet.AddMessage ePacketEC = %d\n", ePacketEC);
+		fflush(stdout);
+	}
+
+	CSimpleBuffer<1024> buffer;
+
+	CPacketSerializer ser(CSerializer::Mode::Serializing, buffer.Buffer(), buffer.Size());
+
+	ePacketEC = packet.Serialize(ser);
+	if (ePacketEC != CPacket::Error::Ok)
+	{
+		printf("packet.Serialize ePacketEC = %d\n", ePacketEC);
+		fflush(stdout);
+	}
+
+	printf("packet has %d messages\n", packet.GetMessageCount());
+	printf("packet has %d bytes\n", packet.GetDataSize());
+	fflush(stdout);
+
+	buffer.InsTail(NULL, ser.GetOffset());
+
+	printf("buffer has %d bytes\n", buffer.UsedSize());
+	fflush(stdout);
+
+	s32 nBytes = SysSocket::Send(newsock, (const s8*)buffer.ConstBuffer(), buffer.UsedSize());
+	if (nBytes > 0)
+	{
+		buffer.StripHead(nBytes);
+
+		printf("send(%d)\n", nBytes);
+		fflush(stdout);
+	}
+
+	FD_CLR(newsock, set);
+	bOnce = true;
+}
+
+
+class RowClass : public CSQLiteRecord
 {
 	public:
+
 		RowClass(const s8* strEvent, const s8* strDetails, const s8* strDatetime) 
-		: SQLiteRecord()
+		: CSQLiteRecord()
 		{
 			m_event = strEvent;
 			m_details = strDetails;
 			m_datetime = strDatetime;
 		}
 		RowClass()
-		: SQLiteRecord()
+		: CSQLiteRecord()
 		{
 			m_event.Clear();
 			m_details.Clear();
@@ -42,99 +108,104 @@ class RowClass : public SQLiteRecord
 		{
 		}
 
-		static s32 GetEvent(void* pRow, void* pData, size_t& nDataSize)
+		static const Meta& GetMetaData(void)
 		{
-			RowClass* pThis = (RowClass*)pRow;
-			s8** pText = (s8**)pData;
-			*pText = pThis->m_event.Buffer(); 
-			return SQLITE_OK;
-		}
-		static s32 SetEvent(void* pRow, void* pData, size_t nDataSize)
-		{
-			RowClass* pThis = (RowClass*)pRow;
-			s8* pText = (s8*)pData;
-			pThis->m_event = pText;
-			return SQLITE_OK;
+			return sm_MetaData;
 		}
 
-		static s32 GetDetails(void* pRow, void* pData, size_t& nDataSize)
+		static s32 AccessEvent(void* pRow, Meta::ColumnInfo::AccessMode::Enum eMode, void* pData, size_t& nDataSize)
 		{
-			RowClass* pThis = (RowClass*)pRow;
-			s8** pText = (s8**)pData;
-			*pText = pThis->m_details.Buffer(); 
-			return SQLITE_OK;
-		}
-		static s32 SetDetails(void* pRow, void* pData, size_t nDataSize)
-		{
-			RowClass* pThis = (RowClass*)pRow;
-			s8* pText = (s8*)pData;
-			pThis->m_details = pText;
-			return SQLITE_OK;
-		}
-
-		static s32 GetDatetime(void* pRow, void* pData, size_t& nDataSize)
-		{
-			RowClass* pThis = (RowClass*)pRow;
-			s8** pText = (s8**)pData;
-			*pText = pThis->m_datetime.Buffer(); 
-			return SQLITE_OK;
-		}
-		static s32 SetDatetime(void* pRow, void* pData, size_t nDataSize)
-		{
-			RowClass* pThis = (RowClass*)pRow;
-			s8* pText = (s8*)pData;
-			pThis->m_datetime = pText;
-			return SQLITE_OK;
-		}
-
-		static s32 ExecCallback(void* pResult, s32 argc, s8** argv, s8** pCols)
-		{
-			printf("ExecCallback:\n");
-			fflush(stdout);
-
-			CSQLiteTable<RowClass>::ExecResult* pExecResult = (CSQLiteTable<RowClass>::ExecResult*)pResult;
-			if (IS_PTR(pExecResult))
+			if ( IS_NULL_PTR(pRow) 
+				|| IS_NULL_PTR(pData) )
 			{
-				pExecResult->m_Results.push_back(RowClass());
-				RowClass& row = pExecResult->m_Results.back();
-				
-				for (s32 i = 0; i < argc; ++i)
-				{
-					printf("New: %s=%s\n", pCols[i], argv[i] ? argv[i] : "null");
-					fflush(stdout);
+				return SQLITE_ERROR;
+			}
+			
+			RowClass* pThis = (RowClass*)pRow;
+			s8** ppText = (s8**)pData;
 
-					for (u32 ic = 0; ic < sm_nInfoCount; ++ic)
-					{
-						if (IS_ZERO(SysString::Strcmp(pCols[i], sm_InfoList[ic].m_strName.ConstBuffer())))
-						{
-							sm_InfoList[ic].m_pSetFunc(&row, argv[i] ? (void*)argv[i] : (void*)"null", 0);
-							break;
-						}
-					}
-				}
+			if (Meta::ColumnInfo::AccessMode::Get == eMode)
+			{
+				*ppText = pThis->m_event.Buffer(); 
+				nDataSize = pThis->m_event.Size();
+			}
+			else
+			{
+				pThis->m_event = *ppText;
 			}
 
-			return 0;
+			return SQLITE_OK;
+		}
+
+		static s32 AccessDetails(void* pRow, Meta::ColumnInfo::AccessMode::Enum eMode, void* pData, size_t& nDataSize)
+		{
+			if ( IS_NULL_PTR(pRow) 
+				|| IS_NULL_PTR(pData) )
+			{
+				return SQLITE_ERROR;
+			}
+			
+			RowClass* pThis = (RowClass*)pRow;
+			s8** ppText = (s8**)pData;
+
+			if (Meta::ColumnInfo::AccessMode::Get == eMode)
+			{
+				*ppText = pThis->m_details.Buffer(); 
+				nDataSize = pThis->m_details.Size();
+			}
+			else
+			{
+				pThis->m_details = *ppText;
+			}
+
+			return SQLITE_OK;
+		}
+
+		static s32 AccessDatetime(void* pRow, Meta::ColumnInfo::AccessMode::Enum eMode, void* pData, size_t& nDataSize)
+		{
+			if ( IS_NULL_PTR(pRow) 
+				|| IS_NULL_PTR(pData) )
+			{
+				return SQLITE_ERROR;
+			}
+			
+			RowClass* pThis = (RowClass*)pRow;
+			s8** ppText = (s8**)pData;
+
+			if (Meta::ColumnInfo::AccessMode::Get == eMode)
+			{
+				*ppText = pThis->m_datetime.Buffer(); 
+				nDataSize = pThis->m_datetime.Size();
+			}
+			else
+			{
+				pThis->m_datetime = *ppText;
+			}
+
+			return SQLITE_OK;
 		}
 
 		FixedString<64>		m_event;
 		FixedString<256>	m_details;
 		FixedString<32>		m_datetime;
 
-		static Info			sm_InfoList[];
-		static u32			sm_nInfoCount;
-
 	private:
+
+		static const Meta					sm_MetaData;
+		static const Meta::ColumnInfo		sm_ColumnArray[];
 };
 
-u32 RowClass::sm_nInfoCount = 3;
-RowClass::Info RowClass::sm_InfoList[] = 
+const RowClass::Meta::ColumnInfo RowClass::sm_ColumnArray[] =
 {
-	{ "event",		RowClass::Type::Text,	RowClass::GetEvent,			RowClass::SetEvent		},
-	{ "details",	RowClass::Type::Text,	RowClass::GetDetails,		RowClass::SetDetails	},
-	{ "logTime",	RowClass::Type::Text,	RowClass::GetDatetime,		RowClass::SetDatetime	}
+	{ "event",		Meta::ColumnInfo::Type::Text,		AccessEvent		},
+	{ "details",	Meta::ColumnInfo::Type::Text,		AccessDetails	},
+	{ "logTime",	Meta::ColumnInfo::Type::Text,		AccessDatetime	},
+	{ "",			Meta::ColumnInfo::Type::End,		NULL			}
 };
-
+const RowClass::Meta RowClass::sm_MetaData =
+{
+	RowClass::sm_ColumnArray
+};
 
 
 
@@ -155,43 +226,45 @@ int main(int argc, char** argv)
 		return 50;
 	}
 
-	CSQLiteTable<RowClass> table(database, "EventLog");
+	CSQLiteTable table(database, "EventLog");
 
 	{
-		SysSmartPtr<CSQLiteTable<RowClass>::Statement> stmt = table.NewStatement();
-		stmt->Prepare("INSERT INTO EventLog (event, details, logTime) VALUES (@event, @details, @logTime);");
-		RowClass trow("wiggle", "a wiggle", "zero");
-		stmt->Bind(&trow);
-		SysSmartPtr<CSQLiteTable<RowClass>::ExecResult> execResult2 = stmt->Exec();
-		for (CSQLiteTable<RowClass>::ExecResult::TRows::iterator it = execResult2->m_Results.begin(); it != execResult2->m_Results.end(); ++it)
+		//-- Test the statement builder.
+		RowClass trow("wiggleBB", "BB extra", "one");
+		CSQLiteStatement<RowClass> stmt(database);
+			
+		stmt.Prepare("INSERT INTO EventLog (event, details, logTime) VALUES (@event, @details, @logTime);");
+		stmt.Bind(&trow);
+
+		SysSmartPtr<CSQLiteStatement<RowClass>::ExecResult> execResult2 = stmt.Exec();
+		
+		for (CSQLiteStatement<RowClass>::ExecResult::TRows::iterator it = execResult2->m_Results.begin(); it != execResult2->m_Results.end(); ++it)
 		{
-			printf("New3: %s, %s, %s\n", it->m_event.ConstBuffer(), it->m_details.ConstBuffer(), it->m_datetime.ConstBuffer());
+			printf("exec2: %s, %s, %s\n", it->m_event.ConstBuffer(), it->m_details.ConstBuffer(), it->m_datetime.ConstBuffer());
 		}
 
 		printf("count exec2: %d\n", execResult2.GetRefCount());
-		printf("count stmt: %d\n", stmt.Count());
 	}
 
 	{
-		SysSmartPtr<CSQLiteTable<RowClass>::ExecResult> execResult = table.Exec("SELECT * FROM EventLog;");
-		for (CSQLiteTable<RowClass>::ExecResult::TRows::iterator it = execResult->m_Results.begin(); it != execResult->m_Results.end(); ++it)
+		//-- Test the table. Exec method for batch 
+		SysSmartPtr<CSQLiteTable::ExecResult> execResult = table.Exec("SELECT * FROM EventLog;");
+		for (CSQLiteTable::ExecResult::TRows::iterator it = execResult->m_Rows.begin(); it != execResult->m_Rows.end(); ++it)
 		{
-			printf("New2: %s, %s, %s\n", it->m_event.ConstBuffer(), it->m_details.ConstBuffer(), it->m_datetime.ConstBuffer());
+			for (CSQLiteTable::ExecResult::TValues::iterator it2 = it->begin(); it2 != it->end(); ++it2)
+			{
+				printf("| %s ", it2->c_str());
+			}
+			printf("\n");
 		}
 
-		printf("count exec: %d\n", execResult.Count());
+		printf("count exec: %d\n", execResult.GetRefCount());
 	}
 
-//	int sock;
-//	fd_set socks;
-//	fd_set readsocks;
 	int maxsock;
-//	int reuseaddr = 1;
-//	struct addrinfo hints, *res;
-
 	SysSocket::Socket sock;
 	SysSocket::FdSet socks;
-	SysSocket::FdSet readsocks;
+	SysSocket::FdSet readsocks, writesocks;
 	SysSocket::AddrInfo hints, *res;
 
 
@@ -200,7 +273,6 @@ int main(int argc, char** argv)
 	hints.ai_family = AF_INET;
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_flags = AI_PASSIVE;
-//	if (0 != getaddrinfo(NULL, PORT, &hints, &res))
 	if (SYS_SOCKET_NO_ERROR != SysSocket::GetInfo(NULL, PORT, &hints, &res))
 	{
 		perror("getaddrinfo");
@@ -208,9 +280,7 @@ int main(int argc, char** argv)
 	}
 
 	//-- Create listening socket
-//	sock = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
 	sock = SysSocket::OpenSocket(res->ai_family, res->ai_socktype, res->ai_protocol);
-//	if (sock == -1)
 	if (SysSocket::INVALID_SOCK == sock)
 	{
 		perror("socket");
@@ -218,7 +288,6 @@ int main(int argc, char** argv)
 	}
 
 	//-- Enable reusable address
-//	if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &reuseaddr, sizeof(int)) == -1)
 	if (SYS_SOCKET_NO_ERROR != SysSocket::SetReusable(sock, true))
 	{
 		perror("setsockopt");
@@ -226,18 +295,15 @@ int main(int argc, char** argv)
 	}
 
 	//-- Bind
-//	if (bind(sock, res->ai_addr, res->ai_addrlen) == -1)
 	if (SYS_SOCKET_NO_ERROR != SysSocket::Bind(sock, res->ai_addr, res->ai_addrlen))
 	{
 		perror("bind");
 		return 35;
 	}
 
-//	freeaddrinfo(res);
 	SysSocket::FreeInfo(res);
 
 	//-- listen
-//	if (listen(sock, BACKLOG) == -1)
 	if (SYS_SOCKET_ERROR == SysSocket::Listen(sock, BACKLOG))
 	{
 		perror("listen");
@@ -258,9 +324,9 @@ int main(int argc, char** argv)
 	while (1)
 	{
 		readsocks = socks;
+		writesocks = socks;
 
-//		if (select(maxsock+1, &readsocks, NULL, NULL, NULL) == -1)
-		if (SYS_SOCKET_ERROR == SysSocket::Select(maxsock+1, &readsocks, NULL, NULL, NULL))
+		if (SYS_SOCKET_ERROR == SysSocket::Select(maxsock+1, &readsocks, &writesocks, NULL, NULL))
 		{
 			perror("select");
 			return 5;
@@ -268,23 +334,26 @@ int main(int argc, char** argv)
 
 		for (int s = 0; s <= maxsock; ++s)
 		{
+			if (FD_ISSET(s, &writesocks))
+			{
+				//printf("WRITE activity on socket %d\n", s);
+				//fflush(stdout);
+
+				HandleWriteActivity(s, &writesocks);
+			}
+
 			if (FD_ISSET(s, &readsocks))
 			{
-				printf("Activity on socket %d\n", s);
-				fflush(stdout);
+//				printf("READ Activity on socket %d\n", s);
+//				fflush(stdout);
 				
 				if (s == sock)
 				{
 					//-- listening socket activity
-//					int newsock;
-//					struct sockaddr_in other_addr;
-//					size_t nSize = sizeof(struct sockaddr_in);
-//					newsock = accept(sock, (struct sockaddr*)&other_addr, &nSize);
 					SysSocket::Socket newsock;
 					SysSocket::SockAddrIn other_addr;
 					size_t nSize = sizeof(other_addr);
 					newsock = SysSocket::Accept(sock, (SysSocket::SockAddr*)&other_addr, &nSize);
-//					if (newsock == -1) 
 					if (SysSocket::INVALID_SOCK == newsock)
 					{
 						perror("accept");
@@ -310,7 +379,7 @@ int main(int argc, char** argv)
 						strExec += "\");";
 						printf("%s\n", strExec.ConstBuffer());
 
-						SysSmartPtr<CSQLiteTable<RowClass>::ExecResult> insertResult = table.Exec(strExec.ConstBuffer());
+						SysSmartPtr<CSQLiteTable::ExecResult> insertResult = table.Exec(strExec.ConstBuffer());
 						if (insertResult->m_nErrorCode != SQLITE_OK)
 						{
 							perror("sql exec");
@@ -325,16 +394,14 @@ int main(int argc, char** argv)
 				}
 				else
 				{
-					HandleActivity(s, &socks);
+					HandleReadActivity(s, &readsocks);
 				}
 			}
 		}
 	}
 
-
 	rc = database.Close();
 
-//	close(sock);
 	SysSocket::CloseSocket(sock);
 
 	return 0;

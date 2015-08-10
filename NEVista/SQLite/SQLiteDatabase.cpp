@@ -1,16 +1,14 @@
 //----------------------------------------------------------//
-// MSGSERVERKEYEXCHANGE.CPP
+// SQLITEDATABASE.CPP
 //----------------------------------------------------------//
 //-- Description			
-// A key exchange message.
-// Message containing the server half of an encryption key.
+// A SQLite database wrapper.
 //----------------------------------------------------------//
 
 
-#include "MsgServerKeyExchange.h"
+#include "SQLiteDatabase.h"
 #include "Types.h"
-#include "Message.h"
-#include "PacketSerializer.h"
+#include <sqlite3.h>
 
 
 //----------------------------------------------------------//
@@ -18,75 +16,68 @@
 //----------------------------------------------------------//
 
 //----------------------------------------------------------//
-// ENUMS
+// GLOBALS
 //----------------------------------------------------------//
 
 //----------------------------------------------------------//
-// STRUCTS
+// CSQLiteDatabase::CSQLiteDatabase
 //----------------------------------------------------------//
+//-- Description
+//----------------------------------------------------------//
+CSQLiteDatabase::CSQLiteDatabase()
+: m_pDatabase(NULL)
+{
+}
+		
 
 //----------------------------------------------------------//
-// CMsgServerKeyExchange::CMsgServerKeyExchange
+// CSQLiteDatabase::~CSQLiteDatabase
 //----------------------------------------------------------//
-//--Description
+//-- Description
 //----------------------------------------------------------//
-CMsgServerKeyExchange::CMsgServerKeyExchange()
-: CMessage(Type::MsgServerKeyExchange)
-, m_nServerKey(0)
+CSQLiteDatabase::~CSQLiteDatabase()
 {
 }
 
 
 //----------------------------------------------------------//
-// CMsgServerKeyExchange::~CMsgServerKeyExchange
+// CSQLiteDatabase::Open
 //----------------------------------------------------------//
-//--Description
+//-- Description
 //----------------------------------------------------------//
-CMsgServerKeyExchange::~CMsgServerKeyExchange()
+s32	CSQLiteDatabase::Open(const s8* strFilename)
 {
+	return sqlite3_open(strFilename, &m_pDatabase);
 }
 
 
 //----------------------------------------------------------//
-// CMsgServerKeyExchange::Serialize
+// CSQLiteDatabase::Close
 //----------------------------------------------------------//
-//--Description
+//-- Description
 //----------------------------------------------------------//
-size_t CMsgServerKeyExchange::Serialize(CSerializer& serializer)
+s32	CSQLiteDatabase::Close(void)
 {
-	size_t nSize = CMessage::Serialize(serializer);
-	nSize += serializer.SerializeU16(m_nServerKey, 'skey');
-	return nSize;
+	if (IS_PTR(m_pDatabase))
+	{
+		return sqlite3_close(m_pDatabase);
+	}
+
+	return SQLITE_OK;
 }
 
 
 //----------------------------------------------------------//
-// CMsgServerKeyExchange::SetKey
+// CSQLiteDatabase::GetHandle
 //----------------------------------------------------------//
-//--Description
+//-- Description
 //----------------------------------------------------------//
-void CMsgServerKeyExchange::SetKey(u16 nServerKey)
+sqlite3* CSQLiteDatabase::GetHandle(void)
 {
-	m_nServerKey = nServerKey;
+	return m_pDatabase;
 }
 
-
-//----------------------------------------------------------//
-// CMsgServerKeyExchange::GetKey
-//----------------------------------------------------------//
-//--Description
-//----------------------------------------------------------//
-u16 CMsgServerKeyExchange::GetKey(void) const
-{
-	return m_nServerKey;
-}
-
-
-//----------------------------------------------------------//
-// EXTERNALS
-//----------------------------------------------------------//
 
 //----------------------------------------------------------//
 // EOF
 //----------------------------------------------------------//
-

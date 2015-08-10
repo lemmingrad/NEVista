@@ -1,18 +1,17 @@
-#ifndef _MSG_SERVER_KEYEXCHANGE_H_
-#define _MSG_SERVER_KEYEXCHANGE_H_
+#ifndef _NETWORK_H_
+#define _NETWORK_H_
 #pragma once
 
 //----------------------------------------------------------//
-// MSGSERVERKEYEXCHANGE.H
+// NETWORK.H
 //----------------------------------------------------------//
 //-- Description			
-// A key exchange message.
-// Message containing the server half of an encryption key.
 //----------------------------------------------------------//
 
 
 #include "Types.h"
-#include "Message.h"
+#include "SysSmartPtr.h"
+#include <list>
 
 
 //----------------------------------------------------------//
@@ -28,7 +27,7 @@
 //----------------------------------------------------------//
 
 
-class CSerializer;
+class CMessage;
 
 
 //----------------------------------------------------------//
@@ -39,33 +38,16 @@ class CSerializer;
 // CLASSES
 //----------------------------------------------------------//
 
-
-class CMsgServerKeyExchange : public CMessage
-{
-	public:
-
-		CMsgServerKeyExchange();
-		virtual ~CMsgServerKeyExchange();
-
-		//-- CMessage
-		virtual size_t			Serialize(CSerializer& serializer);
-
-		void					SetKey(u16 nServerKey);
-		u16						GetKey(void) const;
-
-	private:
-
-		u16						m_nServerKey;
-
-};
-
-
 //----------------------------------------------------------//
 // EXTERNALS
 //----------------------------------------------------------//
+
+
+typedef std::list<SysSmartPtr<CMessage> >	TMessageList;
+
 
 //----------------------------------------------------------//
 // EOF
 //----------------------------------------------------------//
 
-#endif //_MSG_SERVER_KEYEXCHANGE_H_
+#endif //_NETWORK_H_

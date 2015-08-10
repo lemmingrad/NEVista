@@ -47,6 +47,7 @@ CPacket::CPacket(u8 nFlags)
 	}
 
 	m_DataBuffer.Clear();
+	m_MessageList.clear();
 }
 
 
@@ -67,8 +68,10 @@ CPacket::~CPacket()
 //----------------------------------------------------------//
 size_t CPacket::GetMinimumReadSize(void)
 {
-	//-- Could be just the version number (1 byte), but seems pointless when we only have 1 header version.
-	return sizeof(HeaderV1);
+	//-- Could be just the version number (1 byte).
+	//-- But seems pointless when we only have 1 header version at the momemnt.
+	//-- So let's include the sizeof(HeaderV1) in the minimum read size too.
+	return sizeof(u8) + sizeof(HeaderV1);
 }
 
 
@@ -216,16 +219,6 @@ CPacket::Error::Enum CPacket::Serialize(CPacketSerializer& serializer)
 {
 	if (CSerializer::Mode::Serializing == serializer.GetMode())
 	{
-		CMsgMotd motd;
-		motd.Set("Hello!");
-
-		CPacketSerializer mSer(CSerializer::Mode::Serializing, m_DataBuffer.Buffer(), m_DataBuffer.Size());
-
-		size_t wibble2 = motd.Serialize(mSer);
-		m_DataBuffer.InsTail(NULL, wibble2);
-
-		m_HeaderV1.m_nMessages = 1;
-
 		//-- Serializing
 		m_nVersion = Version::Current;
 
@@ -443,49 +436,6 @@ CPacket::Error::Enum CPacket::Serialize(CPacketSerializer& serializer)
 				}
 
 				//-- DataBuffer should now have exactly m_HeaderV1.m_nMessages inside it.
-				u16 nProcessedMessages = 0;
-				CPacketSerializer messageSerializer(CSerializer::Mode::Deserializing, m_DataBuffer.Buffer(), m_DataBuffer.UsedSize());
-
-				while ( (CPacketSerializer::Error::Ok == messageSerializer.GetError())
-					&& (messageSerializer.GetOffset() < messageSerializer.GetSize()) )
-				{
-					u32 nMessageType = CMessage::Type::Unknown;
-					if (IS_ZERO(messageSerializer.SerializeU32(nMessageType, 'type')))
-					{
-						return Error::ProtocolMismatch;
-					}
-					CMessage* pMessage = CMessage::CreateType((CMessage::Type::Enum)nMessageType);
-					if (IS_NULL_PTR(pMessage))
-					{
-						return Error::ProtocolMismatch;
-					}
-					pMessage->Serialize(messageSerializer);
-					if (CPacketSerializer::Error::Ok != messageSerializer.GetError())
-					{
-						return Error::ProtocolMismatch;
-					}
-
-					SysSmartPtr<CMessage> smart(pMessage);
-					m_MessageList.push_back(smart);
-					nProcessedMessages++;
-				}
-
-				//-- Sanity tests
-				//-- messageSerializer should have consumed all its bytes.
-				assert(messageSerializer.GetOffset() == messageSerializer.GetSize());
-				if (messageSerializer.GetOffset() != messageSerializer.GetSize())
-				{
-					return Error::SanityFail;
-				}
-
-				//-- We should have processed exactly the right number of messages.
-				assert(nProcessedMessages == GetMessageCount());
-				if (nProcessedMessages != GetMessageCount())
-				{
-					return Error::SanityFail;
-				}
-
-				//-- MessageList now contains all messages contained in packet.
 				//-- End.
 			}
 			break;
@@ -496,6 +446,107 @@ CPacket::Error::Enum CPacket::Serialize(CPacketSerializer& serializer)
 			}
 			break;
 		}
+	}
+
+	return Error::Ok;
+}
+
+
+//----------------------------------------------------------//
+// CPacket::AddMessage
+//----------------------------------------------------------//
+CPacket::Error::Enum CPacket::AddMessage(SysSmartPtr<CMessage> message)
+{
+	CPacketSerializer messageSerializer(CSerializer::Mode::Serializing, m_DataBuffer.Buffer() + m_DataBuffer.UsedSize(), m_DataBuffer.UnusedSize());
+
+	message->Serialize(messageSerializer);
+
+	CPacketSerializer::Error::Enum eErrorCode = messageSerializer.GetError();
+	if (CPacketSerializer::Error::Ok == eErrorCode)
+	{
+		//-- Success
+		m_DataBuffer.InsTail(NULL, messageSerializer.GetOffset());
+		m_HeaderV1.m_nMessages++;
+	}
+	else
+	{
+		//-- Failed.
+		if (CPacketSerializer::Error::EndReached == eErrorCode)
+		{
+			return Error::DataBufferFull;
+		}
+		else
+		{
+			return Error::CopyFailed;
+		}
+	}
+
+	return Error::Ok;
+}
+
+
+//----------------------------------------------------------//
+// CPacket::ConvertToMessages
+//----------------------------------------------------------//
+CPacket::Error::Enum CPacket::ConvertToMessages(TMessageList& pushList)
+{
+	//-- DataBuffer should have exactly m_HeaderV1.m_nMessages inside it.
+
+	m_MessageList.clear();
+	
+	u16 nProcessedMessages = 0;
+	CPacketSerializer messageSerializer(CSerializer::Mode::Deserializing, m_DataBuffer.Buffer(), m_DataBuffer.UsedSize());
+	CPacketSerializer::Error::Enum eErrorCode = CPacketSerializer::Error::Ok;
+	
+	while ( (CPacketSerializer::Error::Ok == eErrorCode)
+		&& (messageSerializer.GetOffset() < messageSerializer.GetSize()) )
+	{
+		u32 nMessageType = CMessage::Type::Unknown;
+
+		if (IS_ZERO(messageSerializer.SerializeU32(nMessageType, 'type')))
+		{
+			return Error::ProtocolMismatch;
+		}
+
+		CMessage* pMessage = CMessage::CreateType((CMessage::Type::Enum)nMessageType);
+		if (IS_NULL_PTR(pMessage))
+		{
+			return Error::ProtocolMismatch;
+		}
+
+		pMessage->Serialize(messageSerializer);
+
+		eErrorCode = messageSerializer.GetError();
+		if (CPacketSerializer::Error::Ok != eErrorCode)
+		{
+			if (CPacketSerializer::Error::EndReached == eErrorCode)
+			{
+				return Error::DataBufferEmpty;
+			}
+			else
+			{
+				return Error::ProtocolMismatch;
+			}
+		}
+
+		SysSmartPtr<CMessage> smart(pMessage);
+		m_MessageList.push_back(smart);
+		++nProcessedMessages;
+	}
+
+	//-- Sanity tests
+	//-- messageSerializer should have consumed all its bytes.
+	assert(messageSerializer.GetOffset() == messageSerializer.GetSize());
+	if (messageSerializer.GetOffset() != messageSerializer.GetSize())
+	{
+		return Error::SanityFail;
+	}
+
+	//-- We should have processed exactly the right number of messages.
+	assert(nProcessedMessages == GetMessageCount());
+	if (nProcessedMessages != GetMessageCount())
+	{
+		return Error::SanityFail;
 	}
 
 	return Error::Ok;

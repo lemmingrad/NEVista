@@ -18,7 +18,7 @@
 #include "Types.h"
 #include "SysSmartPtr.h"
 #include "SimpleBuffer.h"
-#include <list>
+#include "Network.h"
 
 
 //----------------------------------------------------------//
@@ -26,6 +26,7 @@
 //----------------------------------------------------------//
 
 
+//-- This is the maximum size of the data section of an unencrypted packet.
 #define PACKET_DATA_BUFFER_MAX_SIZE			(1024)
 
 
@@ -63,15 +64,15 @@ class CPacket
 				//-- Not so bad fails
 				SerializerFull				= 0x80000000,
 				SerializerEmpty				= 0x80000001,
-				CopyFailed					= 0x80000002,
-				DataBufferFull				= 0x80000003,
-				DataBufferEmpty				= 0x80000004,
+				DataBufferFull				= 0x80000002,
+				DataBufferEmpty				= 0x80000003,
 
 				//-- Bad fails
 				UnknownVersion				= 0x80000010,
 				ProtocolMismatch			= 0x80000011,
 				EncryptionFailed			= 0x80000012,
-				SanityFail					= 0x80000013,
+				CopyFailed					= 0x80000013,
+				SanityFail					= 0x80000014,
 				
 				BadFail						= -1,
 
@@ -121,13 +122,13 @@ class CPacket
 
 		Error::Enum						Serialize(CPacketSerializer& serializer);
 
-		//-- AddMessage()
-		//-- GetMessages();
+		Error::Enum						AddMessage(SysSmartPtr<CMessage> message);	
+		Error::Enum						ConvertToMessages(TMessageList& pushList);		
 
 	private:
 
 		CSimpleBuffer<PACKET_DATA_BUFFER_MAX_SIZE>	m_DataBuffer;
-		std::list< SysSmartPtr<CMessage> >			m_MessageList;
+		TMessageList					m_MessageList;
 
 		HeaderV1						m_HeaderV1;
 		u8								m_nVersion;						//-- version number

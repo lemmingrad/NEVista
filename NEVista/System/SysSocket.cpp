@@ -171,7 +171,7 @@ s32 SysSocket::Connect(SysSocket::Socket nSocket, const SysSocket::SockAddr* pAd
 
 #		else
 
-			if (SYS_SOCKET_IN_PROGRESS == errno)
+			if (EINPROGRESS == errno)
 			{
 				nRet = SYS_SOCKET_NO_ERROR;
 			}
@@ -598,30 +598,28 @@ const s8* SysSocket::InetNToP(s32 nType, const void* pSrc, size_t nSrcSize, s8* 
 //----------------------------------------------------------//
 s32 SysSocket::Send(SysSocket::Socket nSocket, const s8* pBuffer, size_t nBufferSize)
 {
-#if defined(SYSSOCKET_USES_WINSOCK)
-
 	s32 nRet = send(nSocket, pBuffer, nBufferSize, 0);
 	if (SYS_SOCKET_ERROR == nRet)
 	{
-		if (SYS_SOCKET_WOULD_BLOCK == WSAGetLastError())
+
+#if defined(SYSSOCKET_USES_WINSOCK)
+
+		if (WSAEWOULDBLOCK == WSAGetLastError())
 		{
-			nRet = 0;
+			nRet = SYS_SOCKET_WOULD_BLOCK;
 		}
-	}
 
 #else
 
-	s32 nRet = send(nSocket, pBuffer, nBufferSize, 0);
-	if (SYS_SOCKET_ERROR == nRet)
-	{
-		if ( (SYS_SOCKET_WOULD_BLOCK == errno)
-			|| (SYS_SOCKET_AGAIN == errno) )
+		if ( (EWOULDBLOCK == errno)
+			|| (EAGAIN == errno) )
 		{
-			nRet = 0;
+			nRet = SYS_SOCKET_WOULD_BLOCK;
 		}
-	}
 
 #endif //SYSSOCKET_USES_WINSOCK
+
+	}
 
 	return nRet;
 }
@@ -635,30 +633,27 @@ s32 SysSocket::Send(SysSocket::Socket nSocket, const s8* pBuffer, size_t nBuffer
 s32 SysSocket::Sendto(SysSocket::Socket nSocket, const s8* pBuffer, size_t nBufferSize, 
 					  const SysSocket::SockAddr* pAddr, size_t nAddrSize)
 {
+	s32 nRet = sendto(nSocket, pBuffer, nBufferSize, 0, pAddr, nAddrSize);
+	if (SYS_SOCKET_ERROR == nRet)
+	{
+
 #if defined(SYSSOCKET_USES_WINSOCK)
 
-	s32 nRet = sendto(nSocket, pBuffer, nBufferSize, 0, pAddr, nAddrSize);
-	if (SYS_SOCKET_ERROR == nRet)
-	{
-		if (SYS_SOCKET_WOULD_BLOCK == WSAGetLastError())
+		if (WSAEWOULDBLOCK == WSAGetLastError())
 		{
-			nRet = 0;
+			nRet = SYS_SOCKET_WOULD_BLOCK;
 		}
-	}
-
 #else
 
-	s32 nRet = sendto(nSocket, pBuffer, nBufferSize, 0, pAddr, nAddrSize);
-	if (SYS_SOCKET_ERROR == nRet)
-	{
-		if ( (SYS_SOCKET_WOULD_BLOCK == errno)
-			|| (SYS_SOCKET_AGAIN == errno) )
+		if ( (EWOULDBLOCK == errno)
+			|| (EAGAIN == errno) )
 		{
-			nRet = 0;
+			nRet = SYS_SOCKET_WOULD_BLOCK;
 		}
-	}
 
 #endif //SYSSOCKET_USES_WINSOCK
+
+	}
 
 	return nRet;
 }
@@ -671,30 +666,32 @@ s32 SysSocket::Sendto(SysSocket::Socket nSocket, const s8* pBuffer, size_t nBuff
 //----------------------------------------------------------//
 s32 SysSocket::Recv(SysSocket::Socket nSocket, s8* pBuffer, size_t nBufferSize)
 {
+	s32 nRet = recv(nSocket, pBuffer, nBufferSize, 0);
+	if (IS_ZERO(nRet))
+	{
+		nRet = SYS_SOCKET_RECV_ZERO;
+	}
+	else if (SYS_SOCKET_ERROR == nRet)
+	{
+
 #if defined(SYSSOCKET_USES_WINSOCK)
 
-	s32 nRet = recv(nSocket, pBuffer, nBufferSize, 0);
-	if (SYS_SOCKET_ERROR == nRet)
-	{
-		if (SYS_SOCKET_WOULD_BLOCK == WSAGetLastError())
+		if (WSAEWOULDBLOCK == WSAGetLastError())
 		{
-			nRet = 0;
+			nRet = SYS_SOCKET_WOULD_BLOCK;
 		}
-	}
 
 #else 
 
-	s32 nRet = recv(nSocket, pBuffer, nBufferSize, 0);
-	if (SYS_SOCKET_ERROR == nRet)
-	{
-		if ( (SYS_SOCKET_WOULD_BLOCK == errno)
-			|| (SYS_SOCKET_AGAIN == errno) )
+		if ( (EWOULDBLOCK == errno)
+			|| (EAGAIN == errno) )
 		{
-			nRet = 0;
+			nRet = SYS_SOCKET_WOULD_BLOCK;
 		}
-	}
 
 #endif //SYSSOCKET_USES_WINSOCK
+
+	}
 
 	return nRet;
 }
@@ -711,23 +708,31 @@ s32 SysSocket::Recvfrom(SysSocket::Socket nSocket, s8* pBuffer, size_t nBufferSi
 #if defined(SYSSOCKET_USES_WINSOCK)
 
 	s32 nRet = recvfrom(nSocket, pBuffer, nBufferSize, 0, pAddr, (int*)pAddrSize);
-	if (SYS_SOCKET_ERROR == nRet)
+	if (IS_ZERO(nRet))
 	{
-		if (SYS_SOCKET_WOULD_BLOCK == WSAGetLastError())
+		nRet = SYS_SOCKET_RECV_ZERO;
+	}
+	else if (SYS_SOCKET_ERROR == nRet)
+	{
+		if (WSAEWOULDBLOCK == WSAGetLastError())
 		{
-			nRet = 0;
+			nRet = SYS_SOCKET_WOULD_BLOCK;
 		}
 	}
 
-#else
-	
+#else 
+
 	s32 nRet = recvfrom(nSocket, pBuffer, nBufferSize, 0, pAddr, (socklen_t*)pAddrSize);
-	if (SYS_SOCKET_ERROR == nRet)
+	if (IS_ZERO(nRet))
 	{
-		if ( (SYS_SOCKET_WOULD_BLOCK == errno)
-			|| (SYS_SOCKET_AGAIN == errno) )
+		nRet = SYS_SOCKET_RECV_ZERO;
+	}
+	else if (SYS_SOCKET_ERROR == nRet)
+	{
+		if ( (EWOULDBLOCK == errno)
+			|| (EAGAIN == errno) )
 		{
-			nRet = 0;
+			nRet = SYS_SOCKET_WOULD_BLOCK;
 		}
 	}
 

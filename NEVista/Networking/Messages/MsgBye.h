@@ -1,23 +1,28 @@
-#ifndef _MSG_SERVER_KEYEXCHANGE_H_
-#define _MSG_SERVER_KEYEXCHANGE_H_
+#ifndef _MSG_BYE_H_
+#define _MSG_BYE_H_
 #pragma once
 
 //----------------------------------------------------------//
-// MSGSERVERKEYEXCHANGE.H
+// MSGBYE.H
 //----------------------------------------------------------//
 //-- Description			
-// A key exchange message.
-// Message containing the server half of an encryption key.
+// A disconnect message.
+// Message indicating a disconnect, with optional text.
 //----------------------------------------------------------//
 
 
 #include "Types.h"
+#include "FixedString.h"
 #include "Message.h"
 
 
 //----------------------------------------------------------//
 // DEFINES
 //----------------------------------------------------------//
+
+
+#define MSG_BYE_MAX_SIZE (980)
+
 
 //----------------------------------------------------------//
 // ENUMS
@@ -40,23 +45,38 @@ class CSerializer;
 //----------------------------------------------------------//
 
 
-class CMsgServerKeyExchange : public CMessage
+class CMsgBye : public CMessage
 {
 	public:
 
-		CMsgServerKeyExchange();
-		virtual ~CMsgServerKeyExchange();
+		struct Reason
+		{
+			enum Enum 
+			{
+				Unknown = 0,
+				SafeDisconnect,
+				SafeDisconnectACK
+			};
+		};
+
+		CMsgBye(Reason::Enum eReason);
+		CMsgBye();
+		virtual ~CMsgBye();
 
 		//-- CMessage
-		virtual size_t			Serialize(CSerializer& serializer);
+		virtual size_t						Serialize(CSerializer& serializer);
 
-		void					SetKey(u16 nServerKey);
-		u16						GetKey(void) const;
+		Reason::Enum						GetReason(void) const;
+		void								SetReason(Reason::Enum eReason);
+
+		const s8*							GetText(void) const;
+		void								SetText(const s8* strBuffer);
 
 	private:
 
-		u16						m_nServerKey;
-
+		Reason::Enum						m_eReason;
+		FixedString<MSG_BYE_MAX_SIZE>		m_strReason;
+		u16									m_nStrLength;
 };
 
 
@@ -68,4 +88,4 @@ class CMsgServerKeyExchange : public CMessage
 // EOF
 //----------------------------------------------------------//
 
-#endif //_MSG_SERVER_KEYEXCHANGE_H_
+#endif //_MSG_BYE_H_

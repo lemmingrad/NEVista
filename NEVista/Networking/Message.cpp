@@ -12,6 +12,8 @@
 
 #include "Message.h"
 #include "Types.h"
+#include "PacketSerializer.h"
+#include "Messages/MsgBye.h"
 #include "Messages/MsgMotd.h"
 
 
@@ -27,7 +29,6 @@
 // STRUCTS
 //----------------------------------------------------------//
 
-
 //----------------------------------------------------------//
 // CMessage::CreateType
 //----------------------------------------------------------//
@@ -38,7 +39,13 @@ CMessage* CMessage::CreateType(CMessage::Type::Enum eType)
 {
 	switch (eType)
 	{
-		case 'motd':
+		case Type::MsgBye:
+		{
+			return new CMsgBye(CMsgBye::Reason::SafeDisconnect);
+		}
+		break;
+
+		case Type::MsgMotd:
 		{
 			return new CMsgMotd();
 		}
@@ -52,13 +59,57 @@ CMessage* CMessage::CreateType(CMessage::Type::Enum eType)
 }
 
 
+//----------------------------------------------------------//
+// CMessage::CMessage
+//----------------------------------------------------------//
+//--Description
+//----------------------------------------------------------//
 CMessage::CMessage(CMessage::Type::Enum eType)
 : m_eType(eType)
 {
 }
 
+
+//----------------------------------------------------------//
+// CMessage::~CMessage
+//----------------------------------------------------------//
+//--Description
+//----------------------------------------------------------//
 CMessage::~CMessage()
 {
+}
+
+
+//----------------------------------------------------------//
+// CMessage::Serialize
+//----------------------------------------------------------//
+//--Description
+//----------------------------------------------------------//
+size_t CMessage::Serialize(CSerializer& serializer)
+{
+	size_t nSize = 0;
+
+	if (CSerializer::Mode::Serializing == serializer.GetMode())
+	{
+		u32 eType = (u32)m_eType;
+		nSize += serializer.SerializeU32(eType, 'type');
+	}
+	else
+	{
+	}
+
+	return nSize;
+}
+
+
+//----------------------------------------------------------//
+// CMessage::GetType
+//----------------------------------------------------------//
+//--Description
+//----------------------------------------------------------//
+CMessage::Type::Enum CMessage::GetType(void)
+{
+	return m_eType;
 }
 
 
