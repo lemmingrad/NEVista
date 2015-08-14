@@ -62,8 +62,7 @@ class CPacket
 			enum Enum
 			{
 				//-- Not so bad fails
-				SerializerFull				= 0x80000000,
-				SerializerEmpty				= 0x80000001,
+				Serializer					= 0x80000001,
 				DataBufferFull				= 0x80000002,
 				DataBufferEmpty				= 0x80000003,
 
@@ -122,13 +121,12 @@ class CPacket
 
 		Error::Enum						Serialize(CPacketSerializer& serializer);
 
-		Error::Enum						AddMessage(SysSmartPtr<CMessage> message);	
-		Error::Enum						ConvertToMessages(TMessageList& pushList);		
+		Error::Enum						AddMessages(TMessageList& sendList, TMessageList::iterator& it, bool& bByeDetected);
+		Error::Enum						GetMessages(TMessageList& recvList);		
 
 	private:
 
 		CSimpleBuffer<PACKET_DATA_BUFFER_MAX_SIZE>	m_DataBuffer;
-		TMessageList					m_MessageList;
 
 		HeaderV1						m_HeaderV1;
 		u8								m_nVersion;						//-- version number

@@ -39,7 +39,7 @@ class CTCPConnection
 				
 				//-- State
 				WrongState					= 0x80002000,
-				Closed						- 0x80002001,
+				Closed						= 0x80002001,
 				
 				BadFail = -1,
 

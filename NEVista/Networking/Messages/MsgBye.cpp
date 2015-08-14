@@ -73,22 +73,21 @@ size_t CMsgBye::Serialize(CSerializer& serializer)
 	size_t nSize = CMessage::Serialize(serializer);
 
 	nSize += serializer.SerializeU32((u32&)m_eReason, 'ersn');
-
-	if (CSerializer::Mode::Serializing == serializer.GetMode())
-	{
-		//-- Writing to packet stream
-		m_nStrLength = m_strReason.Length();
-	}
-	else
-	{
-		//-- Reading from packet stream
-		m_strReason.Clear();
-	}
-
 	nSize += serializer.SerializeU16(m_nStrLength, 'len ');
-	if (m_nStrLength > 0)
+
+	if (m_nStrLength > 0) 
 	{
-		nSize += serializer.SerializeBytes((u8*)m_strReason.Buffer(), m_nStrLength, 'srsn');
+		assert(m_nStrLength < m_strReason.Size());
+
+		u8* pBuffer = (u8*)m_strReason.Buffer();
+
+		nSize += serializer.SerializeBytes(pBuffer, m_nStrLength, 'srsn');
+		
+		if (CSerializer::Mode::Deserializing == serializer.GetMode())
+		{
+			//-- If deserializing, make sure the string is null terminated.
+			pBuffer[m_nStrLength] = 0;
+		}
 	}
 
 	return nSize;
@@ -135,7 +134,10 @@ const s8* CMsgBye::GetText(void) const
 //----------------------------------------------------------//
 void CMsgBye::SetText(const s8* strBuffer)
 {
-	m_strReason.Set(strBuffer);
+	if (IS_PTR(m_strReason.Set(strBuffer)))
+	{
+		m_nStrLength = m_strReason.Length();
+	}
 }
 
 

@@ -106,7 +106,7 @@ u8* CPacketSerializer::SerializeReserve(size_t nReservedSize)
 	//-- Failed
 	if (Error::Ok == m_eError)
 	{
-		m_Error = Error::Fail;
+		m_eError = Error::Fail;
 	}
 	return NULL;
 }
@@ -232,7 +232,7 @@ size_t CPacketSerializer::SerializeBytes(u8* pData, size_t nDataSize, u32 nFourC
 	//-- Failed
 	if (Error::Ok == m_eError)
 	{
-		m_Error = Error::Fail;
+		m_eError = Error::Fail;
 	}
 	return 0;
 }
@@ -284,7 +284,7 @@ size_t CPacketSerializer::SerializeF32(f32& fValue, u32 nFourCC)
 	//-- Failed.
 	if (Error::Ok == m_eError)
 	{
-		m_Error = Error::Fail;
+		m_eError = Error::Fail;
 	}
 	return 0;
 }
@@ -336,7 +336,7 @@ size_t CPacketSerializer::SerializeF64(f64& fValue, u32 nFourCC)
 	//-- Failed.
 	if (Error::Ok == m_eError)
 	{
-		m_Error = Error::Fail;
+		m_eError = Error::Fail;
 	}
 	return 0;
 }
@@ -388,7 +388,7 @@ size_t CPacketSerializer::SerializeS32(s32& nValue, u32 nFourCC)
 	//-- Failed.
 	if (Error::Ok == m_eError)
 	{
-		m_Error = Error::Fail;
+		m_eError = Error::Fail;
 	}
 	return 0;
 }
@@ -440,7 +440,7 @@ size_t CPacketSerializer::SerializeU32(u32& nValue, u32 nFourCC)
 	//-- Failed.
 	if (Error::Ok == m_eError)
 	{
-		m_Error = Error::Fail;
+		m_eError = Error::Fail;
 	}
 	return 0;
 }
@@ -475,7 +475,7 @@ size_t CPacketSerializer::SerializeS8(s8& nValue, u32 nFourCC)
 	//-- Failed.
 	if (Error::Ok == m_eError)
 	{
-		m_Error = Error::Fail;
+		m_eError = Error::Fail;
 	}
 	return 0;
 }
@@ -510,7 +510,7 @@ size_t CPacketSerializer::SerializeU8(u8& nValue, u32 nFourCC)
 	//-- Failed.
 	if (Error::Ok == m_eError)
 	{
-		m_Error = Error::Fail;
+		m_eError = Error::Fail;
 	}
 	return 0;
 }
@@ -562,7 +562,7 @@ size_t CPacketSerializer::SerializeS16(s16& nValue, u32 nFourCC)
 	//-- Failed.
 	if (Error::Ok == m_eError)
 	{
-		m_Error = Error::Fail;
+		m_eError = Error::Fail;
 	}
 	return 0;
 }
@@ -614,7 +614,7 @@ size_t CPacketSerializer::SerializeU16(u16& nValue, u32 nFourCC)
 	//-- Failed.
 	if (Error::Ok == m_eError)
 	{
-		m_Error = Error::Fail;
+		m_eError = Error::Fail;
 	}
 	return 0;
 }
@@ -671,7 +671,7 @@ size_t CPacketSerializer::SerializeS64(s64& nValue, u32 nFourCC)
 	//-- Failed.
 	if (Error::Ok == m_eError)
 	{
-		m_Error = Error::Fail;
+		m_eError = Error::Fail;
 	}
 	return 0;
 }
@@ -723,7 +723,7 @@ size_t CPacketSerializer::SerializeU64(u64& nValue, u32 nFourCC)
 	//-- Failed.
 	if (Error::Ok == m_eError)
 	{
-		m_Error = Error::Fail;
+		m_eError = Error::Fail;
 	}
 	return 0;
 }
@@ -775,7 +775,7 @@ size_t CPacketSerializer::SerializeBitfield(bitfield& nFlags, u32 nFourCC)
 	//-- Failed.
 	if (Error::Ok == m_eError)
 	{
-		m_Error = Error::Fail;
+		m_eError = Error::Fail;
 	}
 	return 0;
 }

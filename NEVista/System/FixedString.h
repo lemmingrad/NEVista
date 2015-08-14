@@ -55,10 +55,12 @@ class FixedString
 		
 		s8* Buffer(void)
 		{
+			assert(IS_ZERO(m_strBuffer[S-1]));
 			return m_strBuffer;
 		}
 		const s8* ConstBuffer(void) const
 		{
+			assert(IS_ZERO(m_strBuffer[S-1]));
 			return m_strBuffer;
 		}
 		size_t Length(void)
@@ -78,6 +80,7 @@ class FixedString
 		void Clear(void)
 		{
 			m_strBuffer[0] = 0;
+			m_strBuffer[S-1] = 0;
 		}
 
 		bool IsEmpty(void)
@@ -108,7 +111,7 @@ class FixedString
 		}
 		template <size_t S2> s8* Append(FixedString<S2>& in)
 		{
-			return Append(in.Buffer());
+			return Append(in.ConstBuffer());
 		}
 		template <size_t S2> s8* operator+=(FixedString<S2>& in)
 		{

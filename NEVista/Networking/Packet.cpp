@@ -47,7 +47,6 @@ CPacket::CPacket(u8 nFlags)
 	}
 
 	m_DataBuffer.Clear();
-	m_MessageList.clear();
 }
 
 
@@ -224,22 +223,22 @@ CPacket::Error::Enum CPacket::Serialize(CPacketSerializer& serializer)
 
 		if (IS_ZERO(serializer.SerializeU8(m_nVersion, 'pktV')))
 		{
-			return Error::SerializerFull;
+			return Error::Serializer;
 		}
 
 		//-- Serializer must have at least the size of the header in bytes free to proceed
 		size_t nUnusedSize = serializer.GetSize() - serializer.GetOffset();
 		if (nUnusedSize < GetHeaderSize())
 		{
-			//-- Not enough bytes in serializer.
-			return Error::SerializerFull;
+			//-- Not enough bytes in serializer.	
+			return Error::Serializer;
 		}
 
 		//-- Version::V1
 		if ( IS_ZERO(serializer.SerializeU8(m_HeaderV1.m_nFlags, 'flgs'))
 			|| IS_ZERO(serializer.SerializeU16(m_HeaderV1.m_nMessages, 'mess')) )
 		{
-			return Error::SerializerFull;
+			return Error::Serializer;
 		}
 	
 		if (IS_TRUE(IsEncrypted()))
@@ -256,7 +255,7 @@ CPacket::Error::Enum CPacket::Serialize(CPacketSerializer& serializer)
 
 			if (IS_ZERO(serializer.SerializeU16(m_HeaderV1.m_nDataSize, 'size')))
 			{
-				return Error::SerializerFull;
+				return Error::Serializer;
 			}
 
 			//-- We need a spare byte for null terminating the encoded base64 string.
@@ -266,7 +265,7 @@ CPacket::Error::Enum CPacket::Serialize(CPacketSerializer& serializer)
 			if (nUnusedSize < ((size_t)m_HeaderV1.m_nDataSize + 1))
 			{
 				//-- Not enough bytes in serializer.
-				return Error::SerializerFull;
+				return Error::Serializer;
 			}
 
 			//-- Notice we do not include the extra byte when we reserve space.
@@ -274,7 +273,7 @@ CPacket::Error::Enum CPacket::Serialize(CPacketSerializer& serializer)
 			if (IS_NULL_PTR(pReserved))
 			{
 				//-- Failed.
-				return Error::SerializerFull;
+				return Error::Serializer;
 			}
 
 			//-- NOTE: this will actually put a null terminator beyond the end 
@@ -311,14 +310,14 @@ CPacket::Error::Enum CPacket::Serialize(CPacketSerializer& serializer)
 
 			if (IS_ZERO(serializer.SerializeU16(m_HeaderV1.m_nDataSize, 'size')))
 			{
-				return Error::SerializerFull;
+				return Error::Serializer;
 			}
 
 			u8* pReserved = serializer.SerializeReserve(m_HeaderV1.m_nDataSize);
 			if (IS_NULL_PTR(pReserved))
 			{
 				//-- Failed.
-				return Error::SerializerFull;
+				return Error::Serializer;
 			}
 
 			if (IS_NULL_PTR(SysMemory::Memcpy(pReserved, m_HeaderV1.m_nDataSize, m_DataBuffer.Buffer(), m_HeaderV1.m_nDataSize)))
@@ -346,13 +345,12 @@ CPacket::Error::Enum CPacket::Serialize(CPacketSerializer& serializer)
 		//-- Deserializing.
 		SysMemory::Memclear(&m_HeaderV1, sizeof(m_HeaderV1));
 		m_DataBuffer.Clear();
-		m_MessageList.clear();
 
 		//-- Read version number.
 		if (IS_ZERO(serializer.SerializeU8(m_nVersion, 'pktV')))
 		{
 			//-- Failed to read version number.
-			return Error::SerializerEmpty;
+			return Error::Serializer;
 		}
 
 		//-- Serializer must be at least the size of the header in bytes to proceed
@@ -360,7 +358,7 @@ CPacket::Error::Enum CPacket::Serialize(CPacketSerializer& serializer)
 		if (nUnreadSize < GetHeaderSize())
 		{
 			//-- Not enough bytes in serializer.
-			return Error::SerializerEmpty;
+			return Error::Serializer;
 		}
 
 		//-- Read the header
@@ -372,7 +370,7 @@ CPacket::Error::Enum CPacket::Serialize(CPacketSerializer& serializer)
 					|| IS_ZERO(serializer.SerializeU16(m_HeaderV1.m_nMessages, 'mess'))
 					|| IS_ZERO(serializer.SerializeU16(m_HeaderV1.m_nDataSize, 'size')) )
 				{
-					return Error::SerializerEmpty;
+					return Error::Serializer;
 				}
 
 				if (Version::Unknown == Validate())
@@ -384,7 +382,7 @@ CPacket::Error::Enum CPacket::Serialize(CPacketSerializer& serializer)
 				if (IS_NULL_PTR(pDataSrc))
 				{
 					//-- Failed.
-					return Error::SerializerEmpty;
+					return Error::Serializer;
 				}
 
 				//-- Is packet encrypted?
@@ -453,31 +451,62 @@ CPacket::Error::Enum CPacket::Serialize(CPacketSerializer& serializer)
 
 
 //----------------------------------------------------------//
-// CPacket::AddMessage
+// CPacket::AddMessages
 //----------------------------------------------------------//
-CPacket::Error::Enum CPacket::AddMessage(SysSmartPtr<CMessage> message)
+CPacket::Error::Enum CPacket::AddMessages(TMessageList& sendList, TMessageList::iterator& it, bool& bByeDetected)
 {
-	CPacketSerializer messageSerializer(CSerializer::Mode::Serializing, m_DataBuffer.Buffer() + m_DataBuffer.UsedSize(), m_DataBuffer.UnusedSize());
+	it = sendList.begin();
+	bByeDetected = false;
 
-	message->Serialize(messageSerializer);
+	u32 nMessages = 0;
 
-	CPacketSerializer::Error::Enum eErrorCode = messageSerializer.GetError();
-	if (CPacketSerializer::Error::Ok == eErrorCode)
+	CPacketSerializer::Error::Enum eSerError = CPacketSerializer::Error::Ok;
+
+	while ( IS_FALSE(bByeDetected)
+		&& (CPacketSerializer::Error::Ok == eSerError)
+		&& (it != sendList.end()) )
 	{
-		//-- Success
-		m_DataBuffer.InsTail(NULL, messageSerializer.GetOffset());
-		m_HeaderV1.m_nMessages++;
-	}
-	else
-	{
-		//-- Failed.
-		if (CPacketSerializer::Error::EndReached == eErrorCode)
+		SysSmartPtr<CMessage> message = *it;
+
+		CPacketSerializer messageSerializer(CSerializer::Mode::Serializing, m_DataBuffer.Buffer() + m_DataBuffer.UsedSize(), m_DataBuffer.UnusedSize());
+		message->Serialize(messageSerializer);
+
+		eSerError = messageSerializer.GetError();
+		switch (eSerError)
 		{
-			return Error::DataBufferFull;
-		}
-		else
-		{
-			return Error::CopyFailed;
+			case CPacketSerializer::Error::Ok:
+			{
+				//-- Success
+				if (IS_PTR(m_DataBuffer.InsTail(NULL, messageSerializer.GetOffset())))
+				{
+					++it;
+					m_HeaderV1.m_nMessages++;
+
+					if (CMessage::Type::MsgBye == message->GetType())
+					{
+						//-- Bye detected.
+						bByeDetected = true;
+					}
+				}
+				else
+				{
+					//-- Error!
+					return Error::BadFail;
+				}
+			}
+			break;
+			case CPacketSerializer::Error::EndReached:
+			{
+				//-- This just means we can break out of the loop.
+				return Error::Ok;
+			}
+			break;
+			default:
+			{
+				//-- Something bad went wrong.
+				return Error::Serializer;
+			}
+			break;
 		}
 	}
 
@@ -486,26 +515,25 @@ CPacket::Error::Enum CPacket::AddMessage(SysSmartPtr<CMessage> message)
 
 
 //----------------------------------------------------------//
-// CPacket::ConvertToMessages
+// CPacket::GetMessages
 //----------------------------------------------------------//
-CPacket::Error::Enum CPacket::ConvertToMessages(TMessageList& pushList)
+CPacket::Error::Enum CPacket::GetMessages(TMessageList& recvList)
 {
 	//-- DataBuffer should have exactly m_HeaderV1.m_nMessages inside it.
+	TMessageList tempList;
 
-	m_MessageList.clear();
-	
 	u16 nProcessedMessages = 0;
-	CPacketSerializer messageSerializer(CSerializer::Mode::Deserializing, m_DataBuffer.Buffer(), m_DataBuffer.UsedSize());
-	CPacketSerializer::Error::Enum eErrorCode = CPacketSerializer::Error::Ok;
+	CPacketSerializer messageDeserializer(CSerializer::Mode::Deserializing, m_DataBuffer.Buffer(), m_DataBuffer.UsedSize());
+	CPacketSerializer::Error::Enum eSerError = CPacketSerializer::Error::Ok;
 	
-	while ( (CPacketSerializer::Error::Ok == eErrorCode)
-		&& (messageSerializer.GetOffset() < messageSerializer.GetSize()) )
+	while ( (CPacketSerializer::Error::Ok == eSerError)
+		&& (messageDeserializer.GetOffset() < messageDeserializer.GetSize()) )
 	{
 		u32 nMessageType = CMessage::Type::Unknown;
 
-		if (IS_ZERO(messageSerializer.SerializeU32(nMessageType, 'type')))
+		if (IS_ZERO(messageDeserializer.SerializeU32(nMessageType, 'type')))
 		{
-			return Error::ProtocolMismatch;
+			return Error::Serializer;
 		}
 
 		CMessage* pMessage = CMessage::CreateType((CMessage::Type::Enum)nMessageType);
@@ -514,30 +542,23 @@ CPacket::Error::Enum CPacket::ConvertToMessages(TMessageList& pushList)
 			return Error::ProtocolMismatch;
 		}
 
-		pMessage->Serialize(messageSerializer);
+		pMessage->Serialize(messageDeserializer);
 
-		eErrorCode = messageSerializer.GetError();
-		if (CPacketSerializer::Error::Ok != eErrorCode)
+		eSerError = messageDeserializer.GetError();
+		if (CPacketSerializer::Error::Ok != eSerError)
 		{
-			if (CPacketSerializer::Error::EndReached == eErrorCode)
-			{
-				return Error::DataBufferEmpty;
-			}
-			else
-			{
-				return Error::ProtocolMismatch;
-			}
+			return Error::Serializer;
 		}
 
 		SysSmartPtr<CMessage> smart(pMessage);
-		m_MessageList.push_back(smart);
+		tempList.push_back(smart);
 		++nProcessedMessages;
 	}
 
 	//-- Sanity tests
 	//-- messageSerializer should have consumed all its bytes.
-	assert(messageSerializer.GetOffset() == messageSerializer.GetSize());
-	if (messageSerializer.GetOffset() != messageSerializer.GetSize())
+	assert(messageDeserializer.GetOffset() == messageDeserializer.GetSize());
+	if (messageDeserializer.GetOffset() != messageDeserializer.GetSize())
 	{
 		return Error::SanityFail;
 	}
@@ -549,6 +570,7 @@ CPacket::Error::Enum CPacket::ConvertToMessages(TMessageList& pushList)
 		return Error::SanityFail;
 	}
 
+	recvList.splice(recvList.end(), tempList);
 	return Error::Ok;
 }
 

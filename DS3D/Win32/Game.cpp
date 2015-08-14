@@ -13,6 +13,10 @@
 #include "Log.h"
 #include "TCPConnection.h"
 
+#include "Network.h"
+#include "Message.h"
+#include "Messages/MsgMotd.h"
+
 
 #include "SimpleBuffer.h"
 #include "Packet.h"
@@ -94,22 +98,18 @@ bool Game_Initialise(void)
 	gConnection.Open("192.168.1.36", "5555");
 
 
+	TMessageList recvList;
+	TMessageList sendList;
 
-	CSimpleBuffer<1024> buf;
+	CMsgMotd* pMotd = new CMsgMotd();
+	pMotd->SetText("Hello, this is MOTD");
 
-	CPacketSerializer ser(CSerializer::Mode::Serializing, buf.Buffer(), buf.Size());
+	sendList.push_back(SysSmartPtr<CMessage>(pMotd));
 
-	CPacket packetIn;
-	CPacket::Error::Enum eError = packetIn.Serialize(ser);
+	gConnection.UpdateSend(sendList);
+	size_t s = sendList.size();
 
-	f32 breakhere = 0.0f;
-
-	CPacketSerializer serb(CSerializer::Mode::Deserializing, buf.Buffer(), buf.Size());
-
-	CPacket packetOut;
-	eError = packetOut.Serialize(serb);
-
-	breakhere = 0.0f;
+	gConnection.UpdateRecv(recvList);
 
 	gGameLog.Printf("Complete (OK)");
 	gDebugLog.Printf("Complete (OK)");

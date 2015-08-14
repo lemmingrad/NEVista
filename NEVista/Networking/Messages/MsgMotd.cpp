@@ -58,23 +58,23 @@ size_t CMsgMotd::Serialize(CSerializer& serializer)
 {
 	size_t nSize = CMessage::Serialize(serializer);
 
-	if (CSerializer::Mode::Serializing == serializer.GetMode())
-	{
-		//-- Writing to packet stream
-		m_nMotdLength = m_strMotd.Length();
-	}
-	else
-	{
-		//-- Reading from packet stream
-		m_strMotd.Clear();
-	}
-
 	nSize += serializer.SerializeU16(m_nMotdLength, 'len ');
-	if (m_nMotdLength > 0)
-	{
-		nSize += serializer.SerializeBytes((u8*)m_strMotd.Buffer(), m_nMotdLength, 'motd');
-	}
 
+	if (m_nMotdLength > 0) 
+	{
+		assert(m_nMotdLength < m_strMotd.Size());
+
+		u8* pBuffer = (u8*)m_strMotd.Buffer();
+
+		nSize += serializer.SerializeBytes(pBuffer, m_nMotdLength, 'motd');
+		
+		if (CSerializer::Mode::Deserializing == serializer.GetMode())
+		{
+			//-- If deserializing, make sure the string is null terminated.
+			pBuffer[m_nMotdLength] = 0;
+		}
+	}
+	
 	return nSize;
 }
 
@@ -98,6 +98,7 @@ const s8* CMsgMotd::GetText(void) const
 void CMsgMotd::SetText(const s8* strBuffer)
 {
 	m_strMotd.Set(strBuffer);
+	m_nMotdLength = m_strMotd.Length();
 }
 
 
