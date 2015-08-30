@@ -42,10 +42,14 @@ void HandleWriteActivity(int newsock, fd_set *set)
 	CMsgMotd* pMotd = new CMsgMotd();
 	pMotd->SetText("This is a test.");
 
-	SysSmartPtr<CMessage> message(pMotd);
+	TMessageList sendList;
 
-	CPacket packet;
-	CPacket::Error::Enum ePacketEC = packet.AddMessage(message);
+	sendList.push_back(SysSmartPtr<CMessage>(pMotd));
+	TMessageList::iterator it;
+	bool bByeDetected;
+
+	CPacket packet(SysString::GenerateKey(0,0), CPacket::Flag::Encrypted);
+	CPacket::Error::Enum ePacketEC = packet.AddMessages(sendList, it, bByeDetected);
 	if (ePacketEC != CPacket::Error::Ok)
 	{
 		printf("packet.AddMessage ePacketEC = %d\n", ePacketEC);

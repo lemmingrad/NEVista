@@ -114,6 +114,11 @@ class SysSmartPtr
 			return m_pPtr;
 		}
 
+		T* ptr(void)
+		{
+			return m_pPtr;
+		}
+
 		//-- Assignment operator
 		SysSmartPtr<T>& operator=(const SysSmartPtr<T>& sp)
 		{

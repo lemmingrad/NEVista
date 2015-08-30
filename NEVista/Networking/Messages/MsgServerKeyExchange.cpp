@@ -25,13 +25,25 @@
 // STRUCTS
 //----------------------------------------------------------//
 
+
+//----------------------------------------------------------//
+// IMPLEMENT_MESSAGE_REGISTRAR
+//----------------------------------------------------------//
+//--Description
+//----------------------------------------------------------//
+IMPLEMENT_MESSAGE_REGISTRAR(CMsgServerKeyExchange)
+{
+	return new CMsgServerKeyExchange();
+}
+
+
 //----------------------------------------------------------//
 // CMsgServerKeyExchange::CMsgServerKeyExchange
 //----------------------------------------------------------//
 //--Description
 //----------------------------------------------------------//
 CMsgServerKeyExchange::CMsgServerKeyExchange()
-: CMessage(Type::MsgServerKeyExchange)
+: CMessage(kType, Flag::NeverEncrypted | Flag::ForcedEnd)
 , m_nServerKey(0)
 {
 }
@@ -55,7 +67,7 @@ CMsgServerKeyExchange::~CMsgServerKeyExchange()
 size_t CMsgServerKeyExchange::Serialize(CSerializer& serializer)
 {
 	size_t nSize = CMessage::Serialize(serializer);
-	nSize += serializer.SerializeU16(m_nServerKey, 'skey');
+	nSize += serializer.SerializeU8(m_nServerKey, 'skey');
 	return nSize;
 }
 
@@ -65,7 +77,7 @@ size_t CMsgServerKeyExchange::Serialize(CSerializer& serializer)
 //----------------------------------------------------------//
 //--Description
 //----------------------------------------------------------//
-void CMsgServerKeyExchange::SetKey(u16 nServerKey)
+void CMsgServerKeyExchange::SetKey(u8 nServerKey)
 {
 	m_nServerKey = nServerKey;
 }
@@ -76,7 +88,7 @@ void CMsgServerKeyExchange::SetKey(u16 nServerKey)
 //----------------------------------------------------------//
 //--Description
 //----------------------------------------------------------//
-u16 CMsgServerKeyExchange::GetKey(void) const
+u8 CMsgServerKeyExchange::GetKey(void) const
 {
 	return m_nServerKey;
 }

@@ -18,8 +18,6 @@
 #include "PacketSerializer.h"
 #include "Message.h"
 
-#include "Messages/MsgMotd.h"
-
 
 //----------------------------------------------------------//
 // DEFINES
@@ -32,20 +30,10 @@
 //----------------------------------------------------------//
 // CPacket::CPacket
 //----------------------------------------------------------//
-CPacket::CPacket(u8 nFlags) 
+CPacket::CPacket(SysString::Key key) 
+: m_Key(key)
 {
 	SysMemory::Memclear(&m_HeaderV1, sizeof(m_HeaderV1));
-
-	//-- Version::V1
-	if (TEST_FLAG(nFlags, Flag::Encrypted))
-	{
-		SET_FLAG(m_HeaderV1.m_nFlags, Flag::Encrypted);
-	}
-	if (TEST_FLAG(nFlags, Flag::Compressed))
-	{
-		SET_FLAG(m_HeaderV1.m_nFlags, Flag::Compressed);
-	}
-
 	m_DataBuffer.Clear();
 }
 
@@ -276,6 +264,12 @@ CPacket::Error::Enum CPacket::Serialize(CPacketSerializer& serializer)
 				return Error::Serializer;
 			}
 
+			//-- Valid encryption key?
+			if (SysString::INVALID_KEY == m_Key)
+			{
+				return Error::EncryptionFailed;
+			}
+
 			//-- NOTE: this will actually put a null terminator beyond the end 
 			//-- of the pReserved block! But should be ok because we checked 
 			//-- if there was room enough in the unused size of the serializer
@@ -287,7 +281,7 @@ CPacket::Error::Enum CPacket::Serialize(CPacketSerializer& serializer)
 				m_HeaderV1.m_nDataSize + 1,				
 				m_DataBuffer.Buffer(), 
 				m_DataBuffer.UsedSize(),
-				SysString::GenerateKey(0, 0));
+				m_Key);
 
 			if (IS_ZERO(nEncodedSize))
 			{
@@ -406,12 +400,18 @@ CPacket::Error::Enum CPacket::Serialize(CPacketSerializer& serializer)
 						return Error::DataBufferFull;
 					}
 					
+					//-- Valid encryption key?
+					if (SysString::INVALID_KEY == m_Key)
+					{
+						return Error::EncryptionFailed;
+					}
+
 					nDecodedSize = SysString::KeyDecode(
 						pDataDest, 
 						nDecodedSize,
 						(const s8*)pDataSrc, 
 						m_HeaderV1.m_nDataSize,
-						SysString::GenerateKey(0, 0));
+						m_Key);
 
 					if (IS_ZERO(nDecodedSize))
 					{
@@ -453,20 +453,55 @@ CPacket::Error::Enum CPacket::Serialize(CPacketSerializer& serializer)
 //----------------------------------------------------------//
 // CPacket::AddMessages
 //----------------------------------------------------------//
-CPacket::Error::Enum CPacket::AddMessages(TMessageList& sendList, TMessageList::iterator& it, bool& bByeDetected)
+CPacket::Error::Enum CPacket::AddMessages(TMessageList& sendList, TMessageList::iterator& it)
 {
-	it = sendList.begin();
-	bByeDetected = false;
+	bool bForcedEnd = false;
+	bool bPacketIsCompressed = true;								//-- Prefer compressed.
+	bool bPacketIsEncrypted = (SysString::INVALID_KEY != m_Key);	//-- Prefer encrypted if valid key is available.
 
+	it = sendList.begin();
+	
 	u32 nMessages = 0;
+	if (it != sendList.end())
+	{
+		SysSmartPtr<CMessage> first = *it;
+		
+		bPacketIsCompressed = first->CanBeCompressed(bPacketIsCompressed);
+		if (IS_TRUE(bPacketIsCompressed))
+		{
+			SET_FLAG(m_HeaderV1.m_nFlags, Flag::Compressed);
+		}
+
+		bPacketIsEncrypted = first->CanBeEncrypted(bPacketIsEncrypted);
+		if (IS_TRUE(bPacketIsEncrypted))
+		{
+			SET_FLAG(m_HeaderV1.m_nFlags, Flag::Encrypted);
+		}
+	}
 
 	CPacketSerializer::Error::Enum eSerError = CPacketSerializer::Error::Ok;
 
-	while ( IS_FALSE(bByeDetected)
+	while ( IS_FALSE(bForcedEnd)
 		&& (CPacketSerializer::Error::Ok == eSerError)
 		&& (it != sendList.end()) )
 	{
 		SysSmartPtr<CMessage> message = *it;
+
+		if (bPacketIsCompressed != message->CanBeCompressed(bPacketIsCompressed))
+		{
+			//-- Message cannot be included in same packet as previous message because
+			//-- compressed flag has changed.
+			bForcedEnd = true;
+			break;
+		}
+
+		if (bPacketIsEncrypted != message->CanBeEncrypted(bPacketIsEncrypted))
+		{
+			//-- Message cannot be included in same packet as previous message because
+			//-- encrypted flag has changed.
+			bForcedEnd = true;
+			break;
+		}
 
 		CPacketSerializer messageSerializer(CSerializer::Mode::Serializing, m_DataBuffer.Buffer() + m_DataBuffer.UsedSize(), m_DataBuffer.UnusedSize());
 		message->Serialize(messageSerializer);
@@ -482,10 +517,9 @@ CPacket::Error::Enum CPacket::AddMessages(TMessageList& sendList, TMessageList::
 					++it;
 					m_HeaderV1.m_nMessages++;
 
-					if (CMessage::Type::MsgBye == message->GetType())
+					if (IS_TRUE(message->IsForcedEnd()))
 					{
-						//-- Bye detected.
-						bByeDetected = true;
+						bForcedEnd = true;	
 					}
 				}
 				else
@@ -517,10 +551,10 @@ CPacket::Error::Enum CPacket::AddMessages(TMessageList& sendList, TMessageList::
 //----------------------------------------------------------//
 // CPacket::GetMessages
 //----------------------------------------------------------//
-CPacket::Error::Enum CPacket::GetMessages(TMessageList& recvList)
+CPacket::Error::Enum CPacket::GetMessages(TMessageList& tempList)
 {
 	//-- DataBuffer should have exactly m_HeaderV1.m_nMessages inside it.
-	TMessageList tempList;
+	tempList.clear();
 
 	u16 nProcessedMessages = 0;
 	CPacketSerializer messageDeserializer(CSerializer::Mode::Deserializing, m_DataBuffer.Buffer(), m_DataBuffer.UsedSize());
@@ -529,14 +563,14 @@ CPacket::Error::Enum CPacket::GetMessages(TMessageList& recvList)
 	while ( (CPacketSerializer::Error::Ok == eSerError)
 		&& (messageDeserializer.GetOffset() < messageDeserializer.GetSize()) )
 	{
-		u32 nMessageType = CMessage::Type::Unknown;
+		CMessage::Type nMessageType = CMessage::kTypeUnknown;
 
 		if (IS_ZERO(messageDeserializer.SerializeU32(nMessageType, 'type')))
 		{
 			return Error::Serializer;
 		}
 
-		CMessage* pMessage = CMessage::CreateType((CMessage::Type::Enum)nMessageType);
+		CMessage* pMessage = CMessageFactory::CreateType(nMessageType);
 		if (IS_NULL_PTR(pMessage))
 		{
 			return Error::ProtocolMismatch;
@@ -570,7 +604,6 @@ CPacket::Error::Enum CPacket::GetMessages(TMessageList& recvList)
 		return Error::SanityFail;
 	}
 
-	recvList.splice(recvList.end(), tempList);
 	return Error::Ok;
 }
 

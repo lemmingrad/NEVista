@@ -162,7 +162,15 @@
 				>
 			</File>
 			<File
+				RelativePath=".\TCPAcceptor.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\TCPConnection.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\TCPConnector.cpp"
 				>
 			</File>
 			<Filter
@@ -196,6 +204,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Network.h"
+				>
+			</File>
+			<File
 				RelativePath=".\Packet.h"
 				>
 			</File>
@@ -204,7 +216,15 @@
 				>
 			</File>
 			<File
+				RelativePath=".\TCPAcceptor.h"
+				>
+			</File>
+			<File
 				RelativePath=".\TCPConnection.h"
+				>
+			</File>
+			<File
+				RelativePath=".\TCPConnector.h"
 				>
 			</File>
 			<Filter

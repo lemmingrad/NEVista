@@ -44,6 +44,7 @@ class SysString
 		typedef u32			Hash;
 		typedef u16			Key;
 		static const Hash	INVALID_HASH = (Hash)0;
+		static const Key	INVALID_KEY = (Key)-1;
 
 		static u32			Strlen(const s8* strSrc);
 

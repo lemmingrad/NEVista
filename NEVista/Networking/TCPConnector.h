@@ -1,33 +1,23 @@
-#ifndef _TCPCONNECTION_H_
-#define _TCPCONNECTION_H_
+#ifndef _TCPCONNECTOR_H_
+#define _TCPCONNECTOR_H_
 #pragma once
 
 //----------------------------------------------------------//
-// TCPCONNECTION.H
+// TCPCONNECTOR.H
 //----------------------------------------------------------//
 //-- Description			
-// Wrapper around a TCP socket with send and receive 
-// buffering and to/from Packet conversion.
+// Establishes a TCP connection from a client end.
 //----------------------------------------------------------//
 
 
 #include "Types.h"
-#include "SysString.h"
-#include "SysSmartPtr.h"
 #include "SysSocket.h"
-#include "SimpleBuffer.h"
 #include "Network.h"
 
 
 //----------------------------------------------------------//
 // DEFINES
 //----------------------------------------------------------//
-
-
-#define MAX_PACKET_SIZE				(1500)
-#define TCP_RECV_BUFFER_SIZE		(MAX_PACKET_SIZE * 4)
-#define TCP_SEND_BUFFER_SIZE		(MAX_PACKET_SIZE * 4)
-
 
 //----------------------------------------------------------//
 // ENUMS
@@ -38,7 +28,7 @@
 //----------------------------------------------------------//
 
 
-class CMessage;
+class CTCPConnection;
 
 
 //----------------------------------------------------------//
@@ -50,7 +40,7 @@ class CMessage;
 //----------------------------------------------------------//
 
 
-class CTCPConnection
+class CTCPConnector
 {
 	public:
 
@@ -58,56 +48,68 @@ class CTCPConnection
 		{
 			enum Enum
 			{
-				//-- Bad fails
-				ProtocolMismatch			= 0x80001001,
-				SanityFail					= 0x80001002,
-				CopyFailed					= 0x80001003,
-				
-				//-- State
-				WrongState					= 0x80002000,
-				Closed						= 0x80002001,
-				
-				BadFail = -1,
+				WrongState			= 0x80000000,
+				GetInfoFail			= 0x80000001,
+				NoMoreInfo			= 0x80000002,
+				OpenFail			= 0x80000003,
+				ConnectFail			= 0x80000004,
+				SetSockOptFail		= 0x80000005,
+				GetSockOptFail		= 0x80000006,
+				SelectFail			= 0x80000007,
+
+				BadFail				= -1,
 
 				//-- Success
-				Ok = 0
+				Ok					= 0,
+				
+				//-- In progress
+				InProgress			= 1
 			};
 		};
+
+		struct Result
+		{
+			Result()
+			: m_eError(Error::Ok)
+			, m_pConnection(NULL)
+			{		
+			}
+
+			Error::Enum			m_eError;
+			CTCPConnection*		m_pConnection;
+		};
+
+		CTCPConnector();
+		~CTCPConnector();
+
+		Result					ConnectBlocking(const s8* strHostname, const s8* strPort);
+		Error::Enum				ConnectNonblocking(const s8* strHostname, const s8* strPort);
+		Result					Update(void);
+
+	private:
 
 		struct State
 		{
 			enum Enum
 			{
-				Closed = 0,
-				Open,
-				Closing_WaitingForEmptySend,
-				Closing_WaitingForRecvZero
+				NotConnected = 0,
+				GettingAddrInfo,
+				NextAddr,
+				Connecting,
+				Connected,
 			};
 		};
 
+		State::Enum				m_eState;
 
-		CTCPConnection(SysSocket::Socket nSocket);
-		~CTCPConnection();
+		SysSocket::AddrInfo*	m_pAddrResults;
+		SysSocket::AddrInfo*	m_pCur;
 
-		Error::Enum			UpdateRecv(TMessageList& recvList, TMessageList& sendList);
-		Error::Enum			UpdateSend(TMessageList& sendList);
+		SysSocket::Socket		m_nSocket;
 
-		SysSocket::Socket	GetSocket(void);
 
-		Error::Enum			Close(Error::Enum eError);
-
-	private:
-
-		SysSocket::Socket							m_nSocket;
-
-		CSimpleBuffer<TCP_RECV_BUFFER_SIZE>			m_RecvBuffer;
-		CSimpleBuffer<TCP_SEND_BUFFER_SIZE>			m_SendBuffer;
-	
-		State::Enum									m_eState;
-
-		SysString::Key								m_Key;
-		u8											m_nClientRnd;
-		u8											m_nServerRnd;
+		void					CleanAddrResults(void);
+		void					CleanSocket(void);
 };
 
 
@@ -119,4 +121,4 @@ class CTCPConnection
 // EOF
 //----------------------------------------------------------//
 
-#endif //_TCPCONNECTION_H_
+#endif //_TCPCONNECTOR_H_

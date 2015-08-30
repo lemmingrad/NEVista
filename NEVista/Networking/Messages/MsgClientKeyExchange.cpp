@@ -26,12 +26,23 @@
 //----------------------------------------------------------//
 
 //----------------------------------------------------------//
+// IMPLEMENT_MESSAGE_REGISTRAR
+//----------------------------------------------------------//
+//--Description
+//----------------------------------------------------------//
+IMPLEMENT_MESSAGE_REGISTRAR(CMsgClientKeyExchange)
+{
+	return new CMsgClientKeyExchange();
+}
+
+
+//----------------------------------------------------------//
 // CMsgClientKeyExchange::CMsgClientKeyExchange
 //----------------------------------------------------------//
 //--Description
 //----------------------------------------------------------//
 CMsgClientKeyExchange::CMsgClientKeyExchange()
-: CMessage(Type::MsgClientKeyExchange)
+: CMessage(kType, Flag::NeverEncrypted | Flag::ForcedEnd)
 , m_nClientKey(0)
 {
 }
@@ -55,7 +66,7 @@ CMsgClientKeyExchange::~CMsgClientKeyExchange()
 size_t CMsgClientKeyExchange::Serialize(CSerializer& serializer)
 {
 	size_t nSize = CMessage::Serialize(serializer);
-	nSize += serializer.SerializeU16(m_nClientKey, 'ckey');
+	nSize += serializer.SerializeU8(m_nClientKey, 'ckey');
 	return nSize;
 }
 
@@ -65,7 +76,7 @@ size_t CMsgClientKeyExchange::Serialize(CSerializer& serializer)
 //----------------------------------------------------------//
 //--Description
 //----------------------------------------------------------//
-void CMsgClientKeyExchange::SetKey(u16 nClientKey)
+void CMsgClientKeyExchange::SetKey(u8 nClientKey)
 {
 	m_nClientKey = nClientKey;
 }
@@ -76,7 +87,7 @@ void CMsgClientKeyExchange::SetKey(u16 nClientKey)
 //----------------------------------------------------------//
 //--Description
 //----------------------------------------------------------//
-u16 CMsgClientKeyExchange::GetKey(void) const
+u8 CMsgClientKeyExchange::GetKey(void) const
 {
 	return m_nClientKey;
 }

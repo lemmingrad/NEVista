@@ -11,6 +11,7 @@
 
 
 #include "Types.h"
+#include "Network.h"
 
 
 //----------------------------------------------------------//
@@ -33,12 +34,17 @@
 // EXTERNALS
 //----------------------------------------------------------//
 
+
 const s8* Game_Title(void);
 const s8* Game_Version(void);
 
 bool Game_Initialise(void);
 bool Game_Shutdown(void);
 bool Game_Main(void);
+
+
+extern TMessageList gRecvMessageList;
+extern TMessageList	gSendMessageList;
 
 
 //----------------------------------------------------------//

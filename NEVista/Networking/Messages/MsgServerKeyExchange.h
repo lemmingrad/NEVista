@@ -42,6 +42,8 @@ class CSerializer;
 
 class CMsgServerKeyExchange : public CMessage
 {
+		DECLARE_MESSAGE_REGISTRAR('skey', CMsgServerKeyExchange);
+
 	public:
 
 		CMsgServerKeyExchange();
@@ -50,12 +52,12 @@ class CMsgServerKeyExchange : public CMessage
 		//-- CMessage
 		virtual size_t			Serialize(CSerializer& serializer);
 
-		void					SetKey(u16 nServerKey);
-		u16						GetKey(void) const;
+		void					SetKey(u8 nServerKey);
+		u8						GetKey(void) const;
 
 	private:
 
-		u16						m_nServerKey;
+		u8						m_nServerKey;
 
 };
 

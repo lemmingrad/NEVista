@@ -8,78 +8,36 @@
 #include "PacketSerializer.h"
 #include "SimpleBuffer.h"
 #include "Message.h"
+#include "Messages/MsgBye.h"
+#include "Messages/MsgMotd.h"
+#include "Messages/MsgClientKeyExchange.h"
+#include "Messages/MsgServerKeyExchange.h"
+#include "SysDebugLog.h"
 
 
 
-CTCPConnection::CTCPConnection()
-: m_eState(State::Unknown)
+CTCPConnection::CTCPConnection(SysSocket::Socket nSocket)
+: m_eState(State::Closed)
 , m_nSocket(SysSocket::INVALID_SOCK)
+, m_Key(SysString::INVALID_KEY)
+, m_nClientRnd(0)
+, m_nServerRnd(0)
 {
+	if (SysSocket::INVALID_SOCK != nSocket)
+	{
+		m_eState = State::Open;
+		m_nSocket = nSocket;
+		m_nClientRnd = 0;	// TODO - random u8
+		m_nServerRnd = 0;	// TODO - random u8
+	}
+
 	m_RecvBuffer.Clear();
 	m_SendBuffer.Clear();
 }
 
 CTCPConnection::~CTCPConnection()
 {
-}
-
-CTCPConnection::Error::Enum CTCPConnection::Initialise(void)
-{
-	m_nSocket = SysSocket::INVALID_SOCK;
-	m_eState = State::Closed;
-	m_RecvBuffer.Clear();
-	m_SendBuffer.Clear();
-
-	return Error::Ok;
-}
-
-CTCPConnection::Error::Enum CTCPConnection::Shutdown(void)
-{
-	return Close(Error::Ok);
-}
-
-CTCPConnection::Error::Enum CTCPConnection::Open(const s8* strHostname, const s8* strPort)
-{
-	assert(State::Closed == m_eState);
-	if (State::Closed != m_eState)
-	{
-		return Error::WrongState;
-	}
-
-	if (SysSocket::INVALID_SOCK != m_nSocket)
-	{
-		//-- socket already set?
-		return Error::WrongState;
-	}
-
-	SysSocket::AddrInfo hints;
-	SysSocket::AddrInfo* pRes;
-
-	SysMemory::Memclear(&hints, sizeof(hints));
-	hints.ai_family = AF_INET;
-	hints.ai_socktype = SOCK_STREAM;
-
-	if (SYS_SOCKET_NO_ERROR != SysSocket::GetInfo(strHostname, strPort, &hints, &pRes))
-	{
-		return Close(Error::BadFail);
-	}
-
-/*	m_nSocket = SysSocket::OpenSocket(pRes->ai_family, pRes->ai_socktype, pRes->ai_protocol);
-	if (SysSocket::INVALID_SOCK == m_nSocket)
-	{
-		return Close(Error::BadFail);
-	}
-
-	if (SYS_SOCKET_NO_ERROR != SysSocket::Connect(m_nSocket, pRes->ai_addr, pRes->ai_addrlen))
-	{
-		return Close(Error::BadFail);
-	}
-
-*/	m_eState = State::Open;
-	m_RecvBuffer.Clear();
-	m_SendBuffer.Clear();
-
-	return Error::Ok;
+	Close(Error::Ok);
 }
 
 CTCPConnection::Error::Enum	CTCPConnection::Close(CTCPConnection::Error::Enum eError)
@@ -115,16 +73,11 @@ CTCPConnection::Error::Enum	CTCPConnection::Close(CTCPConnection::Error::Enum eE
 //-- 5. close() local end of socket.
 
 
-CTCPConnection::Error::Enum CTCPConnection::UpdateRecv(TMessageList& recvList)
+CTCPConnection::Error::Enum CTCPConnection::UpdateRecv(TMessageList& recvList, TMessageList& sendList)
 {
-	assert(State::Unknown != m_eState);
-	if (State::Unknown == m_eState)
-	{
-		return Error::WrongState;
-	}
 	if (SysSocket::INVALID_SOCK == m_nSocket)
 	{
-//		return Error::WrongState;
+		return Error::WrongState;
 	}
 	
 	if (IS_ZERO(m_RecvBuffer.UnusedSize()))
@@ -139,7 +92,7 @@ CTCPConnection::Error::Enum CTCPConnection::UpdateRecv(TMessageList& recvList)
 	}
 
 	//-- Update RecvBuffer with any new data from socket.
-/*	s32 nBytes = SysSocket::Recv(m_nSocket, (s8*)m_RecvBuffer.Buffer() + m_RecvBuffer.UsedSize(), m_RecvBuffer.UnusedSize());
+	s32 nBytes = SysSocket::Recv(m_nSocket, (s8*)m_RecvBuffer.Buffer() + m_RecvBuffer.UsedSize(), m_RecvBuffer.UnusedSize());
 	if (SYS_SOCKET_WOULD_BLOCK == nBytes)
 	{
 		//-- No read activity, so nothing to do.
@@ -162,7 +115,6 @@ CTCPConnection::Error::Enum CTCPConnection::UpdateRecv(TMessageList& recvList)
 		//-- (SysSocket::Recv must have returned a value >= m_RecvBuffer.UnusedSize())
 		return Close(Error::BadFail);
 	}
-*/
 
 	//-- If enough data is present, decrypt and copy received messages/contents as necessary.
 	//-- Will loop until a packet error occurs or RecvBuffer is emptied.
@@ -171,15 +123,17 @@ CTCPConnection::Error::Enum CTCPConnection::UpdateRecv(TMessageList& recvList)
 	while ( (CPacket::Error::Ok == ePacketError)
 		&& (m_RecvBuffer.UsedSize() > 0) )
 	{
-		CPacket packet;
+		CPacket packet(m_Key);
 		CPacketSerializer packetDeserializer(CSerializer::Mode::Deserializing, m_RecvBuffer.Buffer(), m_RecvBuffer.UsedSize());
+
+		TMessageList packetMessagesList;
 
 		//-- Test for valid packet header, decrypt, etc.
 		ePacketError = packet.Serialize(packetDeserializer);
 		if (CPacket::Error::Ok == ePacketError)
 		{
-			//-- Convert packet into messages, append to the received message list.
-			ePacketError = packet.GetMessages(recvList);
+			//-- Get packet data as a list of messages
+			ePacketError = packet.GetMessages(packetMessagesList);
 		}
 
 		switch (ePacketError)
@@ -187,7 +141,81 @@ CTCPConnection::Error::Enum CTCPConnection::UpdateRecv(TMessageList& recvList)
 			case CPacket::Error::Ok:
 			{
 				//-- Success.
-				if (IS_NULL_PTR(m_RecvBuffer.StripHead(packetDeserializer.GetOffset())))
+				if (IS_PTR(m_RecvBuffer.StripHead(packetDeserializer.GetOffset())))
+				{
+					//-- Success, so safe to append the packetMessages list to the end of the
+					//-- recvList.
+					for (TMessageList::const_iterator cit = packetMessagesList.begin(); cit != packetMessagesList.end(); ++cit)
+					{
+						SysSmartPtr<CMessage> message = *cit;
+						switch (message->GetType())
+						{
+							case CMsgBye::kType:
+							{
+								//-- Incoming packet contained a Bye message.
+								//-- Send a Bye-ack back.
+								CMsgBye* pResponse = new CMsgBye(CMsgBye::Reason::SafeDisconnectACK);
+								if (IS_PTR(pResponse))
+								{
+									sendList.push_back(SysSmartPtr<CMessage>(pResponse));
+								}
+							}
+							break;
+							case CMsgMotd::kType:
+							{			
+								//-- Incoming packet contained a Motd message. 
+								//-- This means we must be the client.
+								//-- Correct response is to send a ClientKeyExchange back to server.
+								CMsgClientKeyExchange* pResponse = new CMsgClientKeyExchange();
+								if (IS_PTR(pResponse))
+								{
+									pResponse->SetKey(m_nClientRnd);
+									sendList.push_back(SysSmartPtr<CMessage>(pResponse));
+								}
+							}
+							break;
+							case CMsgClientKeyExchange::kType:
+							{			
+								//-- Incoming packet contained a ClientKeyExchange message. 
+								//-- This means we must be the server.
+								//-- Correct response is to send a ServerKeyExchange back to client.
+								//-- And we must generate an encryption key (which should be identical on client and server).
+								CMsgClientKeyExchange* pIn = (CMsgClientKeyExchange*)message.ptr();
+								if (IS_PTR(pIn))
+								{
+									m_nClientRnd = pIn->GetKey();
+									m_Key = SysString::GenerateKey(m_nServerRnd, m_nClientRnd);
+							
+									CMsgServerKeyExchange* pResponse = new CMsgServerKeyExchange();
+									if (IS_PTR(pResponse))
+									{
+										pResponse->SetKey(m_nServerRnd);
+										sendList.push_back(SysSmartPtr<CMessage>(pResponse));
+									}
+								}
+							}
+							break;
+							case CMsgServerKeyExchange::kType:
+							{			
+								//-- Incoming packet contained a ServerKeyExchange message. 
+								//-- This means we must be the client.
+								//-- Generate an encryption key (which should be identical on client and server).
+								CMsgServerKeyExchange* pIn = (CMsgServerKeyExchange*)message.ptr();
+								if (IS_PTR(pIn))
+								{
+									m_nServerRnd = pIn->GetKey();
+									m_Key = SysString::GenerateKey(m_nServerRnd, m_nClientRnd);
+								}
+							}
+							break;
+							default:
+							break;
+						}
+					}
+
+					recvList.splice(recvList.end(), packetMessagesList);
+				}
+				else
 				{
 					//-- Error!
 					//-- This should never happen since serializing and converting both succeeded, 
@@ -268,14 +296,9 @@ CTCPConnection::Error::Enum CTCPConnection::UpdateRecv(TMessageList& recvList)
 
 CTCPConnection::Error::Enum CTCPConnection::UpdateSend(TMessageList& sendList)
 {
-	assert(State::Unknown != m_eState);
-	if (State::Unknown == m_eState)
-	{
-		return Error::WrongState;
-	}
 	if (SysSocket::INVALID_SOCK == m_nSocket)
 	{
-//		return Error::WrongState;
+		return Error::WrongState;
 	}
 
 	if ( (State::Closed == m_eState)
@@ -293,16 +316,12 @@ CTCPConnection::Error::Enum CTCPConnection::UpdateSend(TMessageList& sendList)
 		&& (m_SendBuffer.UnusedSize() > 0) )
 	{
 		//-- Add messages to packet.
-		TMessageList::iterator it = sendList.begin();
-		SysSmartPtr<CMessage> firstMessage = *it;
-		bitfield bitFlags = 0;
-		//SET_FLAG(bitFLags, CPacket::Flag::Encrypted);
-
-		CPacket packet(bitFlags);
+		CPacket packet(m_Key);
 		CPacketSerializer packetSerializer(CSerializer::Mode::Serializing, m_SendBuffer.Buffer() + m_SendBuffer.UsedSize(), m_SendBuffer.UnusedSize());
 
-		bool bByeDetected;
-		ePacketError = packet.AddMessages(sendList, it, bByeDetected);
+		TMessageList::iterator after;
+
+		ePacketError = packet.AddMessages(sendList, after);
 		if (CPacket::Error::Ok == ePacketError)
 		{
 			ePacketError = packet.Serialize(packetSerializer);
@@ -318,9 +337,21 @@ CTCPConnection::Error::Enum CTCPConnection::UpdateSend(TMessageList& sendList)
 					//-- Successfully copied some messages from sendList to the packet, and
 					//-- then serialized the packet to the SendBuffer.
 					//-- It's now safe to strip the consumed messges from sendList.
-					if (IS_TRUE(bByeDetected))
+					bool bHasBye = false;
+					
+					for (TMessageList::const_iterator cit = sendList.begin(); cit != after; ++cit)
 					{
-						//-- Packet contains a ByeBye messsage, which is the last message that 
+						SysSmartPtr<CMessage> message = *cit;
+						if (CMsgBye::kType == message->GetType())
+						{
+							bHasBye = true;
+							break;
+						}
+					}
+
+					if (IS_TRUE(bHasBye))
+					{
+						//-- Packet contains a Bye messsage, which is the last message that 
 						//-- should ever be sent before a graceful shutdown.
 						//-- We can safely empty whatever is left in the sendList.
 						sendList.clear();
@@ -328,9 +359,9 @@ CTCPConnection::Error::Enum CTCPConnection::UpdateSend(TMessageList& sendList)
 					}
 					else
 					{
-						//-- Not ByeBye in packet, so just erase the messages at the head of the
-						//-- sendList that were consumed.
-						sendList.erase(sendList.begin(), it);
+						//-- No Bye in packet, so just erase the messages at the head of the
+						//-- sendList that were consumed by packet.AddMessages().
+						sendList.erase(sendList.begin(), after);
 					}
 				}
 				else
@@ -378,7 +409,6 @@ CTCPConnection::Error::Enum CTCPConnection::UpdateSend(TMessageList& sendList)
 						//-- Other errors are considered non-fatal.
 						//-- In such cases, we'll assume the data is valid, and since nothing has been deleted yet we can try
 						//-- to parse it again next time.
-						//-- Do NOT strip head off RecvBuffer!
 						return Error::Ok;
 					}
 					break;
@@ -409,22 +439,22 @@ CTCPConnection::Error::Enum CTCPConnection::UpdateSend(TMessageList& sendList)
 	//-- Send to socket
 	if (m_SendBuffer.UsedSize() > 0)
 	{
-//		s32 nBytes = SysSocket::Send(m_nSocket, (const s8*)m_SendBuffer.ConstBuffer(), m_SendBuffer.UsedSize());
-		m_RecvBuffer.InsTail(m_SendBuffer.ConstBuffer(), m_SendBuffer.UsedSize());
-		s32 nBytes = m_SendBuffer.UsedSize();
+		s32 nBytes = SysSocket::Send(m_nSocket, (const s8*)m_SendBuffer.ConstBuffer(), m_SendBuffer.UsedSize());
 		if (nBytes > 0)
 		{
 			if (IS_NULL_PTR(m_SendBuffer.StripHead(nBytes)))
 			{
 				return Close(Error::BadFail);
 			}
+
+			SysDebugPrintf("Sent %d bytes.\n", nBytes);
 		}
 	}
 
 	if ( IS_ZERO(m_SendBuffer.UsedSize()) 
 		&& (State::Closing_WaitingForEmptySend == m_eState) )
 	{
-//		SysSocket::Shutdown(m_nSocket, SysSocket::Shutdown::Write);
+		SysSocket::Shutdown(m_nSocket, SysSocket::Shutdown::Write);
 		m_eState = State::Closing_WaitingForRecvZero;
 	}
 

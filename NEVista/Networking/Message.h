@@ -16,6 +16,7 @@
 
 #include "Types.h"
 #include "Serialized.h"
+#include <map>
 
 
 //----------------------------------------------------------//
@@ -47,35 +48,97 @@ class CMessage : public CSerialized
 {
 	public:
 
-		struct Type 
+		typedef u32 Type;
+
+		static const Type kTypeUnknown = 'xxxx';
+
+/*		struct Type
 		{
 			enum Enum
 			{
 				Unknown											= 'xxxx',
 				MsgBye											= 'bye ',
 				MsgMotd											= 'motd',
-				MsgLogin										= 'logn',
 				MsgClientKeyExchange							= 'ckey',
 				MsgServerKeyExchange							= 'skey',
+				MsgLogin										= 'logn',
 				MsgChat											= 'chat'
 				//-- Add new message IDs here.
 			};
 		};
+*/
+		struct Flag
+		{
+			//-- Note: Never flags override Always flags
+			enum
+			{
+				NeverEncrypted			= BIT(0),
+				AlwaysEncrypted			= BIT(1),
+				NeverCompressed			= BIT(2),
+				AlwaysCompressed		= BIT(3),
+				ForcedEnd				= BIT(4)
+			};
+		};
 
-		CMessage(Type::Enum eType);
+		CMessage(Type nType, bitfield bitFlags);
 		virtual ~CMessage();
-
-		static CMessage*		CreateType(Type::Enum eType);
 		
-		Type::Enum				GetType(void);
+		Type					GetType(void) const;
+		bool					CanBeEncrypted(bool bRecommended) const;
+		bool					CanBeCompressed(bool bRecommended) const;
+		bool					IsForcedEnd(void) const;
 
 		//-- CSerialized
 		virtual size_t			Serialize(CSerializer& Serializer);
 
 	protected:
 
-		Type::Enum				m_eType;
+		Type					m_nType;
+		bitfield				m_bitFlags;
 };
+
+
+class CMessageFactory
+{
+	public:
+
+		typedef CMessage* (*TCreateFunc)(void);
+		typedef std::map<CMessage::Type, TCreateFunc> TFuncMap;
+		
+		CMessageFactory();
+		~CMessageFactory();
+
+		static void				RegisterType(CMessage::Type nType, TCreateFunc func);
+		static CMessage*		CreateType(CMessage::Type nType);
+
+private:
+
+		static TFuncMap&		GetMap(void);
+};
+
+
+template <class T>
+class CMessageRegistrar
+{
+	public:
+
+		CMessageRegistrar(CMessage::Type nType, CMessageFactory::TCreateFunc func)
+		{
+			CMessageFactory::RegisterType(nType, func);
+		}
+};
+
+
+#define DECLARE_MESSAGE_REGISTRAR(K, T) \
+	private: \
+		static const CMessageRegistrar<T> sm_reg; \
+	public: \
+		static const Type kType = K; \
+		static CMessage* CreateFunc(void);
+
+#define IMPLEMENT_MESSAGE_REGISTRAR(T) \
+	const CMessageRegistrar<T> T::sm_reg(T::kType, &T::CreateFunc); \
+	CMessage* T::CreateFunc(void)
 
 
 //----------------------------------------------------------//

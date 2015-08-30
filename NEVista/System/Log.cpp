@@ -506,7 +506,7 @@ void CLog::Printf(const s8 *strText, ...)
 
 		va_list ArgList;
 		va_start(ArgList, strText);
-		SysString::Vsprintf(pBuffer, LOG_WORKING_BUFFER_SIZE, strText, ArgList);
+		SysString::Vsprintf(pBuffer, m_strWorkingBuffer.Size(), strText, ArgList);
 		va_end(ArgList);
 
 		if (IS_FALSE(m_strWorkingBuffer.IsEmpty()))

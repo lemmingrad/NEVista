@@ -47,6 +47,8 @@ class CSerializer;
 
 class CMsgBye : public CMessage
 {
+		DECLARE_MESSAGE_REGISTRAR('bye ', CMsgBye);
+
 	public:
 
 		struct Reason

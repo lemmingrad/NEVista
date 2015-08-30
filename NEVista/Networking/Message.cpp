@@ -15,7 +15,7 @@
 #include "PacketSerializer.h"
 #include "Messages/MsgBye.h"
 #include "Messages/MsgMotd.h"
-
+#include <map>
 
 //----------------------------------------------------------//
 // DEFINES
@@ -30,42 +30,13 @@
 //----------------------------------------------------------//
 
 //----------------------------------------------------------//
-// CMessage::CreateType
-//----------------------------------------------------------//
-//--Description
-// Static factory function to create a message of a given type.
-//----------------------------------------------------------//
-CMessage* CMessage::CreateType(CMessage::Type::Enum eType)
-{
-	switch (eType)
-	{
-		case Type::MsgBye:
-		{
-			return new CMsgBye(CMsgBye::Reason::SafeDisconnect);
-		}
-		break;
-
-		case Type::MsgMotd:
-		{
-			return new CMsgMotd();
-		}
-		break;
-
-		default:
-		break;
-	}
-
-	return NULL;
-}
-
-
-//----------------------------------------------------------//
 // CMessage::CMessage
 //----------------------------------------------------------//
 //--Description
 //----------------------------------------------------------//
-CMessage::CMessage(CMessage::Type::Enum eType)
-: m_eType(eType)
+CMessage::CMessage(CMessage::Type nType, bitfield bitFlags)
+: m_nType(nType)
+, m_bitFlags(bitFlags)
 {
 }
 
@@ -91,8 +62,7 @@ size_t CMessage::Serialize(CSerializer& serializer)
 
 	if (CSerializer::Mode::Serializing == serializer.GetMode())
 	{
-		u32 eType = (u32)m_eType;
-		nSize += serializer.SerializeU32(eType, 'type');
+		nSize += serializer.SerializeU32(m_nType, 'type');
 	}
 	else
 	{
@@ -107,10 +77,125 @@ size_t CMessage::Serialize(CSerializer& serializer)
 //----------------------------------------------------------//
 //--Description
 //----------------------------------------------------------//
-CMessage::Type::Enum CMessage::GetType(void)
+CMessage::Type CMessage::GetType(void) const
 {
-	return m_eType;
+	return m_nType;
 }
+
+
+//----------------------------------------------------------//
+// CMessage::CanBeEncrypted
+//----------------------------------------------------------//
+//--Description
+//----------------------------------------------------------//
+bool CMessage::CanBeEncrypted(bool bRecommended) const
+{
+	if (TEST_FLAG(m_bitFlags, Flag::NeverEncrypted))
+	{
+		return false;
+	}
+	else if (TEST_FLAG(m_bitFlags, Flag::AlwaysEncrypted))
+	{
+		return true;
+	}
+
+	return bRecommended;
+}
+
+
+//----------------------------------------------------------//
+// CMessage::CanBeCompressed
+//----------------------------------------------------------//
+//--Description
+//----------------------------------------------------------//
+bool CMessage::CanBeCompressed(bool bRecommended) const
+{
+	if (TEST_FLAG(m_bitFlags, Flag::NeverCompressed))
+	{
+		return false;
+	}
+	else if (TEST_FLAG(m_bitFlags, Flag::AlwaysCompressed))
+	{
+		return true;
+	}
+
+	return bRecommended;
+}
+
+
+//----------------------------------------------------------//
+// CMessage::IsForcedEnd
+//----------------------------------------------------------//
+//--Description
+//----------------------------------------------------------//
+bool CMessage::IsForcedEnd(void) const
+{
+	return TEST_FLAG(m_bitFlags, Flag::ForcedEnd);
+}
+
+
+//----------------------------------------------------------//
+// CMessageFactory::CMessageFactory
+//----------------------------------------------------------//
+//--Description
+// CMessage class factory
+//----------------------------------------------------------//
+CMessageFactory::CMessageFactory()
+{
+}
+
+
+//----------------------------------------------------------//
+// CMessageFactory::~CMessageFactory
+//----------------------------------------------------------//
+//--Description
+//----------------------------------------------------------//
+CMessageFactory::~CMessageFactory()
+{
+}
+
+
+//----------------------------------------------------------//
+// CMessageFactory::GetMap
+//----------------------------------------------------------//
+//--Description
+//----------------------------------------------------------//
+CMessageFactory::TFuncMap& CMessageFactory::GetMap(void)
+{
+	static CMessageFactory::TFuncMap s_Map;
+	return s_Map;
+}
+
+
+//----------------------------------------------------------//
+// CMessageFactory::RegisterType
+//----------------------------------------------------------//
+//--Description
+//----------------------------------------------------------//
+void CMessageFactory::RegisterType(u32 nType, CMessageFactory::TCreateFunc func)
+{
+	GetMap()[nType] = func;
+}
+
+
+//----------------------------------------------------------//
+// CMessageFactory::CreateType
+//----------------------------------------------------------//
+//--Description
+// Create a message of a given type.
+//----------------------------------------------------------//
+CMessage* CMessageFactory::CreateType(u32 nType)
+{
+	TFuncMap& map = GetMap();
+	TFuncMap::const_iterator cit = map.find(nType);
+	if (cit != map.end())
+	{
+		return cit->second();
+	}
+
+	return NULL;
+}
+
 
 
 //----------------------------------------------------------//

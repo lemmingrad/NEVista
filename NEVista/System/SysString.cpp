@@ -22,7 +22,7 @@
 #if defined(WIN32)
 
 //-- Define this to use safe strings with bounds checking as seen in VC8 and VC9
-//# define SYSSTRING_USES_SAFE_STRINGS
+# define SYSSTRING_USES_SAFE_STRINGS
 
 #endif
 
@@ -99,13 +99,14 @@ s8* SysString::Strcpy(s8* strDest, size_t nDestSize, const s8* strSrc)
 //-- Description
 // Copy one string buffer to another, up to a maximum
 // number of characters.
+// nSrcLength should NOT include null terminator.
 //----------------------------------------------------------//
-s8* SysString::Strncpy(s8* strDest, size_t nDestSize, const s8* strSrc, size_t nSrcSize)
+s8* SysString::Strncpy(s8* strDest, size_t nDestSize, const s8* strSrc, size_t nSrcLength)
 {
 #if defined(SYSSTRING_USES_SAFE_STRINGS)
     
 	//-- Use the new safe strncpy
-	errno_t nError = strncpy_s(strDest, nDestSize, strSrc, nSrcSize);
+	errno_t nError = strncpy_s(strDest, nDestSize, strSrc, nSrcLength);
 	if (IS_ZERO(nError))
 	{
 		return strDest;
@@ -121,13 +122,13 @@ s8* SysString::Strncpy(s8* strDest, size_t nDestSize, const s8* strSrc, size_t n
 	if ( IS_NULL_PTR(strDest)
 		|| IS_ZERO(nDestSize) 
 		|| IS_NULL_PTR(strSrc)
-		|| IS_ZERO(nSrcSize) )
+		|| IS_ZERO(nSrcLength) )
 	{
 		//-- Be consistent with the behavior of strncpy_s.
 		return NULL;
 	}
 
-	if (nSrcSize > (nDestSize - 1))
+	if (nSrcLength > (nDestSize - 1))
 	{
 		//-- The source string is too large to copy to the destination.  To
 		//-- be consistent with strncpy_s, return null as an indication that
@@ -326,7 +327,8 @@ const s8* SysString::Strstr(const s8* strSrc, const s8* strFind)
 // SysString::Strstr
 //----------------------------------------------------------//
 //-- Description
-// Converts a string to uppercase in place
+// Converts a string to uppercase in place.
+// nSrcSize should include null terminator.
 //----------------------------------------------------------//
 s8* SysString::Strupr(s8* strSrc, size_t nSrcSize)
 {
@@ -353,7 +355,7 @@ s8* SysString::Strupr(s8* strSrc, size_t nSrcSize)
 	}
 
 	size_t nLen = Strlen(strSrc);
-	if (nLen > (nSrcSize - 1))
+	if (nLen != (nSrcSize - 1))
 	{
 		//-- buffer isn't the correct size
 		return NULL;
@@ -382,7 +384,8 @@ s8* SysString::Strupr(s8* strSrc, size_t nSrcSize)
 // SysString::Strlwr
 //----------------------------------------------------------//
 //-- Description
-// Converts a string to lowercase in place
+// Converts a string to lowercase in place.
+// nSrcSize should include null terminator.
 //----------------------------------------------------------//
 s8* SysString::Strlwr(s8* strSrc, size_t nSrcSize)
 {
@@ -409,7 +412,7 @@ s8* SysString::Strlwr(s8* strSrc, size_t nSrcSize)
 	}
 
 	size_t nLen = Strlen(strSrc);
-	if (nLen > (nSrcSize - 1))
+	if (nLen != (nSrcSize - 1))
 	{
 		//-- buffer isn't the correct size
 		return NULL;
@@ -438,7 +441,7 @@ s8* SysString::Strlwr(s8* strSrc, size_t nSrcSize)
 // SysString::Sprintf
 //----------------------------------------------------------//
 //-- Description
-// Writes a formatted multi-parameter string
+// Writes a formatted multi-parameter string to a buffer
 //----------------------------------------------------------//
 s32 SysString::Sprintf(s8* strDest, size_t nDestSize, const s8* strFormating, ...)
 {
@@ -464,8 +467,8 @@ s32 SysString::Sprintf(s8* strDest, size_t nDestSize, const s8* strFormating, ..
 // SysString::Vsprintf
 //----------------------------------------------------------//
 //-- Description
-// Writes a formatted multi-parameter string using existing
-// va_list data.
+// Writes a formatted multi-parameter string to a buffer
+// using existing va_list data.
 //----------------------------------------------------------//
 s32 SysString::Vsprintf(s8* strDest, size_t nDestSize, const s8* strFormating, va_list ArgList)
 {
@@ -612,6 +615,7 @@ size_t SysString::Base64Encode(s8* strBuffer, size_t nStrBufferSize, const void*
 //----------------------------------------------------------//
 //-- Description
 // Convert a standard format base64 string into a byte buffer.
+// nSrcLength should NOT include null terminator.
 //----------------------------------------------------------//
 size_t SysString::Base64Decode(void* pDataBuffer, size_t nDataBufferSize, const s8* strEncoded, size_t nStrLength)
 {
@@ -642,6 +646,7 @@ size_t SysString::Base64EncodedSize(size_t nDataSize)
 //----------------------------------------------------------//
 //-- Description
 // Get the decoded size of an encoded base64 string.
+// nSrcLength should NOT include null terminator.
 //----------------------------------------------------------//
 size_t SysString::Base64DecodedSize(const s8* strEncoded, size_t nStrLength)
 {
@@ -750,6 +755,7 @@ size_t SysString::KeyEncode(s8* strBuffer, size_t nStrBufferSize, const void* pD
 //----------------------------------------------------------//
 //-- Description
 // Convert a non-standard base64 string into a byte buffer.
+// nSrcLength should NOT include null terminator.
 //----------------------------------------------------------//
 size_t SysString::KeyDecode(void* pDataBuffer, size_t nDataBufferSize, const s8* strEncoded, size_t nStrLength, SysString::Key key)
 {

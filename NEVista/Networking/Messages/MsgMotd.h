@@ -48,6 +48,8 @@ class CSerializer;
 
 class CMsgMotd : public CMessage
 {
+		DECLARE_MESSAGE_REGISTRAR('motd', CMsgMotd);
+
 	public:
 
 		CMsgMotd();

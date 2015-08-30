@@ -27,12 +27,23 @@
 //----------------------------------------------------------//
 
 //----------------------------------------------------------//
+// IMPLEMENT_MESSAGE_REGISTRAR
+//----------------------------------------------------------//
+//--Description
+//----------------------------------------------------------//
+IMPLEMENT_MESSAGE_REGISTRAR(CMsgBye)
+{
+	return new CMsgBye(Reason::SafeDisconnect);
+}
+
+
+//----------------------------------------------------------//
 // CMsgBye::CMsgBye
 //----------------------------------------------------------//
 //--Description
 //----------------------------------------------------------//
 CMsgBye::CMsgBye(Reason::Enum eReason)
-: CMessage(Type::MsgMotd)
+: CMessage(kType, Flag::ForcedEnd)
 , m_eReason(eReason)
 , m_nStrLength(0)
 {
@@ -45,7 +56,7 @@ CMsgBye::CMsgBye(Reason::Enum eReason)
 //--Description
 //----------------------------------------------------------//
 CMsgBye::CMsgBye()
-: CMessage(Type::MsgMotd)
+: CMessage(kType, 0)
 , m_eReason(Reason::Unknown)
 , m_nStrLength(0)
 {

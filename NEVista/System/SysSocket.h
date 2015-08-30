@@ -40,6 +40,7 @@
 #define SYS_SOCKET_NO_ERROR				(0)
 #define SYS_SOCKET_RECV_ZERO			(-2)
 #define SYS_SOCKET_WOULD_BLOCK			(-3)
+#define SYS_SOCKET_IN_PROGRESS			(-4)
 
 #if defined(SYSSOCKET_USES_WINSOCK)
 
@@ -136,6 +137,8 @@ class SysSocket
 
 		static s32			SetNonblocking(Socket nSocket, bool bIsNonblocking);
 		static s32			SetReusable(Socket nSocket, bool bIsReusable);
+		static s32			SetSockOpt(Socket nSocket, s32 nLevel, s32 nOption, const void* pOptVal, size_t nOptValSize);
+		static s32			GetSockOpt(Socket nSocket, s32 nLevel, s32 nOption, void* pOptVal, size_t* pOptValSize);
 
 		static u16			Ntohs(u16 nValue);
 		static u16			Htons(u16 nValue);

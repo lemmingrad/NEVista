@@ -29,11 +29,11 @@
 #if defined(WIN32)
 
 //-- Define this to use safe memory functions, as seen in VC8 and beyond.
-//#	define SYSMEMORY_USES_SAFE_MEMORY
+#	define SYSMEMORY_USES_SAFE_MEMORY
 
 //-- Define this to use Windows optimised functions like ZeroMemory instead of memset, etc.
 //-- In some places, safe memory functions may override this.
-//#	define SYSMEMORY_USES_WINDOWS_MEMORY_OPTIMISATION
+#	define SYSMEMORY_USES_WINDOWS_MEMORY_OPTIMISATION
 
 #endif //WIN32
 

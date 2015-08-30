@@ -21,7 +21,7 @@
 
 //-- Define this to use safer time functions in VC8 and beyond
 //-- Will override ctime_r if defined below.
-//#	define SYSTIME_USES_SAFE_TIME
+#	define SYSTIME_USES_SAFE_TIME
 
 #elif defined(LINUX)
 

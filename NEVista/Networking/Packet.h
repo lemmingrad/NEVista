@@ -18,6 +18,7 @@
 #include "Types.h"
 #include "SysSmartPtr.h"
 #include "SimpleBuffer.h"
+#include "SysString.h"
 #include "Network.h"
 
 
@@ -106,7 +107,7 @@ class CPacket
 			u16							m_nDataSize;					//-- size (bytes) of packet payload data, not including the header
 		};
 
-		CPacket(u8 nFlags = 0);
+		CPacket(SysString::Key key = SysString::INVALID_KEY);
 		virtual ~CPacket();
 
 		static size_t					GetMinimumReadSize(void);
@@ -121,12 +122,13 @@ class CPacket
 
 		Error::Enum						Serialize(CPacketSerializer& serializer);
 
-		Error::Enum						AddMessages(TMessageList& sendList, TMessageList::iterator& it, bool& bByeDetected);
-		Error::Enum						GetMessages(TMessageList& recvList);		
+		Error::Enum						AddMessages(TMessageList& sendList, TMessageList::iterator& it);
+		Error::Enum						GetMessages(TMessageList& messageList);		
 
 	private:
 
 		CSimpleBuffer<PACKET_DATA_BUFFER_MAX_SIZE>	m_DataBuffer;
+		SysString::Key					m_Key;
 
 		HeaderV1						m_HeaderV1;
 		u8								m_nVersion;						//-- version number

@@ -90,11 +90,15 @@ class FixedString
 
 		s8* Set(const s8* strIn)
 		{
-			return SysString::Strcpy(m_strBuffer, S, strIn);
+			s8* pRet = SysString::Strcpy(m_strBuffer, S, strIn);
+			m_strBuffer[S-1] = 0;
+			return pRet;
 		}
 		s8* Set(const s8* strIn, size_t nStrInLength)
 		{
-			return SysString::Strncpy(m_strBuffer, S, strIn, nStrInLength);
+			s8* pRet = SysString::Strncpy(m_strBuffer, S, strIn, nStrInLength);
+			m_strBuffer[S-1] = 0;
+			return pRet;
 		}
 		template <size_t S2> s8* Set(FixedString<S2>& in)
 		{

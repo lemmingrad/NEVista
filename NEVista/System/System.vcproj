@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="E:\Programming\GitRoot\DS3D;E:\Programming\GitRoot\NEVista\System"
+				AdditionalIncludeDirectories="E:\Programming\GitRoot\DS3D;E:\Programming\GitRoot\NEVista\System;E:\Programming\GitRoot\NEVista\Networking"
 				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;WIN32_LEAN_AND_MEAN"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"

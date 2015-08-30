@@ -1,18 +1,18 @@
-#ifndef _MSG_CLIENT_KEYEXCHANGE_H_
-#define _MSG_CLIENT_KEYEXCHANGE_H_
+#ifndef _TCPACCEPTOR_H_
+#define _TCPACCEPTOR_H_
 #pragma once
 
 //----------------------------------------------------------//
-// MSGCLIENTKEYEXCHANGE.H
+// TCPACCEPTOR.H
 //----------------------------------------------------------//
 //-- Description			
-// A key exchange message.
-// Message containing the client half of an encryption key.
+// Establishes a TCP listener on a sevrer end, handles new
+// incoming connection.
 //----------------------------------------------------------//
 
 
 #include "Types.h"
-#include "Message.h"
+#include "Network.h"
 
 
 //----------------------------------------------------------//
@@ -28,7 +28,7 @@
 //----------------------------------------------------------//
 
 
-class CSerializer;
+class CTCPConnection;
 
 
 //----------------------------------------------------------//
@@ -40,24 +40,47 @@ class CSerializer;
 //----------------------------------------------------------//
 
 
-class CMsgClientKeyExchange : public CMessage
+class CTCPAcceptor
 {
-		DECLARE_MESSAGE_REGISTRAR('ckey', CMsgClientKeyExchange);
-
 	public:
 
-		CMsgClientKeyExchange();
-		virtual ~CMsgClientKeyExchange();
+		struct Error
+		{
+			enum Enum
+			{
+				GetInfoFail				= 0x80000000,
+				OpenFail				= 0x80000001,
+				SetReusableFail			= 0x80000002,
+				BindFail				= 0x80000003,
+				ListenFail				= 0x80000004,
 
-		//-- CMessage
-		virtual size_t			Serialize(CSerializer& serializer);
+				BadFail					= -1,
 
-		void					SetKey(u8 nClientKey);
-		u8						GetKey(void) const;
+				//-- Success
+				Ok						= 0
+			};
+		};
+
+		struct Result
+		{
+			Result()
+			: m_eError(Error::Ok)
+			, m_pConnection(NULL)
+			{
+			}
+
+			Error::Enum				m_eError;
+			CTCPConnection*			m_pConnection;
+		};
+
+
+		CTCPAcceptor();
+		~CTCPAcceptor();
+
+		Result						Listen(void);
+		Result						Accept(void);
 
 	private:
-
-		u8						m_nClientKey;
 
 };
 
@@ -70,4 +93,4 @@ class CMsgClientKeyExchange : public CMessage
 // EOF
 //----------------------------------------------------------//
 
-#endif //_MSG_CLIENT_KEYEXCHANGE_H_
+#endif //_TCPACCEPTOR_H_

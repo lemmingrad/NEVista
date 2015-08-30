@@ -164,16 +164,41 @@ s32 SysSocket::Connect(SysSocket::Socket nSocket, const SysSocket::SockAddr* pAd
 #		if defined(SYSSOCKET_USES_WINSOCK)
 
 			int er = WSAGetLastError();
-			if (SYS_SOCKET_WOULD_BLOCK == er)
+			switch (er)
 			{
-				nRet = SYS_SOCKET_NO_ERROR;
+				case WSAEWOULDBLOCK: 
+				case WSAEALREADY:
+				case WSAEINVAL:
+				{
+					nRet = SYS_SOCKET_IN_PROGRESS;
+				}
+				break;
+				case WSAEISCONN:
+				{
+					nRet = SYS_SOCKET_NO_ERROR;
+				}
+				break;
+				default:
+				break;
 			}
 
 #		else
 
-			if (EINPROGRESS == errno)
+			switch (errno)
 			{
-				nRet = SYS_SOCKET_NO_ERROR;
+				case EINPROGRESS:
+				case EALREADY:
+				{
+					nRet = SYS_SOCKET_IN_PROGRESS;
+				}
+				break;
+				case EISCONN:
+				{
+					nRet = SYS_SOCKET_NO_ERROR;
+				}
+				break;	
+				default:
+				break;
 			}
 
 #		endif //SYSSOCKET_USES_WINSOCK
@@ -404,7 +429,45 @@ s32 SysSocket::SetNonblocking(SysSocket::Socket nSocket, bool bIsNonblocking)
 s32 SysSocket::SetReusable(SysSocket::Socket nSocket, bool bIsReusable)
 {
 	s32 nIsReusable = bIsReusable;
-	return setsockopt(nSocket, SOL_SOCKET, SO_REUSEADDR, (const s8*)&nIsReusable, sizeof(s32));
+	return SetSockOpt(nSocket, SOL_SOCKET, SO_REUSEADDR, (const void*)&nIsReusable, sizeof(s32));
+}
+
+
+//----------------------------------------------------------//
+//
+//----------------------------------------------------------//
+//-- Description
+//----------------------------------------------------------//
+s32 SysSocket::SetSockOpt(SysSocket::Socket nSocket, s32 nLevel, s32 nOption, const void* pOptVal, size_t nOptValSize)
+{
+#if defined(SYSSOCKET_USES_WINSOCK)
+
+	return ::setsockopt(nSocket, nLevel, nOption, (const s8*)pOptVal, (int)nOptValSize);
+
+#else
+
+	return ::setsockopt(nSocket, nLevel, nOption, pOptVal, (socklen_t)nOptValSize);
+
+#endif //SYSSOCKET_USES_WINSOCK
+}
+
+
+//----------------------------------------------------------//
+//
+//----------------------------------------------------------//
+//-- Description
+//----------------------------------------------------------//
+s32 SysSocket::GetSockOpt(SysSocket::Socket nSocket, s32 nLevel, s32 nOption, void* pOptVal, size_t* pOptValSize)
+{
+#if defined(SYSSOCKET_USES_WINSOCK)
+
+	return ::getsockopt(nSocket, nLevel, nOption, (s8*)pOptVal, (int*)pOptValSize);
+
+#else
+
+	return ::getsockopt(nSocket, nLevel, nOption, pOptVal, (socklen_t*)pOptValSize);
+
+#endif //SYSSOCKET_USES_WINSOCK
 }
 
 
@@ -415,7 +478,7 @@ s32 SysSocket::SetReusable(SysSocket::Socket nSocket, bool bIsReusable)
 //----------------------------------------------------------//
 u16 SysSocket::Ntohs(u16 nValue)
 {
-	return ntohs(nValue);
+	return ::ntohs(nValue);
 }
 
 
@@ -426,7 +489,7 @@ u16 SysSocket::Ntohs(u16 nValue)
 //----------------------------------------------------------//
 u16 SysSocket::Htons(u16 nValue)
 {
-	return htons(nValue);
+	return ::htons(nValue);
 }
 
 
@@ -437,7 +500,7 @@ u16 SysSocket::Htons(u16 nValue)
 //----------------------------------------------------------//
 u32 SysSocket::Ntohl(u32 nValue)
 {
-	return ntohl(nValue);
+	return ::ntohl(nValue);
 }
 
 
@@ -448,7 +511,7 @@ u32 SysSocket::Ntohl(u32 nValue)
 //----------------------------------------------------------//
 u32 SysSocket::Htonl(u32 nValue)
 {
-	return htonl(nValue);
+	return ::htonl(nValue);
 }
 
 
@@ -676,7 +739,8 @@ s32 SysSocket::Recv(SysSocket::Socket nSocket, s8* pBuffer, size_t nBufferSize)
 
 #if defined(SYSSOCKET_USES_WINSOCK)
 
-		if (WSAEWOULDBLOCK == WSAGetLastError())
+		int e = WSAGetLastError();
+		if (WSAEWOULDBLOCK == e)//WSAGetLastError())
 		{
 			nRet = SYS_SOCKET_WOULD_BLOCK;
 		}
