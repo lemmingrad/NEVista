@@ -1,5 +1,5 @@
 //----------------------------------------------------------//
-// TCPCONNECTOR.CPP
+// TCPBLOCKINGCONNECTOR.CPP
 //----------------------------------------------------------//
 //-- Description			
 // Establishes a TCP connection from a client end.
