@@ -1,20 +1,20 @@
-#ifndef _TCPACCEPTOR_H_
-#define _TCPACCEPTOR_H_
+#ifndef _TCPSELECTOR_H_
+#define _TCPSELECTOR_H_
 #pragma once
 
 //----------------------------------------------------------//
-// TCPACCEPTOR.H
+// TCPSELECTOR.H
 //----------------------------------------------------------//
 //-- Description			
-// Establishes a TCP listener on a sevrer end, handles new
-// incoming connection.
+// Wrapper around poll/select for driving events on a
+// list of TCPConnections.
 //----------------------------------------------------------//
 
 
 #include "Types.h"
-#include "SysSocket.h"
-#include "SysMemory.h"
 #include "Network.h"
+#include "SysSocket.h"
+#include <map>
 
 
 //----------------------------------------------------------//
@@ -22,7 +22,8 @@
 //----------------------------------------------------------//
 
 
-#define TCP_ACCEPTOR_BACKLOG	10
+//-- Define this to use poll instead of select.
+#define TCPSELECTOR_USES_POLL
 
 
 //----------------------------------------------------------//
@@ -33,10 +34,6 @@
 // FORWARD REFERENCES
 //----------------------------------------------------------//
 
-
-class CTCPConnection;
-
-
 //----------------------------------------------------------//
 // STRUCTS
 //----------------------------------------------------------//
@@ -46,7 +43,7 @@ class CTCPConnection;
 //----------------------------------------------------------//
 
 
-class CTCPAcceptor
+class CTCPSelector
 {
 	public:
 
@@ -54,68 +51,63 @@ class CTCPAcceptor
 		{
 			enum Enum
 			{
-				WrongState				= 0x80000000,
-				GetInfoFail				= 0x80000001,
-				NoMoreInfo				= 0x80000002,
-				OpenFail				= 0x80000003,
-				SetSockOptFail			= 0x80000004,
-				SetReusableFail			= 0x80000005,
-				BindFail				= 0x80000006,
-				ListenFail				= 0x80000007,
-				SelectFail				= 0x80000008,
+				AlreadyRegistered		= 0x80000000,
+				SelectFail				= 0x80000001,
+				PollFail				= 0x80000002,
 
 				BadFail					= -1,
 
 				//-- Success
-				Ok						= 0,		
-
-				//-- In progress
-				InProgress				= 1
+				Ok						= 0
 			};
 		};
 
-		struct Result
-		{
-			Result()
-			: m_eError(Error::Ok)
-			, m_pConnection(NULL)
-			{
-				SysMemory::Memclear(&m_Addr, sizeof(m_Addr));
-			}
-
-			Error::Enum						m_eError;
-			SysSmartPtr<CTCPConnection>		m_pConnection;
-			SysSocket::SockAddrIn			m_Addr;
-		};
-
-
-		CTCPAcceptor();
-		~CTCPAcceptor();
-
-		Error::Enum							StopListening(void);
-
-	protected:
-
-		struct State
+		struct Event
 		{
 			enum Enum
 			{
-				NotListening = 0,
-				GettingAddrInfo,
-				NextAddr,
-				Listening
+				Read		= BIT(0),
+				Write		= BIT(1),
+				Exception	= BIT(2)
 			};
 		};
 
-		State::Enum							m_eState;
+		typedef s32	(*TEventCallback)(Event::Enum eEvent, void* pData);
 
-		SysSocket::AddrInfo*				m_pAddrResults;
-		SysSocket::AddrInfo*				m_pCur;
+		CTCPSelector();
+		~CTCPSelector();
 
-		SysSocket::Socket					m_nSocket;
+		Error::Enum						Update(void);
 
-		void								CleanAddrResults(void);
-		void								CleanSocket(void);
+		Error::Enum						AddEventListener(SysSocket::Socket nSocket, TEventCallback cb, void* pData);
+		Error::Enum						RemoveEventListener(SysSocket::Socket nSocket);
+
+	private:
+
+		struct EventListener
+		{
+			TEventCallback				m_pCallbackFunc;
+			void*						m_pData;
+		};
+
+		typedef std::map<SysSocket::Socket, EventListener> TEventListenerMap;
+
+		TEventListenerMap				m_EventListenerMap;
+
+#		if defined(TCPSELECTOR_USES_POLL)
+
+			SysSocket::PollFdSet		m_PollFdSet;
+
+#		else
+
+			SysSocket::FdSet			m_SelectFdSet;
+			SysSocket::FdSet			m_ReadFdSet;
+			SysSocket::FdSet			m_WriteFdSet;
+			SysSocket::FdSet			m_ExceptionFdSet;
+
+			s32							m_nLargestSocket;
+
+#		endif
 };
 
 
@@ -127,4 +119,4 @@ class CTCPAcceptor
 // EOF
 //----------------------------------------------------------//
 
-#endif //_TCPACCEPTOR_H_
+#endif //_TCPSELECTOR_H_

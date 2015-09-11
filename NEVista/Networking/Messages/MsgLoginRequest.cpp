@@ -1,15 +1,13 @@
 //----------------------------------------------------------//
-// MSGBYE.CPP
+// MSGLOGINREQUEST.CPP
 //----------------------------------------------------------//
 //-- Description			
-// A disconnect message.
-// Message indicating a disconnect, with optional text.
+// A login request message sent by the client.
 //----------------------------------------------------------//
 
 
-#include "MsgBye.h"
+#include "MsgLoginRequest.h"
 #include "Types.h"
-#include "FixedString.h"
 #include "Message.h"
 #include "PacketSerializer.h"
 
@@ -22,148 +20,131 @@
 // GLOBALS
 //----------------------------------------------------------//
 
-
-CMsgBye::Reason CMsgBye::sm_ReasonTable[CMsgBye::Reason::MAX] = {
-	"Unknown reason",
-	"Disconnected normally",
-	"Bye acknowledged",
-	"Unexpected disconnection",
-	"Timeout",
-	"Invalid packet header",
-	"Protocol error",
-	"No encryption key was negotiated",
-	"Login failed - Invalid version",
-	"Login failed - No such user",
-	"Login failed - Incorrect password"
-};
-
-
-
 //----------------------------------------------------------//
 // IMPLEMENT_MESSAGE_REGISTRAR
 //----------------------------------------------------------//
 //--Description
 //----------------------------------------------------------//
-IMPLEMENT_MESSAGE_REGISTRAR(CMsgBye, "ByeBye")
+IMPLEMENT_MESSAGE_REGISTRAR(CMsgLoginRequest, "LoginRequest")
 {
-	return new CMsgBye(Reason::Unknown);
+	return new CMsgLoginRequest();
 }
 
 
 //----------------------------------------------------------//
-// CMsgBye::CMsgBye
+// CMsgLoginRequest::CMsgLoginRequest
 //----------------------------------------------------------//
 //--Description
 //----------------------------------------------------------//
-CMsgBye::CMsgBye(Reason::Enum eReason)
-: CMessage(kType, Flag::ForcedEnd)
-, m_eReason(eReason)
-, m_nStrLength(0)
+CMsgLoginRequest::CMsgLoginRequest()
+: CMessage(kType, Flag::AlwaysEncrypted)
+, m_nStrNameLength(0)
+, m_nStrPasswordLength(0)
 {
-	m_strReason.Clear();
-	SetReason(eReason);
+	m_strName.Clear();
+	m_strPassword.Clear();
 }
 
-//----------------------------------------------------------//
-// CMsgBye::CMsgBye
-//----------------------------------------------------------//
-//--Description
-//----------------------------------------------------------//
-CMsgBye::CMsgBye()
-: CMessage(kType, 0)
-, m_eReason(Reason::Unknown)
-, m_nStrLength(0)
+
+CMsgLoginRequest::CMsgLoginRequest(const s8* strName, const s8* strPassword)
+: CMessage(kType, Flag::AlwaysEncrypted)
+, m_nStrNameLength(0)
+, m_nStrPasswordLength(0)
 {
-	m_strReason.Clear();
+	SetName(strName);
+	SetPassword(strPassword);
 }
 
 
 //----------------------------------------------------------//
-// CMsgBye::~CMsgBye
+// CMsgLoginRequest::~CMsgLoginRequest
 //----------------------------------------------------------//
 //--Description
 //----------------------------------------------------------//
-CMsgBye::~CMsgBye()
+CMsgLoginRequest::~CMsgLoginRequest()
 {
 }
 
 
 //----------------------------------------------------------//
-// CMsgBye::Serialize
+// CMsgLoginRequest::Serialize
 //----------------------------------------------------------//
 //--Description
 //----------------------------------------------------------//
-size_t CMsgBye::Serialize(CSerializer& serializer)
+size_t CMsgLoginRequest::Serialize(CSerializer& serializer)
 {
 	size_t nSize = CMessage::Serialize(serializer);
 
-	nSize += serializer.SerializeU32((u32&)m_eReason, 'ersn');
-	nSize += serializer.SerializeU16(m_nStrLength, 'len ');
+	nSize += serializer.SerializeU8(m_nStrNameLength, 'lenN');
+	nSize += serializer.SerializeU8(m_nStrPasswordLength, 'lenP');
 
-	if (m_nStrLength > 0) 
+	if ( (m_nStrNameLength > 0) 
+		&& (m_nStrPasswordLength > 0) )
 	{
-		assert(m_nStrLength < m_strReason.Size());
+		assert(m_nStrNameLength < m_strName.Size());
+		assert(m_nStrPasswordLength < m_strPassword.Size());
 
-		u8* pBuffer = (u8*)m_strReason.Buffer();
+		u8* pNameBuffer = (u8*)m_strName.Buffer();
+		u8* pPasswordBuffer = (u8*)m_strName.Buffer();
 
-		nSize += serializer.SerializeBytes(pBuffer, m_nStrLength, 'srsn');
-		
+		nSize += serializer.SerializeBytes(pNameBuffer, m_nStrNameLength, 'name');
+		nSize += serializer.SerializeBytes(pPasswordBuffer, m_nStrPasswordLength, 'pass');
+	
 		if (CSerializer::Mode::Deserializing == serializer.GetMode())
 		{
 			//-- If deserializing, make sure the string is null terminated.
-			pBuffer[m_nStrLength] = 0;
+			pNameBuffer[m_nStrNameLength] = 0;
+			pPasswordBuffer[m_nStrPasswordLength] = 0;
 		}
 	}
-
+	
 	return nSize;
 }
 
 
 //----------------------------------------------------------//
-// CMsgBye::GetReason
+// CMsgLoginRequest::GetName
 //----------------------------------------------------------//
 //--Description
 //----------------------------------------------------------//
-CMsgBye::Reason::Enum CMsgBye::GetReason(void) const
+const s8* CMsgLoginRequest::GetName(void) const
 {
-	return m_eReason;
+	return m_strName.ConstBuffer();
 }
 
 
 //----------------------------------------------------------//
-// CMsgBye::SetReason
+// CMsgLoginRequest::SetName
 //----------------------------------------------------------//
 //--Description
 //----------------------------------------------------------//
-void CMsgBye::SetReason(CMsgBye::Reason::Enum eReason)
+void CMsgLoginRequest::SetName(const s8* strBuffer)
 {
-	m_eReason = eReason;
-	SetText(sm_ReasonTable[eReason].m_strReasonString);
+	m_strName.Set(strBuffer);
+	m_nStrNameLength = m_strName.Length();
 }
 
 
 //----------------------------------------------------------//
-// CMsgBye::GetText
+// CMsgLoginRequest::GetPassword
 //----------------------------------------------------------//
 //--Description
 //----------------------------------------------------------//
-const s8* CMsgBye::GetText(void) const
+const s8* CMsgLoginRequest::GetPassword(void) const
 {
-	return m_strReason.ConstBuffer();
+	return m_strPassword.ConstBuffer();
 }
 
 
 //----------------------------------------------------------//
-// CMsgBye::SetText
+// CMsgLoginRequest::SetPassword
 //----------------------------------------------------------//
 //--Description
 //----------------------------------------------------------//
-void CMsgBye::SetText(const s8* strBuffer)
+void CMsgLoginRequest::SetPassword(const s8* strBuffer)
 {
-	if (IS_PTR(m_strReason.Set(strBuffer)))
-	{
-		m_nStrLength = m_strReason.Length();
-	}
+	m_strPassword.Set(strBuffer);
+	m_nStrPasswordLength = m_strPassword.Length();
 }
 
 

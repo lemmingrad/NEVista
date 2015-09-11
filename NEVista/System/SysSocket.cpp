@@ -270,16 +270,13 @@ s32	SysSocket::Poll(SysSocket::PollFd* pFds, u32 nFds, s32 nTimeout)
 	
 	if (nFds > 0)
 	{
-		nFds = MIN(nFds, FD_SETSIZE);
-		s32 nLargestFD = (s32)nFds + 1;
-
 		FD_ZERO(&ReadSet);
 		FD_ZERO(&WriteSet);
 		FD_ZERO(&ExceptionSet);
 
 		//-- nTimeout is in milliseonds.
 		//-- Need to convert to seconds and microseconds.
-		if (0 == nTimeout)
+		if (IS_ZERO(nTimeout))
 		{
 			tv.tv_sec = 0;
 			tv.tv_usec = 0;
@@ -290,24 +287,34 @@ s32	SysSocket::Poll(SysSocket::PollFd* pFds, u32 nFds, s32 nTimeout)
 			tv.tv_usec = (nTimeout % 1000) * 1000;
 		}
 
-		s32 something=1;
+		s32 nLargestFD = 0;
 
 		for (u32 i = 0; i < nFds; ++i)
 		{	
-			if (TEST_FLAG(pFds[i].events, something))
+			SysSocket::Socket fd = pFds[i].fd;
+
+			if (SysSocket::INVALID_SOCK == fd)
 			{
-				FD_SET(pFds[i].fd, &ReadSet);
+				continue;
 			}
-			if (TEST_FLAG(pFds[i].events, something))
+
+			s16 events = pFds[i].events;
+
+			if (TEST_FLAG(events, POLLIN))
 			{
-				FD_SET(pFds[i].fd, &WriteSet);
+				FD_SET(fd, &ReadSet);
 			}
-			if (TEST_FLAG(pFds[i].events, something))
+			if (TEST_FLAG(events, POLLOUT))
 			{
-				FD_SET(pFds[i].fd, &ExceptionSet);
+				FD_SET(fd, &WriteSet);
 			}
+			FD_SET(fd, &ExceptionSet);
 			pFds[i].revents = 0;
+
+			nLargestFD = MAX(nLargestFD, (s32)fd);
 		}
+
+		nLargestFD = MIN(nLargestFD, FD_SETSIZE);
 
 		s32 nRes = Select(nLargestFD, &ReadSet, &WriteSet, &ExceptionSet, (nTimeout >= 0) ? &tv : NULL);
 		if (nRes > 0)
@@ -315,19 +322,21 @@ s32	SysSocket::Poll(SysSocket::PollFd* pFds, u32 nFds, s32 nTimeout)
 			nRes = 0;
 			for (u32 i = 0; i < nFds; ++i)
 			{	
-				if (FD_ISSET(pFds[i].fd, &ReadSet))
+				SysSocket::Socket fd = pFds[i].fd;
+
+				if (FD_ISSET(fd, &ReadSet))
 				{
-					SET_FLAG(pFds[i].revents, something);
+					SET_FLAG(pFds[i].revents, POLLIN);
 				}
-				if (FD_ISSET(pFds[i].fd, &WriteSet))
+				if (FD_ISSET(fd, &WriteSet))
 				{
-					SET_FLAG(pFds[i].revents, something);
+					SET_FLAG(pFds[i].revents, POLLOUT);
 				}
-				if (FD_ISSET(pFds[i].fd, &ExceptionSet))
+				if (FD_ISSET(fd, &ExceptionSet))
 				{
-					SET_FLAG(pFds[i].revents, something);
+					SET_FLAG(pFds[i].revents, POLLERR);
 				}
-				if (0 != pFds[i].revents)
+				if (IS_NOT_ZERO(pFds[i].revents))
 				{
 					nRes++;
 				}

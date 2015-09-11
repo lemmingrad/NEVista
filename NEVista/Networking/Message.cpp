@@ -17,16 +17,13 @@
 #include "Messages/MsgMotd.h"
 #include <map>
 
+
 //----------------------------------------------------------//
 // DEFINES
 //----------------------------------------------------------//
 
 //----------------------------------------------------------//
-// ENUMS
-//----------------------------------------------------------//
-
-//----------------------------------------------------------//
-// STRUCTS
+// GLOBALS
 //----------------------------------------------------------//
 
 //----------------------------------------------------------//
@@ -172,9 +169,31 @@ CMessageFactory::TFuncMap& CMessageFactory::GetMap(void)
 //----------------------------------------------------------//
 //--Description
 //----------------------------------------------------------//
-void CMessageFactory::RegisterType(u32 nType, CMessageFactory::TCreateFunc func)
+void CMessageFactory::RegisterType(CMessage::Type nType, CMessageFactory::TNameFunc nameFunc, CMessageFactory::TCreateFunc createFunc)
 {
-	GetMap()[nType] = func;
+	FuncSet set;
+	set.nameFunc = nameFunc;
+	set.createFunc = createFunc;
+	GetMap()[nType] = set;
+}
+
+
+//----------------------------------------------------------//
+// CMessageFactory::GetTypeString
+//----------------------------------------------------------//
+//--Description
+// Return a string representation for the given type.
+//----------------------------------------------------------//
+const s8* CMessageFactory::GetTypeString(CMessage::Type nType)
+{
+	TFuncMap& map = GetMap();
+	TFuncMap::const_iterator cit = map.find(nType);
+	if (cit != map.end())
+	{
+		return cit->second.nameFunc();
+	}
+
+	return "Unknown";
 }
 
 
@@ -184,18 +203,17 @@ void CMessageFactory::RegisterType(u32 nType, CMessageFactory::TCreateFunc func)
 //--Description
 // Create a message of a given type.
 //----------------------------------------------------------//
-CMessage* CMessageFactory::CreateType(u32 nType)
+CMessage* CMessageFactory::CreateType(CMessage::Type nType)
 {
 	TFuncMap& map = GetMap();
 	TFuncMap::const_iterator cit = map.find(nType);
 	if (cit != map.end())
 	{
-		return cit->second();
+		return cit->second.createFunc();
 	}
 
 	return NULL;
 }
-
 
 
 //----------------------------------------------------------//

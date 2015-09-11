@@ -37,7 +37,8 @@ s32 WinSys_Initialise(void)
 	{
 		MessageBox(NULL, "Debug Log cannot be created. Logging disabled.", TEXT(Game_Title()), MB_OK|MB_ICONEXCLAMATION);
 	}
-	gDebugLog.Printf("Title: %s, Version: %s", Game_Title(), Game_Version());
+	gDebugLog.Printf("NEVista Title: %s, Version: %s", Game_Title(), Game_Version());
+
 /*
 	//-- Initialise Mem Manager
 	if (IS_FALSE(gMemMgr.Initialise())
@@ -65,7 +66,7 @@ s32 WinSys_Initialise(void)
 	SysSocket::SystemInitialise();
 
 	CWinSysConfigDialog configDialog;
-	nReturnStatus = configDialog.Initialise();
+	nReturnStatus = configDialog.Initialise(Game_Title(), Game_Version());
 	if (WINSYS_OK != nReturnStatus)
 	{
 		//-- Failed to initialise config dialog

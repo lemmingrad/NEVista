@@ -10,6 +10,7 @@
 
 
 #include "Types.h"
+#include "FixedString.h"
 //#include "WinSysTimer.h"
 
 

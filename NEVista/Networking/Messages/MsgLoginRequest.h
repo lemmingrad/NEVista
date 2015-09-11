@@ -1,14 +1,12 @@
-#ifndef _MSG_MOTD_H_
-#define _MSG_MOTD_H_
+#ifndef _MSG_LOGIN_REQUEST_H_
+#define _MSG_LOGIN_REQUEST_H_
 #pragma once
 
 //----------------------------------------------------------//
-// MSGMOTD.H
+// MSGLOGINREQUEST.H
 //----------------------------------------------------------//
 //-- Description			
-// A message-of-the-day message.
-// Message containing text. The first message sent by the 
-// server to any connecting client.
+// A login request message sent by the client.
 //----------------------------------------------------------//
 
 
@@ -22,7 +20,8 @@
 //----------------------------------------------------------//
 
 
-#define MSG_MOTD_MAX_SIZE (980)
+#define MSG_LOGIN_REQUEST_MAX_NAME_SIZE			(128)
+#define MSG_LOGIN_REQUEST_MAX_PASSWORD_SIZE		(128)
 
 
 //----------------------------------------------------------//
@@ -46,25 +45,31 @@ class CSerializer;
 //----------------------------------------------------------//
 
 
-class CMsgMotd : public CMessage
+class CMsgLoginRequest : public CMessage
 {
-		DECLARE_MESSAGE_REGISTRAR(CMsgMotd, 'motd');
+		DECLARE_MESSAGE_REGISTRAR(CMsgLoginRequest, 'logn');
 
 	public:
 
-		CMsgMotd();
-		virtual ~CMsgMotd();
+		CMsgLoginRequest(const s8* strName, const s8* strPassword);
+		CMsgLoginRequest();
+		virtual ~CMsgLoginRequest();
 
 		//-- CMessage
-		virtual size_t						Serialize(CSerializer& serializer);
+		virtual size_t									Serialize(CSerializer& serializer);
 
-		const s8*							GetText(void) const;
-		void								SetText(const s8* strBuffer);
+		const s8*										GetName(void) const;
+		void											SetName(const s8* strBuffer);
+
+		const s8*										GetPassword(void) const;
+		void											SetPassword(const s8* strBuffer);
 
 	private:
 
-		FixedString<MSG_MOTD_MAX_SIZE>		m_strMotd;
-		u16									m_nMotdLength;
+		FixedString<MSG_LOGIN_REQUEST_MAX_NAME_SIZE>		m_strName;
+		FixedString<MSG_LOGIN_REQUEST_MAX_PASSWORD_SIZE>	m_strPassword;
+		u8												m_nStrNameLength;
+		u8												m_nStrPasswordLength;
 };
 
 
@@ -76,4 +81,4 @@ class CMsgMotd : public CMessage
 // EOF
 //----------------------------------------------------------//
 
-#endif //_MSG_MOTD_H_
+#endif //_MSG_LOGIN_REQUEST_H_

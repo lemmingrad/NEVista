@@ -3,6 +3,7 @@
 #include <string.h>
 #include <sqlite3.h>
 
+#include "SysDebugLog.h"
 #include "SysSocket.h"
 #include "FixedString.h"
 #include "SimpleBuffer.h"
@@ -11,10 +12,11 @@
 #include "SQLiteRecord.h"
 #include "SQLiteStatement.h"
 
+#include "Network.h"
+#include "TCPConnection.h"
 #include "Message.h"
 #include "MsgMotd.h"
-#include "Packet.h"
-#include "PacketSerializer.h"
+#include "MsgBye.h"
 #include <list>
 
 
@@ -22,71 +24,48 @@
 #define BACKLOG 	10
 
 
-static bool bOnce = false;
+SysSmartPtr<CTCPConnection> g_pConnection;
+TMessageList				gRecvMessageList;
+TMessageList				gSendMessageList;
+
 
 void HandleReadActivity(int newsock, fd_set *set)
 {
 	// TODO
+	g_pConnection->UpdateRecv(gRecvMessageList, gSendMessageList);
+
+	while (gRecvMessageList.size() > 0)
+	{
+		SysSmartPtr<CMessage>& pMessage = gRecvMessageList.front();
+		
+		switch (pMessage->GetType())
+		{
+			case CMsgBye::kType:
+			{
+				CMessage* pM = pMessage.ptr();
+				CMsgBye* pBye = (CMsgBye*)pM;
+
+				SysDebugPrintf("Received ByeBye:\n");
+				SysDebugPrintf("%s\n", pBye->GetText());				
+			}
+			break;
+
+			default:
+			break;
+		}
+
+		gRecvMessageList.pop_front();
+	}
+
 	FD_CLR(newsock, set);
 }
 
 void HandleWriteActivity(int newsock, fd_set *set)
 {
 	// TODO
-	if (bOnce == true)
-	{
-		FD_CLR(newsock, set);
-		return;
-	}
-
-	CMsgMotd* pMotd = new CMsgMotd();
-	pMotd->SetText("This is a test.");
-
-	TMessageList sendList;
-
-	sendList.push_back(SysSmartPtr<CMessage>(pMotd));
-	TMessageList::iterator it;
-	bool bByeDetected;
-
-	CPacket packet(SysString::GenerateKey(0,0), CPacket::Flag::Encrypted);
-	CPacket::Error::Enum ePacketEC = packet.AddMessages(sendList, it, bByeDetected);
-	if (ePacketEC != CPacket::Error::Ok)
-	{
-		printf("packet.AddMessage ePacketEC = %d\n", ePacketEC);
-		fflush(stdout);
-	}
-
-	CSimpleBuffer<1024> buffer;
-
-	CPacketSerializer ser(CSerializer::Mode::Serializing, buffer.Buffer(), buffer.Size());
-
-	ePacketEC = packet.Serialize(ser);
-	if (ePacketEC != CPacket::Error::Ok)
-	{
-		printf("packet.Serialize ePacketEC = %d\n", ePacketEC);
-		fflush(stdout);
-	}
-
-	printf("packet has %d messages\n", packet.GetMessageCount());
-	printf("packet has %d bytes\n", packet.GetDataSize());
-	fflush(stdout);
-
-	buffer.InsTail(NULL, ser.GetOffset());
-
-	printf("buffer has %d bytes\n", buffer.UsedSize());
-	fflush(stdout);
-
-	s32 nBytes = SysSocket::Send(newsock, (const s8*)buffer.ConstBuffer(), buffer.UsedSize());
-	if (nBytes > 0)
-	{
-		buffer.StripHead(nBytes);
-
-		printf("send(%d)\n", nBytes);
-		fflush(stdout);
-	}
+	g_pConnection->UpdateSend(gSendMessageList);
 
 	FD_CLR(newsock, set);
-	bOnce = true;
 }
 
 
@@ -219,7 +198,6 @@ const RowClass::Meta RowClass::sm_MetaData =
 
 int main(int argc, char** argv)
 {
-
 	CSQLiteDatabase database;
 	
 	s32 rc = database.Open("Data/test.db");
@@ -394,6 +372,15 @@ int main(int argc, char** argv)
 						{
 							maxsock = (s32)newsock;
 						}
+
+						SysSocket::SetNonblocking(newsock, true);
+
+						g_pConnection = SysSmartPtr<CTCPConnection>(new CTCPConnection(newsock));
+
+						CMsgMotd* pMotd = new CMsgMotd();
+						pMotd->SetText("This is a test-- mk2!");
+
+						gSendMessageList.push_back(SysSmartPtr<CMessage>(pMotd));
 					}
 				}
 				else

@@ -130,7 +130,7 @@ class SysSmartPtr
 
 			return *this;
 		}
-
+	
 		//-- IsUnique
 		//-- Is there only one reference?
 		bool IsUnique(void)

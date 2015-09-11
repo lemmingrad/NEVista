@@ -42,7 +42,7 @@ class CSerializer;
 
 class CMsgClientKeyExchange : public CMessage
 {
-		DECLARE_MESSAGE_REGISTRAR('ckey', CMsgClientKeyExchange);
+		DECLARE_MESSAGE_REGISTRAR(CMsgClientKeyExchange, 'ckey');
 
 	public:
 

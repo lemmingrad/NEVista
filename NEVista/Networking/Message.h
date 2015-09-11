@@ -52,21 +52,6 @@ class CMessage : public CSerialized
 
 		static const Type kTypeUnknown = 'xxxx';
 
-/*		struct Type
-		{
-			enum Enum
-			{
-				Unknown											= 'xxxx',
-				MsgBye											= 'bye ',
-				MsgMotd											= 'motd',
-				MsgClientKeyExchange							= 'ckey',
-				MsgServerKeyExchange							= 'skey',
-				MsgLogin										= 'logn',
-				MsgChat											= 'chat'
-				//-- Add new message IDs here.
-			};
-		};
-*/
 		struct Flag
 		{
 			//-- Note: Never flags override Always flags
@@ -103,15 +88,24 @@ class CMessageFactory
 	public:
 
 		typedef CMessage* (*TCreateFunc)(void);
-		typedef std::map<CMessage::Type, TCreateFunc> TFuncMap;
+		typedef const s8* (*TNameFunc)(void);
 		
 		CMessageFactory();
 		~CMessageFactory();
 
-		static void				RegisterType(CMessage::Type nType, TCreateFunc func);
+		static void				RegisterType(CMessage::Type nType, TNameFunc nameFunc, TCreateFunc createFunc);
 		static CMessage*		CreateType(CMessage::Type nType);
+		static const s8*		GetTypeString(CMessage::Type nType);
 
-private:
+	private:
+
+		struct FuncSet
+		{
+			TCreateFunc		createFunc;
+			TNameFunc		nameFunc;
+		};
+
+		typedef std::map<CMessage::Type, FuncSet> TFuncMap;
 
 		static TFuncMap&		GetMap(void);
 };
@@ -122,22 +116,24 @@ class CMessageRegistrar
 {
 	public:
 
-		CMessageRegistrar(CMessage::Type nType, CMessageFactory::TCreateFunc func)
+		CMessageRegistrar(CMessage::Type nType, CMessageFactory::TNameFunc nameFunc, CMessageFactory::TCreateFunc createFunc)
 		{
-			CMessageFactory::RegisterType(nType, func);
+			CMessageFactory::RegisterType(nType, nameFunc, createFunc);
 		}
 };
 
 
-#define DECLARE_MESSAGE_REGISTRAR(K, T) \
+#define DECLARE_MESSAGE_REGISTRAR(T, K) \
 	private: \
 		static const CMessageRegistrar<T> sm_reg; \
 	public: \
 		static const Type kType = K; \
-		static CMessage* CreateFunc(void);
+		static const s8* GetTypeString(void); \
+		static CMessage* CreateFunc(void)
 
-#define IMPLEMENT_MESSAGE_REGISTRAR(T) \
-	const CMessageRegistrar<T> T::sm_reg(T::kType, &T::CreateFunc); \
+#define IMPLEMENT_MESSAGE_REGISTRAR(T, S) \
+	const CMessageRegistrar<T> T::sm_reg(T::kType, &T::GetTypeString, &T::CreateFunc); \
+	const s8* T::GetTypeString(void) { return S; } \
 	CMessage* T::CreateFunc(void)
 
 

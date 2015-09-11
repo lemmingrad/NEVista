@@ -13,6 +13,7 @@
 
 
 #include "Types.h"
+#include "FixedString.h"
 #include "Ini.h"
 #include "WinSysRollupContainer.h"
 
@@ -20,6 +21,11 @@
 //----------------------------------------------------------//
 // DEFINES
 //----------------------------------------------------------//
+
+
+#define WINSYS_CONFIG_TITLE_MAX_SIZE		(64)
+#define WINSYS_CONFIG_VERSION_MAX_SIZE		(64)
+
 
 //----------------------------------------------------------//
 // ENUMS
@@ -97,7 +103,7 @@ class CWinSysConfigDialog
 		CWinSysConfigDialog();
 		~CWinSysConfigDialog();
 
-		s32							Initialise(void);
+		s32							Initialise(const s8* strTitle, const s8* strVersion);
 		s32							Shutdown(void);
 		s32							Update(void);
 		s32							Show(void);
@@ -132,6 +138,9 @@ class CWinSysConfigDialog
 		CWinSysRollupContainer		m_RollupContainer;
 
 		CIni						m_ConfigIni;
+
+		FixedString<WINSYS_CONFIG_TITLE_MAX_SIZE>		m_strTitle;
+		FixedString<WINSYS_CONFIG_VERSION_MAX_SIZE>		m_strVersion;
 
 		bool						m_bRegistered;
 };

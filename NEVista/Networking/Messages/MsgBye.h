@@ -47,7 +47,7 @@ class CSerializer;
 
 class CMsgBye : public CMessage
 {
-		DECLARE_MESSAGE_REGISTRAR('bye ', CMsgBye);
+		DECLARE_MESSAGE_REGISTRAR(CMsgBye, 'bbye');
 
 	public:
 
@@ -56,9 +56,20 @@ class CMsgBye : public CMessage
 			enum Enum 
 			{
 				Unknown = 0,
-				SafeDisconnect,
-				SafeDisconnectACK
+				NormalDisconnect,
+				ByeAcknowledged,
+				UnexpectedDisconnect,
+				Timeout,
+				InvalidPacketHeader,
+				ProtocolError,
+				NoEncryptionKey,
+				LoginInvalidVersion,
+				LoginNoSuchUser,
+				LoginIncorrectPassword,
+				MAX
 			};
+
+			s8* m_strReasonString;
 		};
 
 		CMsgBye(Reason::Enum eReason);
@@ -75,6 +86,8 @@ class CMsgBye : public CMessage
 		void								SetText(const s8* strBuffer);
 
 	private:
+
+		static Reason						sm_ReasonTable[];						
 
 		Reason::Enum						m_eReason;
 		FixedString<MSG_BYE_MAX_SIZE>		m_strReason;

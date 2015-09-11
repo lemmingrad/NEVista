@@ -1,15 +1,15 @@
 //----------------------------------------------------------//
-// TCPCONNECTOR.CPP
+// MSGLOGINRESPONSE.CPP
 //----------------------------------------------------------//
 //-- Description			
-// Establishes a TCP connection from a client end.
+// A login response message sent by the server.
 //----------------------------------------------------------//
 
 
-#include "TCPConnector.h"
+#include "MsgLoginResponse.h"
 #include "Types.h"
-#include "SysSocket.h"
-#include "TCPConnection.h"
+#include "Message.h"
+#include "PacketSerializer.h"
 
 
 //----------------------------------------------------------//
@@ -21,58 +21,46 @@
 //----------------------------------------------------------//
 
 //----------------------------------------------------------//
-// CTCPConnector::CTCPConnector
+// IMPLEMENT_MESSAGE_REGISTRAR
 //----------------------------------------------------------//
-//-- Description			
+//--Description
 //----------------------------------------------------------//
-CTCPConnector::CTCPConnector()
-: m_eState(State::NotConnected)
-, m_pAddrResults(NULL)
-, m_pCur(NULL)
-, m_nSocket(SysSocket::INVALID_SOCK)
+IMPLEMENT_MESSAGE_REGISTRAR(CMsgLoginResponse, "LoginOKResponse")
+{
+	return new CMsgLoginResponse();
+}
+
+
+//----------------------------------------------------------//
+// CMsgLoginResponse::CMsgLoginResponse
+//----------------------------------------------------------//
+//--Description
+//----------------------------------------------------------//
+CMsgLoginResponse::CMsgLoginResponse()
+: CMessage(kType, Flag::AlwaysEncrypted)
 {
 }
 
 
 //----------------------------------------------------------//
-// CTCPConnector::~CTCPConnector
+// CMsgLoginResponse::~CMsgLoginResponse
 //----------------------------------------------------------//
-//-- Description			
+//--Description
 //----------------------------------------------------------//
-CTCPConnector::~CTCPConnector()
+CMsgLoginResponse::~CMsgLoginResponse()
 {
-	CleanAddrResults();
 }
 
 
 //----------------------------------------------------------//
-// CTCPConnector::CleanAddrResults
+// CMsgLoginResponse::Serialize
 //----------------------------------------------------------//
-//-- Description			
+//--Description
 //----------------------------------------------------------//
-void CTCPConnector::CleanAddrResults(void)
+size_t CMsgLoginResponse::Serialize(CSerializer& serializer)
 {
-	if (IS_PTR(m_pAddrResults))
-	{
-		SysSocket::FreeInfo(m_pAddrResults);
-		m_pAddrResults = NULL;
-		m_pCur = NULL;
-	}
-}
-
-
-//----------------------------------------------------------//
-// CTCPConnector::CleanSocket
-//----------------------------------------------------------//
-//-- Description			
-//----------------------------------------------------------//
-void CTCPConnector::CleanSocket(void)
-{
-	if (SysSocket::INVALID_SOCK != m_nSocket)
-	{
-		SysSocket::CloseSocket(m_nSocket);
-		m_nSocket = SysSocket::INVALID_SOCK;
-	}
+	size_t nSize = CMessage::Serialize(serializer);
+	return nSize;
 }
 
 

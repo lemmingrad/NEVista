@@ -30,6 +30,7 @@
 #endif
 
 #include "Types.h"
+#include <vector>
 
 
 //----------------------------------------------------------//
@@ -115,6 +116,7 @@ class SysSocket
 			};
 		};
 #endif //SYSSOCKET_USES_WINSOCK
+		typedef std::vector<PollFd>			PollFdSet;
 
 		static void			SystemInitialise(void);
 		static void			SystemShutdown(void);

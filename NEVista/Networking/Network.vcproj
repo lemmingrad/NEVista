@@ -166,11 +166,31 @@
 				>
 			</File>
 			<File
+				RelativePath=".\TCPBlockingAcceptor.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\TCPBlockingConnector.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\TCPConnection.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\TCPConnector.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\TCPNonBlockingAcceptor.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\TCPNonBlockingConnector.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\TCPSelector.cpp"
 				>
 			</File>
 			<Filter
@@ -182,6 +202,14 @@
 				</File>
 				<File
 					RelativePath=".\Messages\MsgClientKeyExchange.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\Messages\MsgLoginRequest.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\Messages\MsgLoginResponse.cpp"
 					>
 				</File>
 				<File
@@ -220,11 +248,31 @@
 				>
 			</File>
 			<File
+				RelativePath=".\TCPBlockingAcceptor.h"
+				>
+			</File>
+			<File
+				RelativePath=".\TCPBlockingConnector.h"
+				>
+			</File>
+			<File
 				RelativePath=".\TCPConnection.h"
 				>
 			</File>
 			<File
 				RelativePath=".\TCPConnector.h"
+				>
+			</File>
+			<File
+				RelativePath=".\TCPNonBlockingAcceptor.h"
+				>
+			</File>
+			<File
+				RelativePath=".\TCPNonBlockingConnector.h"
+				>
+			</File>
+			<File
+				RelativePath=".\TCPSelector.h"
 				>
 			</File>
 			<Filter
@@ -236,6 +284,14 @@
 				</File>
 				<File
 					RelativePath=".\Messages\MsgClientKeyExchange.h"
+					>
+				</File>
+				<File
+					RelativePath=".\Messages\MsgLoginRequest.h"
+					>
+				</File>
+				<File
+					RelativePath=".\Messages\MsgLoginResponse.h"
 					>
 				</File>
 				<File

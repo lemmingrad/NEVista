@@ -11,20 +11,8 @@
 #include "SystemIncludes.h"
 #include "Win32/WinSysIncludes.h"
 #include "Log.h"
-#include "TCPConnection.h"
-#include "TCPConnector.h"
+#include "Client.h"
 
-#include "Network.h"
-#include "Message.h"
-#include "Messages/MsgMotd.h"
-#include "Messages/MsgClientKeyExchange.h"
-#include "Messages/MsgServerKeyExchange.h"
-#include "Messages/MsgBye.h"
-
-
-#include "SimpleBuffer.h"
-#include "Packet.h"
-#include "PacketSerializer.h"
 #include "GL/gl.h"
 #include "GL/glu.h"
 
@@ -38,11 +26,8 @@
 //----------------------------------------------------------//
 
 
-CLog				gGameLog;
-CTCPConnection*		g_pConnection;
-
-TMessageList		gRecvMessageList;
-TMessageList		gSendMessageList;
+CLog							gGameLog;
+CClient							gClient;
 
 
 //----------------------------------------------------------//
@@ -109,30 +94,23 @@ bool Game_Initialise(void)
 	}
 
 	FixedString<128> strServer = ini.ReadString("Network", "Server");
-	if (strServer.IsEmpty())
+	if (IS_TRUE(strServer.IsEmpty()))
 	{
 		return false;
 	}
 
-	s8* pNext;
-	s8* strIP = SysString::Strtok(strServer.Buffer(), ":", pNext);
-	s8* strPort = SysString::Strtok(NULL, "\r\n", pNext);
-	if ( IS_TRUE(SysString::IsEmpty(strIP))
-		|| IS_TRUE(SysString::IsEmpty(strPort)) )
+	CClient::Error::Enum eClientError = gClient.Initialise();
+	if (CClient::Error::Ok != eClientError)
 	{
+		gDebugLog.Printf("Failed to initialise Client.");
 		return false;
 	}
 
-	CTCPConnector connector;
-	CTCPConnector::Error::Enum eE = connector.ConnectNonblocking(strIP, strPort);
-	if (CTCPConnector::Error::InProgress == eE)
+	eClientError = gClient.Connect(strServer.Buffer());
+	if (CClient::Error::Ok != eClientError)
 	{
-		CTCPConnector::Result r = connector.Update();
-		while (r.m_eError == CTCPConnector::Error::InProgress)
-		{
-			r = connector.Update();
-		}
-		g_pConnection = r.m_pConnection;
+		gDebugLog.Printf("Failed to begin Client connect to server.");
+		return false;
 	}
 
 	gGameLog.Printf("Complete (OK)");
@@ -155,10 +133,9 @@ bool Game_Shutdown(void)
 	SCOPED_LOG_INDENT(gGameLog);
 
 	//-- Shutdown connection
-	//-- Should really sent a 'bye bye' message, which will close the connection nicely. 
-	//-- Close() should only be used for bad cases.
-	g_pConnection->Close(CTCPConnection::Error::Ok);
-	SAFE_DELETE(g_pConnection);
+	//-- Should really send a Bye message and wait for safe disconnect,
+	//-- but we can't do that here because we're closing the game down completely.
+	gClient.Shutdown();
 
 	//-- Close game log
 	gGameLog.Printf("Complete (OK)");
@@ -178,6 +155,9 @@ bool Game_Shutdown(void)
 //----------------------------------------------------------//
 bool Game_Main(void)
 {
+	gClient.Update();
+
+
 	// WE WILL BE USING NONE OF THIS. FOR TEST ONLY
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
@@ -186,49 +166,6 @@ bool Game_Main(void)
 	col[0] = 1.0f;
 	col[1] = 0.0f;
 	col[2] = 0.0f;
-
-
-	g_pConnection->UpdateRecv(gRecvMessageList, gSendMessageList);
-
-	while (gRecvMessageList.size() > 0)
-	{
-//		gClientLoginManager.Update(recvList, sendList);
-
-		SysSmartPtr<CMessage> message = gRecvMessageList.front();
-		
-		switch (message->GetType())
-		{
-			case CMsgMotd::kType:
-			{
-//				if (CClientLoginManager::Error::Ok == gClientLoginManager->ReceivedMotd())
-				{
-					//-- Ok.
-					CMessage* pM = message.ptr();
-					CMsgMotd* pMotd = (CMsgMotd*)pM;
-
-					SysDebugPrintf("Received MOTD:\n");
-					SysDebugPrintf("%s\n", pMotd->GetText());
-
-//					CMsgClientServerKey* pKeyM = new CMsgClientServerKey();
-//					pKeyM->
-				}
-//				else
-//				{
-//					//-- Error.
-//				}
-			}
-			break;
-
-			default:
-			break;
-		}
-
-		gRecvMessageList.pop_front();
-	}
-
-	g_pConnection->UpdateSend(gSendMessageList);
-
-
 
 	glBegin(GL_TRIANGLES);
 		glColor3fv(col); 

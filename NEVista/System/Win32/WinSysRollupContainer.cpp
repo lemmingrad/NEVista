@@ -17,7 +17,7 @@
 //----------------------------------------------------------//
 
 
-#define WINSYS_ROLLUP_CONTAINER_CLASS_NAME			"WinSysRollupContainer"
+#define WINSYS_ROLLUP_CONTAINER_CLASS_NAME	"NEVistaWinSysRollupContainer"
 
 
 //----------------------------------------------------------//

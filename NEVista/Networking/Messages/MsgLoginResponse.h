@@ -1,29 +1,22 @@
-#ifndef _MSG_MOTD_H_
-#define _MSG_MOTD_H_
+#ifndef _MSG_LOGIN_RESPONSE_H_
+#define _MSG_LOGIN_RESPONSE_H_
 #pragma once
 
 //----------------------------------------------------------//
-// MSGMOTD.H
+// MSGLOGINRESPONSE.H
 //----------------------------------------------------------//
 //-- Description			
-// A message-of-the-day message.
-// Message containing text. The first message sent by the 
-// server to any connecting client.
+// A login response message sent by the server.
 //----------------------------------------------------------//
 
 
 #include "Types.h"
-#include "FixedString.h"
 #include "Message.h"
 
 
 //----------------------------------------------------------//
 // DEFINES
 //----------------------------------------------------------//
-
-
-#define MSG_MOTD_MAX_SIZE (980)
-
 
 //----------------------------------------------------------//
 // ENUMS
@@ -46,25 +39,19 @@ class CSerializer;
 //----------------------------------------------------------//
 
 
-class CMsgMotd : public CMessage
+class CMsgLoginResponse : public CMessage
 {
-		DECLARE_MESSAGE_REGISTRAR(CMsgMotd, 'motd');
+		DECLARE_MESSAGE_REGISTRAR(CMsgLoginResponse, 'logr');
 
 	public:
 
-		CMsgMotd();
-		virtual ~CMsgMotd();
+		CMsgLoginResponse();
+		virtual ~CMsgLoginResponse();
 
 		//-- CMessage
 		virtual size_t						Serialize(CSerializer& serializer);
 
-		const s8*							GetText(void) const;
-		void								SetText(const s8* strBuffer);
-
 	private:
-
-		FixedString<MSG_MOTD_MAX_SIZE>		m_strMotd;
-		u16									m_nMotdLength;
 };
 
 
@@ -76,4 +63,4 @@ class CMsgMotd : public CMessage
 // EOF
 //----------------------------------------------------------//
 
-#endif //_MSG_MOTD_H_
+#endif //_MSG_LOGIN_RESPONSE_H_

@@ -1,4 +1,10 @@
-
+//----------------------------------------------------------//
+// TCPCONNECTION.CPP
+//----------------------------------------------------------//
+//-- Description			
+// Wrapper around a TCP socket with send and receive 
+// buffering and to/from Packet conversion.
+//----------------------------------------------------------//
 
 
 #include "TCPConnection.h"
@@ -15,7 +21,19 @@
 #include "SysDebugLog.h"
 
 
+//----------------------------------------------------------//
+// DEFINES
+//----------------------------------------------------------//
 
+//----------------------------------------------------------//
+// GLOBALS
+//----------------------------------------------------------//
+
+//----------------------------------------------------------//
+// CTCPConnection::CTCPConnection
+//----------------------------------------------------------//
+//-- Description			
+//----------------------------------------------------------//
 CTCPConnection::CTCPConnection(SysSocket::Socket nSocket)
 : m_eState(State::Closed)
 , m_nSocket(SysSocket::INVALID_SOCK)
@@ -23,6 +41,9 @@ CTCPConnection::CTCPConnection(SysSocket::Socket nSocket)
 , m_nClientRnd(0)
 , m_nServerRnd(0)
 {
+	//-- Just touch these, otherwise they never get added to the CMessageFactory.
+	CMsgMotd dummy;
+
 	if (SysSocket::INVALID_SOCK != nSocket)
 	{
 		m_eState = State::Open;
@@ -35,11 +56,23 @@ CTCPConnection::CTCPConnection(SysSocket::Socket nSocket)
 	m_SendBuffer.Clear();
 }
 
+
+//----------------------------------------------------------//
+// CTCPConnection::~CTCPConnection
+//----------------------------------------------------------//
+//-- Description			
+//----------------------------------------------------------//
 CTCPConnection::~CTCPConnection()
 {
 	Close(Error::Ok);
 }
 
+
+//----------------------------------------------------------//
+// CTCPConnection::Close
+//----------------------------------------------------------//
+//-- Description			
+//----------------------------------------------------------//
 CTCPConnection::Error::Enum	CTCPConnection::Close(CTCPConnection::Error::Enum eError)
 {
 	if (SysSocket::INVALID_SOCK != m_nSocket)
@@ -56,23 +89,21 @@ CTCPConnection::Error::Enum	CTCPConnection::Close(CTCPConnection::Error::Enum eE
 	return eError;
 }
 
-//-- We are trying to close the connection locally.
-//-- 1. Put a 'bye' message in the send queue. No more messages should be added after that.
-//-- 2. Wait for 'bye' to be packetized and sent. Send message queue should be empty afterwards.
-//-- 3. Issue shutdown(write) locally. This tells the other end you aren't sending anymore, but are still receiving data.
-//-- 4. Remote will receive the 'bye', send a 'byebye', and shutdown(write) their end, but continue to recv bytes.
-//-- 5. Remote doing the shutdown(write) will stop it sending data back to local, and so eventually
-//-- the local end will recv() 0 bytes.
-//-- 6. When recv() 0 bytes, you can safely close() the local end of the socket.
 
-//-- Remote end closed the connection.
-//-- 1. Received a 'bye' packet. Send back a 'byebye'. 
-//-- 2. Wait for 'byebye' to be sent.
-//-- 3. Issue shutdown(write).
-//-- 4. Wait for recv() to return 0 bytes.
-//-- 5. close() local end of socket.
-
-
+//----------------------------------------------------------//
+// CTCPConnection::UpdateRecv
+//----------------------------------------------------------//
+//-- Description			
+// Calls recv() and add any pending socket data to a buffer.
+// Attempts to form a complete packet from the buffer.
+// Parse the packet and convert into a list of messages to
+// be appended to recvList.
+// Note that if this CTCPConnection is from the result of
+// a CTCPBlockingConnector or CTCPBlockingAcceptor, it will
+// block on the recv().
+// Internally handles encryption handshaking and safe
+// shutdown when necessary.
+//----------------------------------------------------------//
 CTCPConnection::Error::Enum CTCPConnection::UpdateRecv(TMessageList& recvList, TMessageList& sendList)
 {
 	if (SysSocket::INVALID_SOCK == m_nSocket)
@@ -93,6 +124,7 @@ CTCPConnection::Error::Enum CTCPConnection::UpdateRecv(TMessageList& recvList, T
 
 	//-- Update RecvBuffer with any new data from socket.
 	s32 nBytes = SysSocket::Recv(m_nSocket, (s8*)m_RecvBuffer.Buffer() + m_RecvBuffer.UsedSize(), m_RecvBuffer.UnusedSize());
+
 	if (SYS_SOCKET_WOULD_BLOCK == nBytes)
 	{
 		//-- No read activity, so nothing to do.
@@ -109,6 +141,8 @@ CTCPConnection::Error::Enum CTCPConnection::UpdateRecv(TMessageList& recvList, T
 		return Close(Error::BadFail);
 	}
 	
+	SysDebugPrintf("Received %d bytes.\n", nBytes);
+
 	if (IS_NULL_PTR(m_RecvBuffer.InsTail(NULL, nBytes)))
 	{
 		//-- Error. This should never happen, since InsTail(NULL, nBytes) should be fine if nBytes is valid.
@@ -136,6 +170,13 @@ CTCPConnection::Error::Enum CTCPConnection::UpdateRecv(TMessageList& recvList, T
 			ePacketError = packet.GetMessages(packetMessagesList);
 		}
 
+		SysDebugPrintf("Packet Received\n");
+		SysDebugPrintf("  version: %d, data size: %d\n", packet.Validate(), packet.GetDataSize());
+		SysDebugPrintf("  flags: %s %s\n", 
+			packet.IsCompressed() ? "compressed" : "",
+			packet.IsEncrypted() ? "encrypted" : "");
+		SysDebugPrintf("  messages: %d expected, %d parsed\n", packet.GetMessageCount(), packetMessagesList.size());
+
 		switch (ePacketError)
 		{
 			case CPacket::Error::Ok:
@@ -147,14 +188,17 @@ CTCPConnection::Error::Enum CTCPConnection::UpdateRecv(TMessageList& recvList, T
 					//-- recvList.
 					for (TMessageList::const_iterator cit = packetMessagesList.begin(); cit != packetMessagesList.end(); ++cit)
 					{
-						SysSmartPtr<CMessage> message = *cit;
-						switch (message->GetType())
+						SysSmartPtr<CMessage> pMessage = *cit;
+
+						SysDebugPrintf("  Message: \"%s\"\n", CMessageFactory::GetTypeString(pMessage->GetType()));
+
+						switch (pMessage->GetType())
 						{
 							case CMsgBye::kType:
 							{
 								//-- Incoming packet contained a Bye message.
 								//-- Send a Bye-ack back.
-								CMsgBye* pResponse = new CMsgBye(CMsgBye::Reason::SafeDisconnectACK);
+								CMsgBye* pResponse = new CMsgBye(CMsgBye::Reason::ByeAcknowledged);
 								if (IS_PTR(pResponse))
 								{
 									sendList.push_back(SysSmartPtr<CMessage>(pResponse));
@@ -180,7 +224,7 @@ CTCPConnection::Error::Enum CTCPConnection::UpdateRecv(TMessageList& recvList, T
 								//-- This means we must be the server.
 								//-- Correct response is to send a ServerKeyExchange back to client.
 								//-- And we must generate an encryption key (which should be identical on client and server).
-								CMsgClientKeyExchange* pIn = (CMsgClientKeyExchange*)message.ptr();
+								CMsgClientKeyExchange* pIn = (CMsgClientKeyExchange*)pMessage.ptr();
 								if (IS_PTR(pIn))
 								{
 									m_nClientRnd = pIn->GetKey();
@@ -200,7 +244,7 @@ CTCPConnection::Error::Enum CTCPConnection::UpdateRecv(TMessageList& recvList, T
 								//-- Incoming packet contained a ServerKeyExchange message. 
 								//-- This means we must be the client.
 								//-- Generate an encryption key (which should be identical on client and server).
-								CMsgServerKeyExchange* pIn = (CMsgServerKeyExchange*)message.ptr();
+								CMsgServerKeyExchange* pIn = (CMsgServerKeyExchange*)pMessage.ptr();
 								if (IS_PTR(pIn))
 								{
 									m_nServerRnd = pIn->GetKey();
@@ -271,6 +315,7 @@ CTCPConnection::Error::Enum CTCPConnection::UpdateRecv(TMessageList& recvList, T
 			break;
 
 			//-- Bad Fails - Should force close.
+			case CPacket::Error::EncryptionFailed:
 			case CPacket::Error::UnknownVersion:
 			case CPacket::Error::ProtocolMismatch:
 			{
@@ -294,6 +339,21 @@ CTCPConnection::Error::Enum CTCPConnection::UpdateRecv(TMessageList& recvList, T
 }
 
 
+//----------------------------------------------------------//
+// CTCPConnection::UpdateSend
+//----------------------------------------------------------//
+//-- Description			
+// Attempt to form a packet using the head messages of
+// sendList.
+// Serialize the packet data to a buffer.
+// Calls send() to transfer anything in the buffer to 
+// the network.
+// Note that if this CTCPConnection is from the result of
+// a CTCPBlockingConnector or CTCPBlockingAcceptor, it will
+// block on the send().
+// Internally handles encryption handshaking and safe
+// shutdown when necessary.
+//----------------------------------------------------------//
 CTCPConnection::Error::Enum CTCPConnection::UpdateSend(TMessageList& sendList)
 {
 	if (SysSocket::INVALID_SOCK == m_nSocket)
@@ -327,6 +387,12 @@ CTCPConnection::Error::Enum CTCPConnection::UpdateSend(TMessageList& sendList)
 			ePacketError = packet.Serialize(packetSerializer);
 		}
 
+		SysDebugPrintf("Packet Sending\n");
+		SysDebugPrintf("  version: %d, data size: %d\n", packet.Validate(), packet.GetDataSize());
+		SysDebugPrintf("  flags: %s %s\n", 
+			packet.IsCompressed() ? "compressed" : "",
+			packet.IsEncrypted() ? "encrypted" : "");
+
 		switch (ePacketError)
 		{
 			case CPacket::Error::Ok:
@@ -341,8 +407,11 @@ CTCPConnection::Error::Enum CTCPConnection::UpdateSend(TMessageList& sendList)
 					
 					for (TMessageList::const_iterator cit = sendList.begin(); cit != after; ++cit)
 					{
-						SysSmartPtr<CMessage> message = *cit;
-						if (CMsgBye::kType == message->GetType())
+						SysSmartPtr<CMessage> pMessage = *cit;
+
+						SysDebugPrintf("  Message: \"%s\"\n", CMessageFactory::GetTypeString(pMessage->GetType()));
+
+						if (CMsgBye::kType == pMessage->GetType())
 						{
 							bHasBye = true;
 							break;
@@ -462,3 +531,10 @@ CTCPConnection::Error::Enum CTCPConnection::UpdateSend(TMessageList& sendList)
 }
 
 
+//----------------------------------------------------------//
+// EXTERNALS
+//----------------------------------------------------------//
+
+//----------------------------------------------------------//
+// EOF
+//----------------------------------------------------------//

@@ -461,18 +461,17 @@ CPacket::Error::Enum CPacket::AddMessages(TMessageList& sendList, TMessageList::
 
 	it = sendList.begin();
 	
-	u32 nMessages = 0;
 	if (it != sendList.end())
 	{
-		SysSmartPtr<CMessage> first = *it;
+		SysSmartPtr<CMessage> pFirst = *it;
 		
-		bPacketIsCompressed = first->CanBeCompressed(bPacketIsCompressed);
+		bPacketIsCompressed = pFirst->CanBeCompressed(bPacketIsCompressed);
 		if (IS_TRUE(bPacketIsCompressed))
 		{
 			SET_FLAG(m_HeaderV1.m_nFlags, Flag::Compressed);
 		}
 
-		bPacketIsEncrypted = first->CanBeEncrypted(bPacketIsEncrypted);
+		bPacketIsEncrypted = pFirst->CanBeEncrypted(bPacketIsEncrypted);
 		if (IS_TRUE(bPacketIsEncrypted))
 		{
 			SET_FLAG(m_HeaderV1.m_nFlags, Flag::Encrypted);
@@ -485,9 +484,9 @@ CPacket::Error::Enum CPacket::AddMessages(TMessageList& sendList, TMessageList::
 		&& (CPacketSerializer::Error::Ok == eSerError)
 		&& (it != sendList.end()) )
 	{
-		SysSmartPtr<CMessage> message = *it;
+		SysSmartPtr<CMessage> pMessage = *it;
 
-		if (bPacketIsCompressed != message->CanBeCompressed(bPacketIsCompressed))
+		if (bPacketIsCompressed != pMessage->CanBeCompressed(bPacketIsCompressed))
 		{
 			//-- Message cannot be included in same packet as previous message because
 			//-- compressed flag has changed.
@@ -495,7 +494,7 @@ CPacket::Error::Enum CPacket::AddMessages(TMessageList& sendList, TMessageList::
 			break;
 		}
 
-		if (bPacketIsEncrypted != message->CanBeEncrypted(bPacketIsEncrypted))
+		if (bPacketIsEncrypted != pMessage->CanBeEncrypted(bPacketIsEncrypted))
 		{
 			//-- Message cannot be included in same packet as previous message because
 			//-- encrypted flag has changed.
@@ -504,7 +503,7 @@ CPacket::Error::Enum CPacket::AddMessages(TMessageList& sendList, TMessageList::
 		}
 
 		CPacketSerializer messageSerializer(CSerializer::Mode::Serializing, m_DataBuffer.Buffer() + m_DataBuffer.UsedSize(), m_DataBuffer.UnusedSize());
-		message->Serialize(messageSerializer);
+		pMessage->Serialize(messageSerializer);
 
 		eSerError = messageSerializer.GetError();
 		switch (eSerError)
@@ -517,7 +516,7 @@ CPacket::Error::Enum CPacket::AddMessages(TMessageList& sendList, TMessageList::
 					++it;
 					m_HeaderV1.m_nMessages++;
 
-					if (IS_TRUE(message->IsForcedEnd()))
+					if (IS_TRUE(pMessage->IsForcedEnd()))
 					{
 						bForcedEnd = true;	
 					}
@@ -584,8 +583,8 @@ CPacket::Error::Enum CPacket::GetMessages(TMessageList& tempList)
 			return Error::Serializer;
 		}
 
-		SysSmartPtr<CMessage> smart(pMessage);
-		tempList.push_back(smart);
+		SysSmartPtr<CMessage> pSmart(pMessage);
+		tempList.push_back(pSmart);
 		++nProcessedMessages;
 	}
 

@@ -85,7 +85,7 @@ class FixedString
 
 		bool IsEmpty(void)
 		{
-			return SysString::IsEmpty(m_strBuffer);
+			return IS_TRUE(SysString::IsEmpty(m_strBuffer));
 		}
 
 		s8* Set(const s8* strIn)

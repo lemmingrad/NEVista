@@ -18,8 +18,8 @@ processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 
 #include "WinSysIncludes.h"
 #include "Types.h"
+#include "FixedString.h"
 #include "SysDebugLog.h"
-#include "Win32/Game.h"
 
 
 //----------------------------------------------------------//
@@ -54,16 +54,16 @@ CWinSysConfigDialog::DesiredWindowMode CWinSysConfigDialog::sm_WindowModeTable[C
 
 
 CWinSysConfigDialog::DesiredResolution CWinSysConfigDialog::sm_ResolutionTable[CWinSysConfigDialog::DesiredResolution::MAX] = {
-	{IDS_RES_640x480,		640,	480 },
-	{IDS_RES_800x600,		800,	600 },
-	{IDS_RES_1024x768,		1024,	768 },
-	{IDS_RES_1280x720,		1280,	720 },
-	{IDS_RES_1280x800,		1280,	800 },
-	{IDS_RES_1366x768,		1366,	768 },
-	{IDS_RES_1440x900,		1440,	900 },
-	{IDS_RES_1600x900,		1600,	900 },
-	{IDS_RES_1680x1050,		1680,	1050 },
-	{IDS_RES_1920x1080,		1920,	1080 }
+	{ IDS_RES_640x480,		640,	480 },
+	{ IDS_RES_800x600,		800,	600 },
+	{ IDS_RES_1024x768,		1024,	768 },
+	{ IDS_RES_1280x720,		1280,	720 },
+	{ IDS_RES_1280x800,		1280,	800 },
+	{ IDS_RES_1366x768,		1366,	768 },
+	{ IDS_RES_1440x900,		1440,	900 },
+	{ IDS_RES_1600x900,		1600,	900 },
+	{ IDS_RES_1680x1050,	1680,	1050 },
+	{ IDS_RES_1920x1080,	1920,	1080 }
 };
 
 
@@ -143,7 +143,7 @@ INT_PTR CWinSysConfigDialog::DlgEventProc(HWND hWnd, UINT nMsg, WPARAM wParam, L
 				CheckDlgButton(hWnd, IDC_CHECK_SHOWATSTARTUP, BST_UNCHECKED);
 			}
 
-			SetDlgItemText(hWnd, IDC_NEVISTA_VERSION, TEXT(Game_Version()));
+			SetDlgItemText(hWnd, IDC_NEVISTA_VERSION, TEXT(m_strVersion.ConstBuffer()));
 
 			return true;
 		}
@@ -199,7 +199,7 @@ INT_PTR CWinSysConfigDialog::DlgEventProc(HWND hWnd, UINT nMsg, WPARAM wParam, L
 // Initialises widgets and registers the rollup container
 // class. Activates config dialog.
 //----------------------------------------------------------//
-s32 CWinSysConfigDialog::Initialise(void)
+s32 CWinSysConfigDialog::Initialise(const s8* strTitle, const s8* strVersion)
 {
 	s32 nReturnStatus = WINSYS_OK;
 
@@ -213,12 +213,15 @@ s32 CWinSysConfigDialog::Initialise(void)
 		m_bRegistered = true;
 	}
 
-	//TODO - init config ini
 	if (IS_FALSE(m_ConfigIni.Initialise()))
 	{
-		// Failed to initialise config ini
+		//-- Failed to initialise config ini
+		gDebugLog.Printf("Failed to initialise Configuration Ini storage.");
 		return WINSYS_CONFIG_INI_NOT_LOADED;
 	}
+
+	m_strTitle = strTitle;
+	m_strVersion = strVersion;
 
 	ChangeShowAtStartup(true);
 	SetDesiredWindowMode(DesiredWindowMode::Windowed);
@@ -230,8 +233,8 @@ s32 CWinSysConfigDialog::Initialise(void)
 
 	if (IS_FALSE(m_ConfigIni.Load(WINSYS_CONFIG_SAVE_FILE)))
 	{
-		// Failed to load config ini
-		MessageBox(NULL, "Configuration Ini cannot be created. Using defaults.", Game_Title(), MB_OK|MB_ICONEXCLAMATION);
+		//-- Failed to load config ini
+		MessageBox(NULL, "Configuration Ini cannot be created. Using defaults.", TEXT(m_strTitle.ConstBuffer()), MB_OK|MB_ICONEXCLAMATION);
 	}
 
 	nReturnStatus = m_RollupContainer.Initialise(this);

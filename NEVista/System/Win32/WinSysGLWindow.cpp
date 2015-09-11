@@ -6,8 +6,8 @@
 
 #include "WinSysIncludes.h"
 #include "Types.h"
+#include "FixedString.h"
 #include "SysDebugLog.h"
-#include "Win32/Game.h"
 //#include "MathsIncludes.h"
 //#include "InputIncludes.h"
 //#include "NEVista.h"
@@ -16,6 +16,10 @@
 //----------------------------------------------------------//
 // DEFINES
 //----------------------------------------------------------//
+
+
+#define WINSYS_GLWINDOW_CLASS_NAME	"NEVistaWinSysGLWindow"
+
 
 //----------------------------------------------------------//
 // GLOBALS
@@ -683,7 +687,7 @@ s32 CWinSysGLWindow::CreateGLWindow(const s32 nWidth, const s32 nHeight, const s
 		WNDCLASSEX GLWindowClass;
 		
 		GLWindowClass.cbSize			= sizeof(GLWindowClass);
-		GLWindowClass.lpszClassName		= Game_Title();									//-- Set the class name
+		GLWindowClass.lpszClassName		= TEXT(WINSYS_GLWINDOW_CLASS_NAME);				//-- Set the class name
 		GLWindowClass.hInstance			= m_hInstance;									//-- Set the window's instance
 		GLWindowClass.lpfnWndProc		= (WNDPROC)CWinSysGLWindow::EventProc;			//-- Handle the WNDPROC messages
 		GLWindowClass.hCursor			= LoadCursor(NULL, IDC_ARROW);					//-- Load the mouse pointer
@@ -717,8 +721,8 @@ s32 CWinSysGLWindow::CreateGLWindow(const s32 nWidth, const s32 nHeight, const s
 
 	//-- Create the window
 	m_hWnd = CreateWindowEx(dwExStyle,						//-- The extended style for the window
-							 Game_Title(),					//-- The class name
-							 Game_Title(),					//-- The window's title
+							 TEXT(WINSYS_GLWINDOW_CLASS_NAME), //-- The class name
+							 TEXT(""),						//-- The window's title
 							 dwStyle|WS_CLIPSIBLINGS|WS_CLIPCHILDREN,		 
 							 0, 0,							//-- The window's position
 							 WinRect.right - WinRect.left,	//-- Calculate the window's width
@@ -877,7 +881,7 @@ s32 CWinSysGLWindow::DestroyGLWindow(void)
 	m_hWnd = NULL;					
  
 	//-- Unregister class
-	if (IS_TRUE(m_bRegisteredClass) && UnregisterClass(Game_Title(), m_hInstance))	
+	if (IS_TRUE(m_bRegisteredClass) && UnregisterClass(TEXT(WINSYS_GLWINDOW_CLASS_NAME), m_hInstance))	
 	{
 		gDebugLog.Printf("Unregistered window class.");
 	}

@@ -75,18 +75,14 @@ class CTCPConnector
 			{		
 			}
 
-			Error::Enum			m_eError;
-			CTCPConnection*		m_pConnection;
+			Error::Enum						m_eError;
+			SysSmartPtr<CTCPConnection>		m_pConnection;
 		};
 
 		CTCPConnector();
 		~CTCPConnector();
 
-		Result					ConnectBlocking(const s8* strHostname, const s8* strPort);
-		Error::Enum				ConnectNonblocking(const s8* strHostname, const s8* strPort);
-		Result					Update(void);
-
-	private:
+	protected:
 
 		struct State
 		{
@@ -96,7 +92,7 @@ class CTCPConnector
 				GettingAddrInfo,
 				NextAddr,
 				Connecting,
-				Connected,
+				Connected
 			};
 		};
 
