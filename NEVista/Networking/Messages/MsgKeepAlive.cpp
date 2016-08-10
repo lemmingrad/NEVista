@@ -1,21 +1,16 @@
-#ifndef _SQLITE_TABLE_H_
-#define _SQLITE_TABLE_H_
-#pragma once
-
-
 //----------------------------------------------------------//
-// SQLITETABLE.H
+// MSGKEEPALIVE.CPP
 //----------------------------------------------------------//
 //-- Description			
-// A SQLite table wrapper.
+// If connection has an idle timer, keep alive messages
+// may be used if no other messages are being sent.
 //----------------------------------------------------------//
 
 
+#include "MsgKeepAlive.h"
 #include "Types.h"
-#include "FixedString.h"
-#include "SysSmartPtr.h"
-#include <list>
-#include <string>
+#include "Message.h"
+#include "PacketSerializer.h"
 
 
 //----------------------------------------------------------//
@@ -23,54 +18,51 @@
 //----------------------------------------------------------//
 
 //----------------------------------------------------------//
-// ENUMS
+// GLOBALS
 //----------------------------------------------------------//
 
 //----------------------------------------------------------//
-// FORWARD REFERENCES
+// IMPLEMENT_MESSAGE_REGISTRAR
 //----------------------------------------------------------//
-
-
-class CSQLiteDatabase;
-
-
+//--Description
 //----------------------------------------------------------//
-// STRUCTS
-//----------------------------------------------------------//
-
-//----------------------------------------------------------//
-// CLASSES
-//----------------------------------------------------------//
-
-
-class CSQLiteTable
+IMPLEMENT_MESSAGE_REGISTRAR(CMsgKeepAlive, "KeepAlive")
 {
-	public:
-	
-		struct ExecResult
-		{
-			typedef std::list<std::string>		TValues;
-			typedef std::list<TValues>			TRows;
+	return new CMsgKeepAlive();
+}
 
-			ExecResult();
-			~ExecResult();
-			
-			TRows					m_Rows;
-			s32						m_nErrorCode;	
-			s8*						m_pStrError;
-		};
-			
-		CSQLiteTable(CSQLiteDatabase& database, const s8* strTableName);
-		virtual ~CSQLiteTable();
 
-		SysSmartPtr<ExecResult>		Exec(const s8* strCommands);
-		static s32					ExecCallback(void* pResult, s32 nValues, s8** ppValues, s8** ppNames);
+//----------------------------------------------------------//
+// CMsgKeepAlive::CMsgKeepAlive
+//----------------------------------------------------------//
+//--Description
+//----------------------------------------------------------//
+CMsgKeepAlive::CMsgKeepAlive()
+: CMessage(kType, 0)
+{
+}
 
-	protected:
 
-		CSQLiteDatabase&			m_database;
-		FixedString<64>				m_strTableName;
-};
+//----------------------------------------------------------//
+// CMsgKeepAlive::~CMsgKeepAlive
+//----------------------------------------------------------//
+//--Description
+//----------------------------------------------------------//
+CMsgKeepAlive::~CMsgKeepAlive()
+{
+}
+
+
+//----------------------------------------------------------//
+// CMsgKeepAlive::Serialize
+//----------------------------------------------------------//
+//--Description
+//----------------------------------------------------------//
+size_t CMsgKeepAlive::Serialize(CSerializer& serializer)
+{
+	size_t nSize = CMessage::Serialize(serializer);
+	return nSize;
+}
 
 
 //----------------------------------------------------------//
@@ -80,5 +72,3 @@ class CSQLiteTable
 //----------------------------------------------------------//
 // EOF
 //----------------------------------------------------------//
-
-#endif //_SQLITE_TABLE_H_

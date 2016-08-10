@@ -1,13 +1,13 @@
 //----------------------------------------------------------//
-// MSGBYE.CPP
+// MSGCHAT.CPP
 //----------------------------------------------------------//
 //-- Description			
-// A disconnect message.
-// Message indicating a disconnect, with optional text.
+// A text chat message.
+// Includes shouts, talk and whispers.
 //----------------------------------------------------------//
 
 
-#include "MsgBye.h"
+#include "MsgChat.h"
 #include "Types.h"
 #include "FixedString.h"
 #include "Message.h"
@@ -22,94 +22,74 @@
 // GLOBALS
 //----------------------------------------------------------//
 
-
-CMsgBye::Reason CMsgBye::sm_ReasonTable[CMsgBye::Reason::MAX] = {
-	{ "Unknown reason" },
-	{ "Safe disconnect" },
-	{ "Client disconnected" },
-	{ "Server disconnected" },
-	{ "Bye acknowledged" },
-	{ "Unexpected disconnection" },
-	{ "Timeout" },
-	{ "Invalid packet header" },
-	{ "Protocol error" },
-	{ "No encryption key was negotiated" },
-	{ "Login failed - Invalid version" },
-	{ "Login failed - No such user" },
-	{ "Login failed - Incorrect password" },
-	{ "Server is going down NOW!" }
-};
-
-
 //----------------------------------------------------------//
 // IMPLEMENT_MESSAGE_REGISTRAR
 //----------------------------------------------------------//
 //--Description
 //----------------------------------------------------------//
-IMPLEMENT_MESSAGE_REGISTRAR(CMsgBye, "ByeBye")
+IMPLEMENT_MESSAGE_REGISTRAR(CMsgChat, "Chat")
 {
-	return new CMsgBye(Reason::Unknown);
+	return new CMsgChat();
 }
 
 
 //----------------------------------------------------------//
-// CMsgBye::CMsgBye
+// CMsgChat::CMsgChat
 //----------------------------------------------------------//
 //--Description
 //----------------------------------------------------------//
-CMsgBye::CMsgBye(Reason::Enum eReason)
-: CMessage(kType, Flag::ForcedEnd)
-, m_eReason(eReason)
+CMsgChat::CMsgChat(Type::Enum eType)
+: CMessage(kType, 0)
+, m_eType(eType)
 , m_nStrLength(0)
 {
-	m_strReason.Clear();
-	SetReason(eReason);
+	m_strText.Clear();
 }
 
 
 //----------------------------------------------------------//
-// CMsgBye::CMsgBye
+// CMsgChat::CMsgChat
 //----------------------------------------------------------//
 //--Description
 //----------------------------------------------------------//
-CMsgBye::CMsgBye()
-: CMessage(kType, Flag::ForcedEnd)
-, m_eReason(Reason::Unknown)
+CMsgChat::CMsgChat()
+: CMessage(kType, 0)
+, m_eType(Type::Chat)
 , m_nStrLength(0)
 {
-	m_strReason.Clear();
+	m_strText.Clear();
 }
 
 
 //----------------------------------------------------------//
-// CMsgBye::~CMsgBye
+// CMsgChat::~CMsgChat
 //----------------------------------------------------------//
 //--Description
 //----------------------------------------------------------//
-CMsgBye::~CMsgBye()
+CMsgChat::~CMsgChat()
 {
 }
 
 
 //----------------------------------------------------------//
-// CMsgBye::Serialize
+// CMsgChat::Serialize
 //----------------------------------------------------------//
 //--Description
 //----------------------------------------------------------//
-size_t CMsgBye::Serialize(CSerializer& serializer)
+size_t CMsgChat::Serialize(CSerializer& serializer)
 {
 	size_t nSize = CMessage::Serialize(serializer);
 
-	nSize += serializer.SerializeU32((u32&)m_eReason, 'ersn');
+	nSize += serializer.SerializeU32((u32&)m_eType, 'type');
 	nSize += serializer.SerializeU16(m_nStrLength, 'len ');
 
 	if (m_nStrLength > 0) 
 	{
-		assert(m_nStrLength < m_strReason.Size());
+		assert(m_nStrLength < m_strText.Size());
 
-		u8* pBuffer = (u8*)m_strReason.Buffer();
+		u8* pBuffer = (u8*)m_strText.Buffer();
 
-		nSize += serializer.SerializeBytes(pBuffer, m_nStrLength, 'srsn');
+		nSize += serializer.SerializeBytes(pBuffer, m_nStrLength, 'text');
 		
 		if (CSerializer::Mode::Deserializing == serializer.GetMode())
 		{
@@ -123,49 +103,48 @@ size_t CMsgBye::Serialize(CSerializer& serializer)
 
 
 //----------------------------------------------------------//
-// CMsgBye::GetReason
+// CMsgChat::GetType
 //----------------------------------------------------------//
 //--Description
 //----------------------------------------------------------//
-CMsgBye::Reason::Enum CMsgBye::GetReason(void) const
+CMsgChat::Type::Enum CMsgChat::GetType(void) const
 {
-	return m_eReason;
+	return m_eType;
 }
 
 
 //----------------------------------------------------------//
-// CMsgBye::SetReason
+// CMsgChat::SetReason
 //----------------------------------------------------------//
 //--Description
 //----------------------------------------------------------//
-void CMsgBye::SetReason(CMsgBye::Reason::Enum eReason)
+void CMsgChat::SetType(CMsgChat::Type::Enum eType)
 {
-	m_eReason = eReason;
-	SetText(sm_ReasonTable[eReason].m_strReasonString);
+	m_eType = eType;
 }
 
 
 //----------------------------------------------------------//
-// CMsgBye::GetText
+// CMsgChat::GetText
 //----------------------------------------------------------//
 //--Description
 //----------------------------------------------------------//
-const s8* CMsgBye::GetText(void) const
+const s8* CMsgChat::GetText(void) const
 {
-	return m_strReason.ConstBuffer();
+	return m_strText.ConstBuffer();
 }
 
 
 //----------------------------------------------------------//
-// CMsgBye::SetText
+// CMsgChat::SetText
 //----------------------------------------------------------//
 //--Description
 //----------------------------------------------------------//
-void CMsgBye::SetText(const s8* strBuffer)
+void CMsgChat::SetText(const s8* strBuffer)
 {
-	if (IS_PTR(m_strReason.Set(strBuffer)))
+	if (IS_PTR(m_strText.Set(strBuffer)))
 	{
-		m_nStrLength = m_strReason.Length();
+		m_nStrLength = m_strText.Length();
 	}
 }
 

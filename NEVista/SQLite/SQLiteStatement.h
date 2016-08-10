@@ -23,6 +23,10 @@
 // DEFINES
 //----------------------------------------------------------//
 
+
+#define SQLITE_BIND_PARAM_MAX_SIZE		(33)
+
+
 //----------------------------------------------------------//
 // ENUMS
 //----------------------------------------------------------//
@@ -62,6 +66,7 @@ class CSQLiteStatement
 	
 			~ExecResult()
 			{
+				m_Results.clear();
 			}
 			
 			TRows	m_Results;
@@ -121,8 +126,8 @@ class CSQLiteStatement
 					continue;
 				}
 
-				//-- Try to find a bind (either @name or :name) in the command string.
-				FixedString<33> strTemp("@");
+				//-- Try to find a bind (either @name or :name or $name) in the command string.
+				FixedString<SQLITE_BIND_PARAM_MAX_SIZE> strTemp("@");
 				strTemp += pColumnInfo->m_strName.ConstBuffer();
 
 				s32 nIndex = sqlite3_bind_parameter_index(m_pStatement, strTemp.ConstBuffer());
@@ -226,13 +231,13 @@ class CSQLiteStatement
 		//--   No error string in result.
 		SysSmartPtr<ExecResult> Exec(void)
 		{
-			ExecResult* pExecResult = new ExecResult();
+			SysSmartPtr<ExecResult> pExecResult(new ExecResult());
 
 			if (IS_NULL_PTR(m_pStatement)) 
 			{
 				//-- Error. No active statement ptr
 				pExecResult->m_nErrorCode = SQLITE_ERROR;
-				return SysSmartPtr<ExecResult>(pExecResult);
+				return pExecResult;
 			}
 
 			const typename T::Meta& meta = T::GetMetaData();
@@ -324,7 +329,7 @@ class CSQLiteStatement
 				pExecResult->m_nErrorCode = nErrorCode;
 			}
 			
-			return SysSmartPtr<ExecResult>(pExecResult);
+			return pExecResult;
 		}
 
 		s32 Reset(void)

@@ -85,7 +85,7 @@ size_t CMsgLoginRequest::Serialize(CSerializer& serializer)
 		assert(m_nStrPasswordLength < m_strPassword.Size());
 
 		u8* pNameBuffer = (u8*)m_strName.Buffer();
-		u8* pPasswordBuffer = (u8*)m_strName.Buffer();
+		u8* pPasswordBuffer = (u8*)m_strPassword.Buffer();
 
 		nSize += serializer.SerializeBytes(pNameBuffer, m_nStrNameLength, 'name');
 		nSize += serializer.SerializeBytes(pPasswordBuffer, m_nStrPasswordLength, 'pass');

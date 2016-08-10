@@ -198,10 +198,10 @@ CTCPConnection::Error::Enum CTCPConnection::UpdateRecv(TMessageList& recvList, T
 							{
 								//-- Incoming packet contained a Bye message.
 								//-- Send a Bye-ack back.
-								CMsgBye* pResponse = new CMsgBye(CMsgBye::Reason::ByeAcknowledged);
-								if (IS_PTR(pResponse))
+								SysSmartPtr<CMessage> pResponse(new CMsgBye(CMsgBye::Reason::ByeAcknowledged));
+								if (IS_PTR(pResponse.ptr()))
 								{
-									sendList.push_back(SysSmartPtr<CMessage>(pResponse));
+									sendList.push_back(pResponse);
 								}
 							}
 							break;
@@ -210,11 +210,12 @@ CTCPConnection::Error::Enum CTCPConnection::UpdateRecv(TMessageList& recvList, T
 								//-- Incoming packet contained a Motd message. 
 								//-- This means we must be the client.
 								//-- Correct response is to send a ClientKeyExchange back to server.
-								CMsgClientKeyExchange* pResponse = new CMsgClientKeyExchange();
-								if (IS_PTR(pResponse))
+								SysSmartPtr<CMessage> pResponse(new CMsgClientKeyExchange());
+								CMsgClientKeyExchange* pKeyEx = (CMsgClientKeyExchange*)pResponse.ptr();
+								if (IS_PTR(pKeyEx))
 								{
-									pResponse->SetKey(m_nClientRnd);
-									sendList.push_back(SysSmartPtr<CMessage>(pResponse));
+									pKeyEx->SetKey(m_nClientRnd);
+									sendList.push_back(pResponse);
 								}
 							}
 							break;
@@ -230,11 +231,12 @@ CTCPConnection::Error::Enum CTCPConnection::UpdateRecv(TMessageList& recvList, T
 									m_nClientRnd = pIn->GetKey();
 									m_Key = SysString::GenerateKey(m_nServerRnd, m_nClientRnd);
 							
-									CMsgServerKeyExchange* pResponse = new CMsgServerKeyExchange();
-									if (IS_PTR(pResponse))
+									SysSmartPtr<CMessage> pResponse(new CMsgServerKeyExchange());
+									CMsgServerKeyExchange* pKeyEx = (CMsgServerKeyExchange*)pResponse.ptr();
+									if (IS_PTR(pKeyEx))
 									{
-										pResponse->SetKey(m_nServerRnd);
-										sendList.push_back(SysSmartPtr<CMessage>(pResponse));
+										pKeyEx->SetKey(m_nServerRnd);
+										sendList.push_back(pResponse);
 									}
 								}
 							}

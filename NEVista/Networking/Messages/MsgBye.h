@@ -56,7 +56,9 @@ class CMsgBye : public CMessage
 			enum Enum 
 			{
 				Unknown = 0,
-				NormalDisconnect,
+				SafeDisconnect,
+				ClientDisconnected,
+				ServerDisconnected,
 				ByeAcknowledged,
 				UnexpectedDisconnect,
 				Timeout,
@@ -66,10 +68,11 @@ class CMsgBye : public CMessage
 				LoginInvalidVersion,
 				LoginNoSuchUser,
 				LoginIncorrectPassword,
+				ServerIsShuttingDown,
 				MAX
 			};
 
-			s8* m_strReasonString;
+			const s8* m_strReasonString;
 		};
 
 		CMsgBye(Reason::Enum eReason);

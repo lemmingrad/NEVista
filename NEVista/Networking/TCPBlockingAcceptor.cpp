@@ -144,9 +144,7 @@ CTCPAcceptor::Result CTCPBlockingAcceptor::Accept(void)
 
 	if (State::Listening == m_eState)
 	{
-		size_t nSize = sizeof(result.m_Addr);
-
-		SysSocket::Socket nNewsock = SysSocket::Accept(m_nSocket, (SysSocket::SockAddr*)&result.m_Addr, &nSize);
+		SysSocket::Socket nNewsock = SysSocket::Accept(m_nSocket, result.m_address.GetSockAddr(), result.m_address.GetSockAddrSize());
 		if (SysSocket::INVALID_SOCK != nNewsock)
 		{
 			result.m_pConnection = SysSmartPtr<CTCPConnection>(new CTCPConnection(nNewsock));

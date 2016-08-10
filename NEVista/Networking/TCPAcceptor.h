@@ -79,13 +79,13 @@ class CTCPAcceptor
 			Result()
 			: m_eError(Error::Ok)
 			, m_pConnection(NULL)
+			, m_address(NULL)
 			{
-				SysMemory::Memclear(&m_Addr, sizeof(m_Addr));
 			}
 
 			Error::Enum						m_eError;
 			SysSmartPtr<CTCPConnection>		m_pConnection;
-			SysSocket::SockAddrIn			m_Addr;
+			SysSocket::Address				m_address;
 		};
 
 

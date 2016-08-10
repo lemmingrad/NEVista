@@ -43,14 +43,14 @@ class CSQLiteDatabase
 		CSQLiteDatabase();
 		~CSQLiteDatabase();
 
-		s32	Open(const s8* strFilename);
-		s32	Close(void);
-
-		sqlite3* GetHandle(void);
+		s32			Open(const s8* strFilename);
+		s32			Close(void);
+		bool		IsOpen(void) const;
+		sqlite3*	GetHandle(void);
 
 	private:
 
-		sqlite3* m_pDatabase;
+		sqlite3*	m_pDatabase;
 };
 
 

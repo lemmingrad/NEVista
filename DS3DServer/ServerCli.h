@@ -1,21 +1,24 @@
-#ifndef _CLIENT_H_
-#define _CLIENT_H_
+#ifndef _SERVERCLI_H_
+#define _SERVERCLI_H_
 #pragma once
 
 //----------------------------------------------------------//
-// CLIENT.H
+// SERVERCLI.H
 //----------------------------------------------------------//
 //-- Description
-// Client connection wrapper. Contains a TCP connection,
-// message queues and utilities for handling incoming/outgoing
-// messages.
+// Class that spawns for every incoming client connection,
+// Contains a TCP connection, message queues and utilities 
+// for handling incoming/outgoing messages.
+// Equivalent functionality to CClient class used by
+// client code.
 //----------------------------------------------------------//
 
 
 #include "SysSmartPtr.h"
+#include "SysSocket.h"
+#include "FixedString.h"
 #include "Network.h"
 #include "TCPConnection.h"
-#include "TCPNonBlockingConnector.h"
 #include "Message.h"
 #include <list>
 #include <map>
@@ -25,6 +28,10 @@
 // DEFINES
 //----------------------------------------------------------//
 
+
+#define SERVERCLI_LOGIN_NAME_MAX_SIZE		(128)			
+
+
 //----------------------------------------------------------//
 // ENUMS
 //----------------------------------------------------------//
@@ -32,6 +39,10 @@
 //----------------------------------------------------------//
 // FORWARD REFERENCES
 //----------------------------------------------------------//
+
+
+class CServer;
+
 
 //----------------------------------------------------------//
 // STRUCTS
@@ -42,7 +53,7 @@
 //----------------------------------------------------------//
 
 
-class CClient
+class CServerCli
 {
 	public:
 
@@ -52,9 +63,7 @@ class CClient
 			{
 				AlreadyRegistered	= 0x80000000,
 				NotRegistered		= 0x80000001,
-				WrongState			= 0x80000010,
-				BadServerAddress	= 0x80000011,
-				ConnectFailed		= 0x80000012,
+				WrongState			= 0x80000010,		
 				ConnectionClosed	= 0x80000020,
 				ConnectionError		= 0x80000021,
 
@@ -78,9 +87,7 @@ class CClient
 			enum Enum
 			{
 				Disconnected = 0,
-				Connecting,
 				Connected,
-				LoggingIn,
 				LoggedIn,
 				Disconnecting
 			};
@@ -88,21 +95,19 @@ class CClient
 
 		typedef s32 (*TRecvMessageHandlerFunc)(SysSmartPtr<CMessage> pMessage, void* pData, bool bAlreadyProcessed);
 
-		CClient();
-		~CClient();
+		CServerCli(CServer& server);
+		~CServerCli();
 
-		Error::Enum		Initialise(void);
-		Error::Enum		Shutdown(void);
-		Error::Enum		Update(void);
+		Error::Enum							Initialise(SysSmartPtr<CTCPConnection> pConnection, SysSocket::Address& address);
+		Error::Enum							Shutdown(void);
+		Error::Enum							Update(void);
 
-		Error::Enum		Connect(s8* strServer);
-		Error::Enum		Connect(const s8* strIP, const s8* strPort);
-		Error::Enum		Disconnect(void);
+		Error::Enum							Disconnect(void);
 
-		Error::Enum		AddRecvMessageHandler(CMessage::Type nType, TRecvMessageHandlerFunc handlerFunc, void* pData);
-		Error::Enum		RemoveRecvMessageHandler(CMessage::Type nType, TRecvMessageHandlerFunc handlerFunc);
+		Error::Enum							AddRecvMessageHandler(CMessage::Type nType, TRecvMessageHandlerFunc handlerFunc, void* pData);
+		Error::Enum							RemoveRecvMessageHandler(CMessage::Type nType, TRecvMessageHandlerFunc handlerFunc);
 
-		Error::Enum		SendMessage(SysSmartPtr<CMessage> pMessage);
+		Error::Enum							SendMessage(SysSmartPtr<CMessage> pMessage);
 
 	private:
 
@@ -118,21 +123,43 @@ class CClient
 			void*							m_pData;
 		};
 
-		typedef std::list<RecvMessageHandlerRecord> TRecvMessageHandlerRecordList;
-		typedef std::map<CMessage::Type, TRecvMessageHandlerRecordList>	TRecvMessageHandlerArray;
+		typedef std::list<RecvMessageHandlerRecord>							TRecvMessageHandlerRecordList;
+		typedef std::map<CMessage::Type, TRecvMessageHandlerRecordList>		TRecvMessageHandlerArray;
 
-		CTCPNonblockingConnector			m_connector;
-		SysSmartPtr<CTCPConnection>			m_pConnection;
+		class Messaging
+		{
+			public:
+				Messaging(); 
+				~Messaging();
 
-		TMessageList						m_recvMessageList;
-		TMessageList						m_sendMessageList;
+				Initialise();
+				Shutdown();
+				Update();
+				Reset();
+			private:
+				TMessageList					m_recvMessageList;
+				TMessageList					m_sendMessageList;
+				TRecvMessageHandlerArray		m_receivedMessageHandlers;
+		};
 
-		TRecvMessageHandlerArray			m_RecvMessageHandlerArray;
+		struct ConnectionVars
+		{
+			SysSmartPtr<CTCPConnection>		m_pConnection;
+			SysSocket::Address				m_connectionAddress;
+		};
 
+		struct LoginVars
+		{
+			FixedString<SERVERCLI_LOGIN_NAME_MAX_SIZE> m_strLoginEmail;
+		};
+
+		ConnectionVars						m_connectionVars;
+		MessagingVars						m_messagingVars;
+		LoginVars							m_loginVars;
+		CServer&							m_server;
 		State::Enum							m_eState;
 
 		Error::Enum							Reset(Error::Enum eError);
-
 		Error::Enum							NotifyRecvMessageHandlers(void);
 
 		static s32							ClientStateChangeHandler(SysSmartPtr<CMessage> pMessage, void* pData, bool bAlreadyHandled);
@@ -144,4 +171,4 @@ class CClient
 // EOF
 //----------------------------------------------------------//
 
-#endif //_CLIENT_H_
+#endif //_SERVERCLI_H_

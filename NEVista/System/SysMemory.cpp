@@ -208,6 +208,18 @@ void* SysMemory::Memclear(void* pMem, size_t nByteCount)
 
 
 //----------------------------------------------------------//
+// SysMemory::Memcmp
+//----------------------------------------------------------//
+//-- Description
+// Compare memory
+//----------------------------------------------------------//
+s32 SysMemory::Memcmp(const void* pMem1, const void* pMem2, size_t nCount)
+{
+	return memcmp(pMem1, pMem2, nCount);
+}
+
+
+//----------------------------------------------------------//
 // SysMemory::EndianSwapValue
 //----------------------------------------------------------//
 //-- Description

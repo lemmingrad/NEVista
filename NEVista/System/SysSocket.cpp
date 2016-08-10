@@ -9,6 +9,7 @@
 
 #include "SysSocket.h"
 #include "Types.h"
+#include "SysMemory.h"
 #include "SysDebugLog.h"
 
 #if defined(SYSSOCKET_USES_WINSOCK)
@@ -104,6 +105,153 @@ void SysSocket::SystemShutdown(void)
 	WSACleanup();
 
 #endif //SYSSOCKET_USES_WINSOCK
+}
+
+
+//----------------------------------------------------------//
+//
+//----------------------------------------------------------//
+//-- Description
+//----------------------------------------------------------//
+SysSocket::Address::Address(const SysSocket::SockAddr* pAddr)
+{
+	SysMemory::Memclear(&m_addr, sizeof(m_addr));
+
+	if (IS_PTR(pAddr))
+	{
+		switch (pAddr->sa_family)
+		{
+			case AF_INET:
+			{
+				SysMemory::Memcpy(&m_addr, sizeof(m_addr), pAddr, sizeof(SysSocket::SockAddrIn));
+			}
+			break;
+			case AF_INET6:
+			{
+				SysMemory::Memcpy(&m_addr, sizeof(m_addr), pAddr, sizeof(SysSocket::SockAddrIn6));
+			}
+			break;
+			default:
+			break;
+		}
+	}
+}
+
+SysSocket::Address::Address()
+{
+	SysMemory::Memclear(&m_addr, sizeof(m_addr));
+}
+
+
+//----------------------------------------------------------//
+//
+//----------------------------------------------------------//
+//-- Description
+//----------------------------------------------------------//
+SysSocket::Address::~Address()
+{
+}
+
+
+//----------------------------------------------------------//
+//
+//----------------------------------------------------------//
+//-- Description
+//----------------------------------------------------------//
+SysSocket::SockAddr* SysSocket::Address::GetSockAddr(void)
+{
+	return (SysSocket::SockAddr*)&m_addr;
+}
+
+
+//----------------------------------------------------------//
+//
+//----------------------------------------------------------//
+//-- Description
+//----------------------------------------------------------//
+size_t* SysSocket::Address::GetSockAddrSize(void)
+{
+	SysSocket::SockAddr* pAddr = GetSockAddr();
+	switch (pAddr->sa_family)
+	{
+		case AF_INET:
+		{
+			m_nAddrSize = sizeof(SysSocket::SockAddrIn);
+		}
+		break;
+		case AF_INET6:
+		{
+			m_nAddrSize = sizeof(SysSocket::SockAddrIn6);
+		}
+		break;
+		default:
+		{
+			m_nAddrSize = sizeof(SysSocket::SockAddrStorage);
+		}
+		break;
+	}
+
+	return &m_nAddrSize;
+}
+
+
+//----------------------------------------------------------//
+//
+//----------------------------------------------------------//
+//-- Description
+//----------------------------------------------------------//
+const s8* SysSocket::Address::GetIPAddress(s8* strBuffer, size_t nStrBufferSize)
+{
+	SysSocket::SockAddr* pAddr = GetSockAddr();
+	switch (pAddr->sa_family)
+	{
+		case AF_INET:
+		{
+			SysSocket::SockAddrIn* pAddrIn = (SysSocket::SockAddrIn*)pAddr;
+			return SysSocket::InetNToP(AF_INET, (const SysSocket::InAddr*)&pAddrIn->sin_addr, sizeof(pAddrIn->sin_addr), strBuffer, nStrBufferSize);
+		}
+		break;
+		case AF_INET6:
+		{
+			SysSocket::SockAddrIn6* pAddrIn = (SysSocket::SockAddrIn6*)pAddr;
+			return SysSocket::InetNToP(AF_INET6, (const SysSocket::In6Addr*)&pAddrIn->sin6_addr, sizeof(pAddrIn->sin6_addr), strBuffer, nStrBufferSize);
+		}
+		break;
+		default:
+		break;
+	}
+
+	return NULL;
+}
+
+
+//----------------------------------------------------------//
+//
+//----------------------------------------------------------//
+//-- Description
+//----------------------------------------------------------//
+u16 SysSocket::Address::GetPort(void)
+{
+	SysSocket::SockAddr* pAddr = GetSockAddr();
+	switch (pAddr->sa_family)
+	{
+		case AF_INET:
+		{
+			SysSocket::SockAddrIn* pAddrIn = (SysSocket::SockAddrIn*)pAddr;
+			return SysSocket::Ntohs(pAddrIn->sin_port);
+		}
+		break;
+		case AF_INET6:
+		{
+			SysSocket::SockAddrIn6* pAddrIn = (SysSocket::SockAddrIn6*)pAddr;
+			return SysSocket::Ntohs(pAddrIn->sin6_port);
+		}
+		break;
+		default:
+		break;
+	}
+	
+	return 0;
 }
 
 
@@ -654,7 +802,7 @@ const s8* SysSocket::InetNToP(s32 nType, const void* pSrc, size_t nSrcSize, s8* 
 	if (IS_PTR(pAddress))
 	{
 		SysString::Strcpy(strDest, nDestSize, pAddress);
-		return strDest;
+		return (const s8*)strDest;
 	}
 
 	return NULL;

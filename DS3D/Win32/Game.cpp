@@ -87,6 +87,7 @@ bool Game_Initialise(void)
 	SCOPED_LOG_INDENT(gGameLog);
 
 	CIni ini;
+	ini.Initialise();
 	if (IS_FALSE(ini.Load("Data/config.ini")))
 	{
 		gDebugLog.Printf("Failed to open config.ini.");

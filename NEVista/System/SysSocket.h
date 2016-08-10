@@ -53,6 +53,8 @@
 
 #endif //SYSSOCKET_USES_WINSOCK
 
+#define SYSSOCKET_IPADDRESS_MAX_SIZE	(INET6_ADDRSTRLEN)
+
 
 //----------------------------------------------------------//
 // ENUMS
@@ -84,6 +86,7 @@ class SysSocket
 		typedef struct in_addr				InAddr;
 		typedef struct sockaddr_in6			SockAddrIn6;
 		typedef struct in6_addr				In6Addr;
+		typedef struct sockaddr_storage		SockAddrStorage;
 		typedef struct addrinfo				AddrInfo;
 		typedef struct timeval				Timeval;
 		typedef fd_set						FdSet;
@@ -117,6 +120,22 @@ class SysSocket
 		};
 #endif //SYSSOCKET_USES_WINSOCK
 		typedef std::vector<PollFd>			PollFdSet;
+
+		class Address
+		{
+			public:
+				Address(const SockAddr* pAddr);
+				Address();
+				~Address();
+
+				SysSocket::SockAddr*			GetSockAddr(void);
+				size_t*							GetSockAddrSize(void);
+				const s8*						GetIPAddress(s8* strBuffer, size_t nStrBufferSize);
+				u16								GetPort(void);
+			private:
+				SysSocket::SockAddrStorage		m_addr;
+				size_t							m_nAddrSize;
+		};
 
 		static void			SystemInitialise(void);
 		static void			SystemShutdown(void);

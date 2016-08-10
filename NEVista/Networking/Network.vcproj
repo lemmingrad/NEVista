@@ -201,7 +201,15 @@
 					>
 				</File>
 				<File
+					RelativePath=".\Messages\MsgChat.cpp"
+					>
+				</File>
+				<File
 					RelativePath=".\Messages\MsgClientKeyExchange.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\Messages\MsgKeepAlive.cpp"
 					>
 				</File>
 				<File
@@ -283,7 +291,15 @@
 					>
 				</File>
 				<File
+					RelativePath=".\Messages\MsgChat.h"
+					>
+				</File>
+				<File
 					RelativePath=".\Messages\MsgClientKeyExchange.h"
+					>
+				</File>
+				<File
+					RelativePath=".\Messages\MsgKeepAlive.h"
 					>
 				</File>
 				<File

@@ -60,7 +60,9 @@ s32	CSQLiteDatabase::Close(void)
 {
 	if (IS_PTR(m_pDatabase))
 	{
-		return sqlite3_close(m_pDatabase);
+		s32 nRet = sqlite3_close(m_pDatabase);
+		m_pDatabase = NULL;
+		return nRet;
 	}
 
 	return SQLITE_OK;
@@ -75,6 +77,17 @@ s32	CSQLiteDatabase::Close(void)
 sqlite3* CSQLiteDatabase::GetHandle(void)
 {
 	return m_pDatabase;
+}
+
+
+//----------------------------------------------------------//
+// CSQLiteDatabase::IsOpen
+//----------------------------------------------------------//
+//-- Description
+//----------------------------------------------------------//
+bool CSQLiteDatabase::IsOpen(void) const
+{
+	return IS_PTR(m_pDatabase) ? true : false;
 }
 
 

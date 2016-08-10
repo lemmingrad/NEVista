@@ -39,9 +39,10 @@ class SysMemory
 		static void* Memmove(void* pDest, size_t nDestSize, const void* pSrc, size_t nSrcSize);
 		static void* Memset(void* pMem, s8 nValue, size_t nByteCount);
 		static void* Memclear(void* pMem, size_t nByteCount);
+		static s32	 Memcmp(const void* pMem1, const void* pMem2, size_t nCount);
 
 		//-- Endian
-		static bool  IsSystemBigEndian(void);
+		static bool	 IsSystemBigEndian(void);
 		static void	 EndianSwap(void* pMem, size_t nSizeofEntity);
 		static void  EndianSwapArray(void* pMem, size_t nSizeofEntity, u32 nEntityCount);
 		static void	 EndianSwapCopy(void* pDest, const void* pSrc, size_t nSizeofEntity);

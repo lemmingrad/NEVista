@@ -171,7 +171,23 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath=".\EventLogSQLTable.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\main.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Server.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ServerCli.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\UsersSQLTable.cpp"
 				>
 			</File>
 		</Filter>
@@ -180,6 +196,22 @@
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
+			<File
+				RelativePath=".\EventLogSQLTable.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Server.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ServerCli.h"
+				>
+			</File>
+			<File
+				RelativePath=".\UsersSQLTable.h"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Resource Files"

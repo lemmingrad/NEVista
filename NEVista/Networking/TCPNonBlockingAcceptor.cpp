@@ -148,7 +148,7 @@ CTCPAcceptor::Result CTCPNonblockingAcceptor::Accept(void)
 				break;
 			}
 
-			if (SYS_SOCKET_NO_ERROR == SysSocket::Listen(m_nSocket, m_nBacklog))
+			if (SYS_SOCKET_NO_ERROR != SysSocket::Listen(m_nSocket, m_nBacklog))
 			{
 				eError = Error::ListenFail;
 				break;
@@ -202,12 +202,11 @@ CTCPAcceptor::Result CTCPNonblockingAcceptor::Accept(void)
 		case Error::Ok:
 		{
 			//-- Finished!
-			size_t nSize = sizeof(result.m_Addr);
-
-			SysSocket::Socket nNewsock = SysSocket::Accept(m_nSocket, (SysSocket::SockAddr*)&result.m_Addr, &nSize);
+			SysSocket::Socket nNewsock = SysSocket::Accept(m_nSocket, result.m_address.GetSockAddr(), result.m_address.GetSockAddrSize());
 			if (SysSocket::INVALID_SOCK != nNewsock)
 			{
 				result.m_pConnection = SysSmartPtr<CTCPConnection>(new CTCPConnection(nNewsock));
+				SysSocket::SetNonblocking(nNewsock, true);
 			}
 			result.m_eError = Error::Ok;
 

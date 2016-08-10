@@ -55,7 +55,7 @@ CSQLiteTable::ExecResult::~ExecResult()
 //-- Description
 //----------------------------------------------------------//
 CSQLiteTable::CSQLiteTable(CSQLiteDatabase& database, const s8* strTableName)
-: m_Database(database)
+: m_database(database)
 {
 	m_strTableName.Set(strTableName);
 }
@@ -86,17 +86,17 @@ CSQLiteTable::~CSQLiteTable()
 //----------------------------------------------------------//
 SysSmartPtr<CSQLiteTable::ExecResult> CSQLiteTable::Exec(const s8* strCommands)
 {
-	ExecResult* pExecResult = new ExecResult();
-	if (IS_PTR(pExecResult))
+	SysSmartPtr<ExecResult> pExecResult(new ExecResult());
+	if (IS_PTR(pExecResult.ptr()))
 	{		
-		s32 nErrorCode = sqlite3_exec(m_Database.GetHandle(), strCommands, ExecCallback, pExecResult, &pExecResult->m_pStrError);
+		s32 nErrorCode = sqlite3_exec(m_database.GetHandle(), strCommands, ExecCallback, pExecResult.ptr(), &pExecResult->m_pStrError);
 		if (SQLITE_OK == pExecResult->m_nErrorCode)
 		{
 			pExecResult->m_nErrorCode = nErrorCode;
 		}
 	}
 
-	return SysSmartPtr<ExecResult>(pExecResult);
+	return pExecResult;
 }
 
 

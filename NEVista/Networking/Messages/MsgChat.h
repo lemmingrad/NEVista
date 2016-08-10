@@ -1,26 +1,28 @@
-#ifndef _SQLITE_TABLE_H_
-#define _SQLITE_TABLE_H_
+#ifndef _MSG_CHAT_H_
+#define _MSG_CHAT_H_
 #pragma once
 
-
 //----------------------------------------------------------//
-// SQLITETABLE.H
+// MSGCHAT.H
 //----------------------------------------------------------//
 //-- Description			
-// A SQLite table wrapper.
+// A text chat message.
+// Includes shouts, talk and whispers.
 //----------------------------------------------------------//
 
 
 #include "Types.h"
 #include "FixedString.h"
-#include "SysSmartPtr.h"
-#include <list>
-#include <string>
+#include "Message.h"
 
 
 //----------------------------------------------------------//
 // DEFINES
 //----------------------------------------------------------//
+
+
+#define MSG_CHAT_MAX_SIZE (980)
+
 
 //----------------------------------------------------------//
 // ENUMS
@@ -31,7 +33,7 @@
 //----------------------------------------------------------//
 
 
-class CSQLiteDatabase;
+class CSerializer;
 
 
 //----------------------------------------------------------//
@@ -43,33 +45,41 @@ class CSQLiteDatabase;
 //----------------------------------------------------------//
 
 
-class CSQLiteTable
+class CMsgChat : public CMessage
 {
+		DECLARE_MESSAGE_REGISTRAR(CMsgChat, 'chat');
+
 	public:
-	
-		struct ExecResult
+
+		struct Type
 		{
-			typedef std::list<std::string>		TValues;
-			typedef std::list<TValues>			TRows;
-
-			ExecResult();
-			~ExecResult();
-			
-			TRows					m_Rows;
-			s32						m_nErrorCode;	
-			s8*						m_pStrError;
+			enum Enum 
+			{
+				Chat = 0,
+				Shout,
+				Whisper,
+				Server
+			};
 		};
-			
-		CSQLiteTable(CSQLiteDatabase& database, const s8* strTableName);
-		virtual ~CSQLiteTable();
 
-		SysSmartPtr<ExecResult>		Exec(const s8* strCommands);
-		static s32					ExecCallback(void* pResult, s32 nValues, s8** ppValues, s8** ppNames);
+		CMsgChat(Type::Enum eType);
+		CMsgChat();
+		virtual ~CMsgChat();
 
-	protected:
+		//-- CMessage
+		virtual size_t						Serialize(CSerializer& serializer);
 
-		CSQLiteDatabase&			m_database;
-		FixedString<64>				m_strTableName;
+		Type::Enum							GetType(void) const;
+		void								SetType(Type::Enum eType);
+
+		const s8*							GetText(void) const;
+		void								SetText(const s8* strBuffer);
+
+	private:
+
+		Type::Enum							m_eType;
+		FixedString<MSG_CHAT_MAX_SIZE>		m_strText;
+		u16									m_nStrLength;
 };
 
 
@@ -81,4 +91,4 @@ class CSQLiteTable
 // EOF
 //----------------------------------------------------------//
 
-#endif //_SQLITE_TABLE_H_
+#endif //_MSG_CHAT_H_

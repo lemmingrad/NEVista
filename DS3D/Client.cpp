@@ -1,8 +1,10 @@
 //----------------------------------------------------------//
-// GAME.CPP
+// CLIENT.CPP
 //----------------------------------------------------------//
 //-- Description
-// Main game initialise/shutdown/loop and main()
+// Client connection wrapper. Contains a TCP connection,
+// message queues and utilities for handling incoming/outgoing
+// messages.
 //----------------------------------------------------------//
 
 
@@ -17,6 +19,8 @@
 #include "Messages/MsgServerKeyExchange.h"
 #include "Messages/MsgLoginRequest.h"
 #include "Messages/MsgLoginResponse.h"
+
+#include "Ini.h"
 
 
 //----------------------------------------------------------//
@@ -46,25 +50,9 @@ CClient::~CClient()
 }
 
 
-CClient::Error::Enum CClient::Reset(CClient::Error::Enum eError)
-{
-	m_eState = State::Disconnected;
-
-	m_recvMessageList.clear();
-	m_sendMessageList.clear();
-
-	if (IS_PTR(m_pConnection.ptr()))
-	{
-		m_pConnection->Close(CTCPConnection::Error::Ok);
-		m_pConnection = SysSmartPtr<CTCPConnection>();
-	}
-
-	return eError;
-}
-
-
 CClient::Error::Enum CClient::Initialise(void)
 {
+	m_RecvMessageHandlerArray.clear();
 	//-- Register a handler to process incoming messages related to logging in.
 	AddRecvMessageHandler(CMsgServerKeyExchange::kType, &CClient::ClientStateChangeHandler, this);
 	AddRecvMessageHandler(CMsgLoginResponse::kType, &CClient::ClientStateChangeHandler, this);
@@ -81,6 +69,23 @@ CClient::Error::Enum CClient::Shutdown(void)
 	m_RecvMessageHandlerArray.clear();
 
 	return Reset(Error::Ok);
+}
+
+
+CClient::Error::Enum CClient::Reset(CClient::Error::Enum eError)
+{
+	m_eState = State::Disconnected;
+
+	m_recvMessageList.clear();
+	m_sendMessageList.clear();
+
+	if (IS_PTR(m_pConnection.ptr()))
+	{
+		m_pConnection->Close(CTCPConnection::Error::Ok);
+		m_pConnection = SysSmartPtr<CTCPConnection>();
+	}
+
+	return eError;
 }
 
 
@@ -183,15 +188,16 @@ CClient::Error::Enum CClient::Update(void)
 }
 
 
-bool CClient::ByeHandler(CMessage::Type nType, void* pData, bool bAlreadyHandled)
+s32 CClient::ByeHandler(SysSmartPtr<CMessage> pMessage, void* pData, bool bAlreadyHandled)
 {
+	CMessage::Type nType = pMessage->GetType();
 	assert(CMsgBye::kType == nType);
 
 	if (CMsgBye::kType == nType)
 	{
 		if (IS_NULL_PTR(pData))
 		{
-			return false;
+			return -1;
 		}
 			
 		//-- Any Bye received will already have been acknowledged and responded to internally.
@@ -199,15 +205,17 @@ bool CClient::ByeHandler(CMessage::Type nType, void* pData, bool bAlreadyHandled
 		//-- (which is no action at the moment.)
 		//-- Some time after receiving MsgBye, the connection UpdateRecv() function will return Error::Closed,
 		//-- and _that_ is the correct place to handle cleanup, _not_ here.
-		return false;
+		return 1;
 	}
 
-	return false;
+	return 0;
 }
 
 
-bool CClient::ClientStateChangeHandler(CMessage::Type nType, void* pData, bool bAlreadyHandled)
+s32 CClient::ClientStateChangeHandler(SysSmartPtr<CMessage> pMessage, void* pData, bool bAlreadyHandled)
 {
+	CMessage::Type nType = pMessage->GetType();
+
 	switch (nType)
 	{
 		case CMsgServerKeyExchange::kType:
@@ -215,24 +223,43 @@ bool CClient::ClientStateChangeHandler(CMessage::Type nType, void* pData, bool b
 			CClient* _this = (CClient*)pData;
 			if (IS_NULL_PTR(pData))
 			{
-				return false;
+				return -1;
 			}
 
 			assert(State::Connected == _this->m_eState);
 			assert(IS_FALSE(bAlreadyHandled));
 
-			if (State::Connected == _this->m_eState)
+			if (State::Connected != _this->m_eState)
 			{			
-				//-- We can progress to logging in.
-				CMsgLoginRequest* pLogin = new CMsgLoginRequest();
-				if (IS_PTR(pLogin))
-				{
-					_this->SendMessage(SysSmartPtr<CMessage>(pLogin));
-					_this->m_eState = State::LoggingIn;
-
-					return true;
-				}
+				return -1;
 			}
+
+			//-- We can progress to logging in.
+			CIni ini;
+			ini.Initialise();
+			if (IS_FALSE(ini.Load("Data/config.ini")))
+			{
+				gDebugLog.Printf("Failed to open config.ini.");
+				return -1;
+			}
+
+			SysSmartPtr<CMessage> pMessage(new CMsgLoginRequest());
+			CMsgLoginRequest* pLogin = (CMsgLoginRequest*)pMessage.ptr();
+			if (IS_NULL_PTR(pLogin))
+			{
+				return -1;
+			}
+
+			pLogin->SetName(ini.ReadString("Network", "Email"));
+			pLogin->SetPassword(ini.ReadString("Network", "Password"));
+
+			if (Error::Ok != _this->SendMessage(pMessage))
+			{
+				return -1;
+			}
+			
+			_this->m_eState = State::LoggingIn;
+			return 1;
 		}
 		break;
 
@@ -241,19 +268,20 @@ bool CClient::ClientStateChangeHandler(CMessage::Type nType, void* pData, bool b
 			CClient* _this = (CClient*)pData;
 			if (IS_NULL_PTR(pData))
 			{
-				return false;
+				return -1;
 			}
 
 			assert(State::LoggingIn == _this->m_eState);
 			assert(IS_FALSE(bAlreadyHandled));
 
-			if (State::LoggingIn == _this->m_eState)
+			if (State::LoggingIn != _this->m_eState)
 			{	
-				//-- We can progress to logged in.
-				_this->m_eState = State::LoggedIn;
-
-				return true;
+				return -1;
 			}
+
+			//-- We can progress to logged in.
+			_this->m_eState = State::LoggedIn;
+			return 1;
 		}
 		break;
 
@@ -261,7 +289,7 @@ bool CClient::ClientStateChangeHandler(CMessage::Type nType, void* pData, bool b
 		break;
 	}
 
-	return false;
+	return 0;
 }
 
 
@@ -308,16 +336,17 @@ CClient::Error::Enum CClient::Connect(const s8* strIP, const s8* strPort)
 //-- Trigger a nice disconnect.
 CClient::Error::Enum CClient::Disconnect(void)
 {
-	//-- Simply add a CMsgBye(Reason::NormalDisconnect) to the sendList.
+	//-- Simply add a CMsgBye(Reason::ClientDisconnected) to the sendList.
 	//-- CTCPConnection will do the rest.
 
-	CMsgBye* pBye = new CMsgBye(CMsgBye::Reason::NormalDisconnect);
-	if (IS_NULL_PTR(pBye))
+	SysSmartPtr<CMessage> pMessage(new CMsgBye(CMsgBye::Reason::ClientDisconnected));
+	CMsgBye* pBye = (CMsgBye*)pMessage.ptr();
+	if (IS_PTR(pBye))
 	{
-		return Reset(Error::BadFail);
+		return SendMessage(pMessage);
 	}
 
-	return SendMessage(SysSmartPtr<CMessage>(pBye));
+	return Reset(Error::BadFail);
 }
 
 
@@ -342,7 +371,7 @@ CClient::Error::Enum CClient::RemoveRecvMessageHandler(CMessage::Type nType, TRe
 		}
 	}
 
-	return Error::NotFound;
+	return Error::NotRegistered;
 }
 
 
@@ -350,7 +379,7 @@ CClient::Error::Enum CClient::NotifyRecvMessageHandlers(void)
 {
 	while (m_recvMessageList.size() > 0)
 	{
-		SysSmartPtr<CMessage>& pMessage = m_recvMessageList.front();
+		SysSmartPtr<CMessage> pMessage = m_recvMessageList.front();
 		CMessage::Type nType = pMessage->GetType();
 
 		TRecvMessageHandlerRecordList recordList = m_RecvMessageHandlerArray[nType];
@@ -360,7 +389,15 @@ CClient::Error::Enum CClient::NotifyRecvMessageHandlers(void)
 		{
 			if (IS_PTR(it->m_pCB))
 			{
-				bAlreadyProcessed |= it->m_pCB(nType, it->m_pData, bAlreadyProcessed);
+				s32 nRes = it->m_pCB(pMessage, it->m_pData, bAlreadyProcessed);
+				if (nRes > 0)
+				{			
+					bAlreadyProcessed = true;
+				}
+				else if (nRes < 0)
+				{
+					return Error::BadFail;
+				}
 			}
 		}
 
@@ -373,9 +410,13 @@ CClient::Error::Enum CClient::NotifyRecvMessageHandlers(void)
 
 CClient::Error::Enum CClient::SendMessage(SysSmartPtr<CMessage> pMessage)
 {
-	m_sendMessageList.push_back(pMessage);		
+	if (IS_PTR(pMessage.ptr()))
+	{
+		m_sendMessageList.push_back(pMessage);		
+		return Error::Ok;
+	}
 
-	return Error::Ok;
+	return Error::NullMessage;
 }
 
 
