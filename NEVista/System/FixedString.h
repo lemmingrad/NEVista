@@ -121,7 +121,16 @@ class FixedString
 		{
 			return Append(in);
 		}
-	
+
+		s32 Format(const s8 *strIn, ...)
+		{
+			va_list ArgList;
+			va_start(ArgList, strIn);
+			s32 nLen = SysString::Vsprintf(m_strBuffer, S, strIn, ArgList);
+			va_end(ArgList);
+			return nLen;
+		}
+
 	private:
 
 		s8		m_strBuffer[S];

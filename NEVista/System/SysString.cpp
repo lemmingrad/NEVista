@@ -488,6 +488,11 @@ s32 SysString::Vsprintf(s8* strDest, size_t nDestSize, const s8* strFormating, v
 #else
 
 	nSymbolsConverted = vsprintf(strDest, strFormating, ArgList);
+	if (nSymbolsConverted >= nDestSize)
+	{
+		//-- We overflowed the buffer, which is really bad.
+		nSymbolsConverted = -1;
+	}
 
 #endif //SYSSTRING_USES_SAFE_STRINGS
 
