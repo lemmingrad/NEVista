@@ -93,8 +93,15 @@ class CSimpleBuffer
 						else
 						{
 							//-- Copy failed.
+							SysMemory::Memclear(m_Buffer, nInSize);
 						}
 					}
+					else
+					{
+						//-- Nothing to copy.
+						SysMemory::Memclear(m_Buffer, nInSize);
+					}
+
 					m_nFilledSize += nInSize;
 					return m_Buffer;
 				}
@@ -121,8 +128,15 @@ class CSimpleBuffer
 						else
 						{
 							//-- Copy failed.
+							SysMemory::Memclear(pBuf, nInSize);
 						}
 					}
+					else
+					{
+						//-- Nothing to copy.
+						SysMemory::Memclear(pBuf, nInSize);
+					}
+
 					m_nFilledSize += nInSize;
 					return pBuf;
 				}
