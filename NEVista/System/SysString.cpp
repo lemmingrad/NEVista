@@ -314,7 +314,7 @@ s8* SysString::Strtok(s8* strToken, const s8* strDelimiters, s8*& strNextToken)
 // SysString::Strstr
 //----------------------------------------------------------//
 //-- Description
-// Find the first occurance of a substring inside a larger
+// Find the first occurrence of a substring inside a larger
 // string.
 //----------------------------------------------------------//
 const s8* SysString::Strstr(const s8* strSrc, const s8* strFind)
@@ -451,6 +451,7 @@ s32 SysString::Sprintf(s8* strDest, size_t nDestSize, const s8* strFormating, ..
 		|| IS_ZERO(nDestSize) 
 		|| IS_TRUE(IsEmpty(strFormating)) )
 	{
+		//-- Be consistent with the behaviour of sprintf_s, which is to return -1 for a dodgy parameter.
 		return nSymbolsConverted;
 	}
 
@@ -472,26 +473,32 @@ s32 SysString::Sprintf(s8* strDest, size_t nDestSize, const s8* strFormating, ..
 //----------------------------------------------------------//
 s32 SysString::Vsprintf(s8* strDest, size_t nDestSize, const s8* strFormating, va_list ArgList)
 {
-	s32 nSymbolsConverted = -1;
+	s32 nSymbolsConverted = 0;
 	
-	if ( IS_NULL_PTR(strDest)
-		|| IS_ZERO(nDestSize) 
-		|| IS_TRUE(IsEmpty(strFormating)) )
-	{
-		return nSymbolsConverted;
-	}
-
 #if defined(SYSSTRING_USES_SAFE_STRINGS)
 
 	nSymbolsConverted = vsprintf_s(strDest, nDestSize, strFormating, ArgList);
 
 #else
 
-	nSymbolsConverted = vsprintf(strDest, strFormating, ArgList);
+	//-- Emulate the safe string version
+	if (IS_NULL_PTR(strDest)
+		|| IS_ZERO(nDestSize)
+		|| IS_TRUE(IsEmpty(strFormating)))
+	{
+		//-- Be consistent with the behavior of vsprintf_s.
+		nSymbolsConverted = 0;
+	}
+	else
+	{
+		nSymbolsConverted = vsnprintf(strDest, nDestSize, strFormating, ArgList);
+	}
+
 	if (nSymbolsConverted >= nDestSize)
 	{
-		//-- We overflowed the buffer, which is really bad.
-		nSymbolsConverted = -1;
+		//-- We would have overflowed the buffer if not for vsnprintf instead of vsprintf
+		//-- Be consistent with the behaviour of vsprintf_s.
+		nSymbolsConverted = 0;
 	}
 
 #endif //SYSSTRING_USES_SAFE_STRINGS
@@ -539,7 +546,7 @@ s32 SysString::Atoi(const s8* strBuffer)
 //----------------------------------------------------------//
 SysString::Hash SysString::GenerateHash(const s8* strBuffer)
 {
-	if (IS_TRUE(SysString::IsEmpty(strBuffer)))
+	if (IS_TRUE(IsEmpty(strBuffer)))
 	{
 		//-- 0 length string
 		return INVALID_HASH;
@@ -655,7 +662,7 @@ size_t SysString::Base64EncodedSize(size_t nDataSize)
 //----------------------------------------------------------//
 size_t SysString::Base64DecodedSize(const s8* strEncoded, size_t nStrLength)
 {
-	if ( IS_TRUE(SysString::IsEmpty(strEncoded))
+	if ( IS_TRUE(IsEmpty(strEncoded))
 		|| IS_ZERO(nStrLength) 
 		|| (0 != (nStrLength % 4)) )
 	{
@@ -764,7 +771,7 @@ size_t SysString::KeyEncode(s8* strBuffer, size_t nStrBufferSize, const void* pD
 //----------------------------------------------------------//
 size_t SysString::KeyDecode(void* pDataBuffer, size_t nDataBufferSize, const s8* strEncoded, size_t nStrLength, SysString::Key key)
 {
-	if ( IS_TRUE(SysString::IsEmpty(strEncoded))
+	if ( IS_TRUE(IsEmpty(strEncoded))
 		|| IS_ZERO(nStrLength) 
 		|| IS_NULL_PTR(pDataBuffer) 
 		|| IS_ZERO(nDataBufferSize) 
