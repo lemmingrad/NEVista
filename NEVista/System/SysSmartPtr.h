@@ -114,7 +114,7 @@ class SysSmartPtr
 			return m_pPtr;
 		}
 
-		T* ptr(void)
+		T* get(void)
 		{
 			return m_pPtr;
 		}
