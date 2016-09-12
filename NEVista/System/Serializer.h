@@ -11,6 +11,7 @@
 
 
 #include "Types.h"
+#include "FixedString.h"
 
 
 //----------------------------------------------------------//
@@ -45,7 +46,7 @@ class CSerializer
 		};
 
 		CSerializer(Mode::Enum eMode) : m_eMode(eMode) {}
-		virtual ~CSerializer() {};
+		virtual ~CSerializer() {}
 
 		virtual	size_t			SerializeF32(f32& fValue, u32 nFourCC = 'f32 ') = 0; 
 		virtual	size_t			SerializeF64(f64& fValue, u32 nFourCC = 'f64 ') = 0; 
@@ -59,6 +60,8 @@ class CSerializer
 		virtual	size_t			SerializeU64(u64& nValue, u32 nFourCC = 'u64 ') = 0; 
 		virtual	size_t			SerializeBitfield(bitfield& nFlags, u32 nFourCC = 'bits') = 0; 
 		virtual size_t			SerializeBytes(u8* pData, size_t nDataSize, u32 nFourCC = 'data') = 0;
+		virtual size_t			SerializeBool(bool& bValue, u32 nFourCC = 'bool') = 0;
+		virtual size_t			SerializeFixedString(FixedString& fixedString, u32 nFourCC = "fstr") = 0;
 
 		Mode::Enum				GetMode(void) const { return m_eMode; }
 

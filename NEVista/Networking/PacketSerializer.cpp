@@ -784,5 +784,64 @@ size_t CPacketSerializer::SerializeBitfield(bitfield& nFlags, u32 nFourCC)
 
 
 //----------------------------------------------------------//
+// CPacketSerializer::SerializeBool
+//----------------------------------------------------------//
+size_t CPacketSerializer::SerializeBool(bool& bValue, u32 nFourCC)
+{
+	u8 nByte;
+
+	if (Mode::Serializing == m_eMode)
+	{
+		nByte = bValue ? 1 : 0;
+		return SerializeU8(nByte, nFourCC);
+	}
+	else 
+	{
+		size_t nSize = SerializeU8(nByte, nFourCC);
+		bValue = (nByte != 0);
+		return nSize;
+	}
+}
+
+
+//----------------------------------------------------------//
+// CPacketSerializer::SerializeFixedString
+//----------------------------------------------------------//
+size_t CPacketSerializer::SerializeFixedString(FixedString& fixedString, u32 nFourCC)
+{
+	u64 nSize = 0;
+	size_t nReturn = 0;
+
+	if (Mode::Serializing == m_eMode)
+	{
+		nSize = (u64)fixedString.Size();
+		nReturn += SerializeU64(nSize, "slen");
+		if (Error::Ok == m_eError)
+		{
+			nReturn += SerializeBytes(fixedString.Buffer(), fixedString.Size(), nFourCC);
+		}
+	}
+	else
+	{
+		nReturn += SerializeU64(nSize, "slen");
+		if (Error::Ok == m_Error)
+		{
+			if (fixedString.Size() >= nSize)
+			{
+				nReturn += SerializeBytes(fixedString.Buffer(), fixedString.Size(), nFourCC);
+			}
+			else
+			{
+				if (IS_PTR(SerializeReserve(nSize)))
+				{
+					nReturn += nSize;
+				}
+			}
+		}
+	}
+}
+
+
+//----------------------------------------------------------//
 // EOF
 //----------------------------------------------------------//
