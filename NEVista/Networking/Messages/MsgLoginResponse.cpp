@@ -57,7 +57,7 @@ CMsgLoginResponse::~CMsgLoginResponse()
 //----------------------------------------------------------//
 //--Description
 //----------------------------------------------------------//
-size_t CMsgLoginResponse::Serialize(CSerializer& serializer)
+size_t CMsgLoginResponse::Serialize(ISerializer& serializer)
 {
 	size_t nSize = CMessage::Serialize(serializer);
 	return nSize;

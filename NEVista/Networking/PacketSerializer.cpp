@@ -8,8 +8,9 @@
 
 #include "PacketSerializer.h"
 #include "Types.h"
+#include "FixedString.h"
 #include "SysMemory.h"
-#include "Serializer.h"
+#include "ISerializer.h"
 
 
 //----------------------------------------------------------//
@@ -24,7 +25,7 @@
 // CPacketSerializer::CPacketSerializer
 //----------------------------------------------------------//
 CPacketSerializer::CPacketSerializer(Mode::Enum eMode, u8* pBuffer, size_t nSize, size_t nOffset)
-: CSerializer(eMode)
+: ISerializer(eMode)
 , m_pBuffer(pBuffer)
 , m_nSize(nSize)
 , m_nOffset(nOffset)
@@ -807,15 +808,16 @@ size_t CPacketSerializer::SerializeBool(bool& bValue, u32 nFourCC)
 //----------------------------------------------------------//
 // CPacketSerializer::SerializeFixedString
 //----------------------------------------------------------//
+/*
 size_t CPacketSerializer::SerializeFixedString(FixedString& fixedString, u32 nFourCC)
 {
-	u64 nSize = 0;
+	u32 nSize = 0;
 	size_t nReturn = 0;
 
 	if (Mode::Serializing == m_eMode)
 	{
 		nSize = (u64)fixedString.Size();
-		nReturn += SerializeU64(nSize, "slen");
+		nReturn += SerializeU32(nSize, 'slen');
 		if (Error::Ok == m_eError)
 		{
 			nReturn += SerializeBytes(fixedString.Buffer(), fixedString.Size(), nFourCC);
@@ -823,8 +825,8 @@ size_t CPacketSerializer::SerializeFixedString(FixedString& fixedString, u32 nFo
 	}
 	else
 	{
-		nReturn += SerializeU64(nSize, "slen");
-		if (Error::Ok == m_Error)
+		nReturn += SerializeU32(nSize, 'slen');
+		if (Error::Ok == m_eError)
 		{
 			if (fixedString.Size() >= nSize)
 			{
@@ -840,6 +842,7 @@ size_t CPacketSerializer::SerializeFixedString(FixedString& fixedString, u32 nFo
 		}
 	}
 }
+*/
 
 
 //----------------------------------------------------------//

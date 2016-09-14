@@ -61,7 +61,7 @@ CMsgMotd::~CMsgMotd()
 //----------------------------------------------------------//
 //--Description
 //----------------------------------------------------------//
-size_t CMsgMotd::Serialize(CSerializer& serializer)
+size_t CMsgMotd::Serialize(ISerializer& serializer)
 {
 	size_t nSize = CMessage::Serialize(serializer);
 
@@ -75,7 +75,7 @@ size_t CMsgMotd::Serialize(CSerializer& serializer)
 
 		nSize += serializer.SerializeBytes(pBuffer, m_nMotdLength, 'motd');
 		
-		if (CSerializer::Mode::Deserializing == serializer.GetMode())
+		if (ISerializer::Mode::Deserializing == serializer.GetMode())
 		{
 			//-- If deserializing, make sure the string is null terminated.
 			pBuffer[m_nMotdLength] = 0;

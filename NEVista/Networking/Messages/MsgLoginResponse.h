@@ -49,7 +49,7 @@ class CMsgLoginResponse : public CMessage
 		virtual ~CMsgLoginResponse();
 
 		//-- CMessage
-		virtual size_t						Serialize(CSerializer& serializer);
+		virtual size_t						Serialize(ISerializer& serializer);
 
 	private:
 };

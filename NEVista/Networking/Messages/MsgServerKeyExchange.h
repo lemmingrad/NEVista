@@ -50,7 +50,7 @@ class CMsgServerKeyExchange : public CMessage
 		virtual ~CMsgServerKeyExchange();
 
 		//-- CMessage
-		virtual size_t			Serialize(CSerializer& serializer);
+		virtual size_t			Serialize(ISerializer& serializer);
 
 		void					SetKey(u8 nServerKey);
 		u8						GetKey(void) const;

@@ -59,7 +59,7 @@ CMsgClientKeyExchange::~CMsgClientKeyExchange()
 //----------------------------------------------------------//
 //--Description
 //----------------------------------------------------------//
-size_t CMsgClientKeyExchange::Serialize(CSerializer& serializer)
+size_t CMsgClientKeyExchange::Serialize(ISerializer& serializer)
 {
 	size_t nSize = CMessage::Serialize(serializer);
 	nSize += serializer.SerializeU8(m_nClientKey, 'ckey');

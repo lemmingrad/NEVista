@@ -71,7 +71,7 @@ CMsgLoginRequest::~CMsgLoginRequest()
 //----------------------------------------------------------//
 //--Description
 //----------------------------------------------------------//
-size_t CMsgLoginRequest::Serialize(CSerializer& serializer)
+size_t CMsgLoginRequest::Serialize(ISerializer& serializer)
 {
 	size_t nSize = CMessage::Serialize(serializer);
 
@@ -90,7 +90,7 @@ size_t CMsgLoginRequest::Serialize(CSerializer& serializer)
 		nSize += serializer.SerializeBytes(pNameBuffer, m_nStrNameLength, 'name');
 		nSize += serializer.SerializeBytes(pPasswordBuffer, m_nStrPasswordLength, 'pass');
 	
-		if (CSerializer::Mode::Deserializing == serializer.GetMode())
+		if (ISerializer::Mode::Deserializing == serializer.GetMode())
 		{
 			//-- If deserializing, make sure the string is null terminated.
 			pNameBuffer[m_nStrNameLength] = 0;

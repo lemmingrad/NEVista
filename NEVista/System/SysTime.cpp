@@ -10,6 +10,9 @@
 #include "Types.h"
 #include <ctime>
 #include "SysString.h"
+#if defined(WIN32)
+#	include <windows.h>
+#endif
 
 
 //----------------------------------------------------------//

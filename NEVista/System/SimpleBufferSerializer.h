@@ -34,7 +34,7 @@
 class CSimpleBuffer;
 
 
-class CSimpleBufferSerializer
+class CSimpleBufferSerializer : public ISerializer
 {
 	public:
 
@@ -51,6 +51,7 @@ class CSimpleBufferSerializer
 		CSimpleBufferSerializer(CSimpleBuffer& Buffer, bool bCompress = false, bool bIncludeFourCCs = false);
 		virtual ~CSimpleBufferSerializer();
 
+		// ISerializable
 		virtual	size_t			SerializeF32(f32& fValue, u32 nFourCC = 'f32 ');
 		virtual	size_t			SerializeF64(f64& fValue, u32 nFourCC = 'f64 ');
 		virtual	size_t			SerializeS32(s32& nValue, u32 nFourCC = 's32 ');
@@ -64,7 +65,8 @@ class CSimpleBufferSerializer
 		virtual	size_t			SerializeBitfield(bitfield& nFlags, u32 nFourCC = 'bits');
 		virtual size_t			SerializeBytes(u8* pData, size_t nDataSize, u32 nFourCC = 'data');
 		virtual size_t			SerializeBool(bool& bValue, u32 nFourCC = 'bool');
-		virtual size_t			SerializeFixedString(FixedString& fixedString, u32 nFourCC = "fstr"); 
+//		virtual size_t			SerializeFixedString(FixedString& fixedString, u32 nFourCC = "fstr"); 
+		// ~ISerializable
 
 		Error::Enum				GetError() const;
 

@@ -56,7 +56,7 @@ class CMsgMotd : public CMessage
 		virtual ~CMsgMotd();
 
 		//-- CMessage
-		virtual size_t						Serialize(CSerializer& serializer);
+		virtual size_t						Serialize(ISerializer& serializer);
 
 		const s8*							GetText(void) const;
 		void								SetText(const s8* strBuffer);

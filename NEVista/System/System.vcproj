@@ -158,6 +158,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\SimpleBufferSerializer.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\SysDebugLog.cpp"
 				>
 			</File>
@@ -260,19 +264,23 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ISerializable.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ISerializer.h"
+				>
+			</File>
+			<File
 				RelativePath=".\Log.h"
 				>
 			</File>
 			<File
-				RelativePath=".\Serialized.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Serializer.h"
-				>
-			</File>
-			<File
 				RelativePath=".\SimpleBuffer.h"
+				>
+			</File>
+			<File
+				RelativePath=".\SimpleBufferSerializer.h"
 				>
 			</File>
 			<File

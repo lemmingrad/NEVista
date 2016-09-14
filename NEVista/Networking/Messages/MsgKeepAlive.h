@@ -50,7 +50,7 @@ class CMsgKeepAlive : public CMessage
 		virtual ~CMsgKeepAlive();
 
 		//-- CMessage
-		virtual size_t						Serialize(CSerializer& serializer);
+		virtual size_t						Serialize(ISerializer& serializer);
 
 	private:
 };

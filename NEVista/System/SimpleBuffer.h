@@ -81,7 +81,7 @@ class CSimpleBuffer
 			return Size() - UsedSize();
 		}
 
-		Error::Enum GetError() const
+		typename Error::Enum GetError() const
 		{
 			return m_eError;
 		}
@@ -260,9 +260,9 @@ class CSimpleBuffer
 
 	private:
 
-		u8				m_Buffer[S];
-		size_t			m_nFilledSize;
-		Error::Enum		m_eError;
+		u8						m_Buffer[S];
+		size_t					m_nFilledSize;
+		typename Error::Enum	m_eError;
 };
 
 

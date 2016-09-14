@@ -14,7 +14,7 @@
 #include "Types.h"
 #include "SysSmartPtr.h"
 #include "SysString.h"
-#include "Serialized.h"
+#include "ISerializable.h"
 #include "PacketSerializer.h"
 #include "Message.h"
 
@@ -204,7 +204,7 @@ size_t CPacket::GetDataSize(void) const
 //----------------------------------------------------------//
 CPacket::Error::Enum CPacket::Serialize(CPacketSerializer& serializer)
 {
-	if (CSerializer::Mode::Serializing == serializer.GetMode())
+	if (ISerializer::Mode::Serializing == serializer.GetMode())
 	{
 		//-- Serializing
 		m_nVersion = Version::Current;
@@ -502,7 +502,7 @@ CPacket::Error::Enum CPacket::AddMessages(TMessageList& sendList, TMessageList::
 			break;
 		}
 
-		CPacketSerializer messageSerializer(CSerializer::Mode::Serializing, m_DataBuffer.Buffer() + m_DataBuffer.UsedSize(), m_DataBuffer.UnusedSize());
+		CPacketSerializer messageSerializer(ISerializer::Mode::Serializing, m_DataBuffer.Buffer() + m_DataBuffer.UsedSize(), m_DataBuffer.UnusedSize());
 		pMessage->Serialize(messageSerializer);
 
 		eSerError = messageSerializer.GetError();
@@ -556,7 +556,7 @@ CPacket::Error::Enum CPacket::GetMessages(TMessageList& tempList)
 	tempList.clear();
 
 	u16 nProcessedMessages = 0;
-	CPacketSerializer messageDeserializer(CSerializer::Mode::Deserializing, m_DataBuffer.Buffer(), m_DataBuffer.UsedSize());
+	CPacketSerializer messageDeserializer(ISerializer::Mode::Deserializing, m_DataBuffer.Buffer(), m_DataBuffer.UsedSize());
 	CPacketSerializer::Error::Enum eSerError = CPacketSerializer::Error::Ok;
 	
 	while ( (CPacketSerializer::Error::Ok == eSerError)

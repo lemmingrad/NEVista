@@ -39,7 +39,7 @@ class SysTime
 {
 	public:
 
-		static time_t Time();
+		static time_t Time(time_t* pTime);
 		static s8* Ctime(s8* strDest, size_t nDestSize, const time_t* pTime);
 
 		static u64 GetTicks();

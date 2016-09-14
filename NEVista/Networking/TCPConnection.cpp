@@ -158,7 +158,7 @@ CTCPConnection::Error::Enum CTCPConnection::UpdateRecv(TMessageList& recvList, T
 		&& (m_RecvBuffer.UsedSize() > 0) )
 	{
 		CPacket packet(m_Key);
-		CPacketSerializer packetDeserializer(CSerializer::Mode::Deserializing, m_RecvBuffer.Buffer(), m_RecvBuffer.UsedSize());
+		CPacketSerializer packetDeserializer(ISerializer::Mode::Deserializing, m_RecvBuffer.Buffer(), m_RecvBuffer.UsedSize());
 
 		TMessageList packetMessagesList;
 
@@ -199,7 +199,7 @@ CTCPConnection::Error::Enum CTCPConnection::UpdateRecv(TMessageList& recvList, T
 								//-- Incoming packet contained a Bye message.
 								//-- Send a Bye-ack back.
 								SysSmartPtr<CMessage> pResponse(new CMsgBye(CMsgBye::Reason::ByeAcknowledged));
-								if (IS_PTR(pResponse.ptr()))
+								if (IS_PTR(pResponse.get()))
 								{
 									sendList.push_back(pResponse);
 								}
@@ -211,7 +211,7 @@ CTCPConnection::Error::Enum CTCPConnection::UpdateRecv(TMessageList& recvList, T
 								//-- This means we must be the client.
 								//-- Correct response is to send a ClientKeyExchange back to server.
 								SysSmartPtr<CMessage> pResponse(new CMsgClientKeyExchange());
-								CMsgClientKeyExchange* pKeyEx = (CMsgClientKeyExchange*)pResponse.ptr();
+								CMsgClientKeyExchange* pKeyEx = (CMsgClientKeyExchange*)pResponse.get();
 								if (IS_PTR(pKeyEx))
 								{
 									pKeyEx->SetKey(m_nClientRnd);
@@ -225,14 +225,14 @@ CTCPConnection::Error::Enum CTCPConnection::UpdateRecv(TMessageList& recvList, T
 								//-- This means we must be the server.
 								//-- Correct response is to send a ServerKeyExchange back to client.
 								//-- And we must generate an encryption key (which should be identical on client and server).
-								CMsgClientKeyExchange* pIn = (CMsgClientKeyExchange*)pMessage.ptr();
+								CMsgClientKeyExchange* pIn = (CMsgClientKeyExchange*)pMessage.get();
 								if (IS_PTR(pIn))
 								{
 									m_nClientRnd = pIn->GetKey();
 									m_Key = SysString::GenerateKey(m_nServerRnd, m_nClientRnd);
 							
 									SysSmartPtr<CMessage> pResponse(new CMsgServerKeyExchange());
-									CMsgServerKeyExchange* pKeyEx = (CMsgServerKeyExchange*)pResponse.ptr();
+									CMsgServerKeyExchange* pKeyEx = (CMsgServerKeyExchange*)pResponse.get();
 									if (IS_PTR(pKeyEx))
 									{
 										pKeyEx->SetKey(m_nServerRnd);
@@ -246,7 +246,7 @@ CTCPConnection::Error::Enum CTCPConnection::UpdateRecv(TMessageList& recvList, T
 								//-- Incoming packet contained a ServerKeyExchange message. 
 								//-- This means we must be the client.
 								//-- Generate an encryption key (which should be identical on client and server).
-								CMsgServerKeyExchange* pIn = (CMsgServerKeyExchange*)pMessage.ptr();
+								CMsgServerKeyExchange* pIn = (CMsgServerKeyExchange*)pMessage.get();
 								if (IS_PTR(pIn))
 								{
 									m_nServerRnd = pIn->GetKey();
@@ -379,7 +379,7 @@ CTCPConnection::Error::Enum CTCPConnection::UpdateSend(TMessageList& sendList)
 	{
 		//-- Add messages to packet.
 		CPacket packet(m_Key);
-		CPacketSerializer packetSerializer(CSerializer::Mode::Serializing, m_SendBuffer.Buffer() + m_SendBuffer.UsedSize(), m_SendBuffer.UnusedSize());
+		CPacketSerializer packetSerializer(ISerializer::Mode::Serializing, m_SendBuffer.Buffer() + m_SendBuffer.UsedSize(), m_SendBuffer.UnusedSize());
 
 		TMessageList::iterator after;
 

@@ -33,7 +33,7 @@
 //----------------------------------------------------------//
 
 
-class CSerializer;
+class ISerializer;
 
 
 //----------------------------------------------------------//
@@ -56,7 +56,7 @@ class CMsgLoginRequest : public CMessage
 		virtual ~CMsgLoginRequest();
 
 		//-- CMessage
-		virtual size_t									Serialize(CSerializer& serializer);
+		virtual size_t									Serialize(ISerializer& serializer);
 
 		const s8*										GetName(void) const;
 		void											SetName(const s8* strBuffer);

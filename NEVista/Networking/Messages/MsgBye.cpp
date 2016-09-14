@@ -96,7 +96,7 @@ CMsgBye::~CMsgBye()
 //----------------------------------------------------------//
 //--Description
 //----------------------------------------------------------//
-size_t CMsgBye::Serialize(CSerializer& serializer)
+size_t CMsgBye::Serialize(ISerializer& serializer)
 {
 	size_t nSize = CMessage::Serialize(serializer);
 
@@ -111,7 +111,7 @@ size_t CMsgBye::Serialize(CSerializer& serializer)
 
 		nSize += serializer.SerializeBytes(pBuffer, m_nStrLength, 'srsn');
 		
-		if (CSerializer::Mode::Deserializing == serializer.GetMode())
+		if (ISerializer::Mode::Deserializing == serializer.GetMode())
 		{
 			//-- If deserializing, make sure the string is null terminated.
 			pBuffer[m_nStrLength] = 0;

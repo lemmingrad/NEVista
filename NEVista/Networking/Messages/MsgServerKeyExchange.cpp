@@ -59,7 +59,7 @@ CMsgServerKeyExchange::~CMsgServerKeyExchange()
 //----------------------------------------------------------//
 //--Description
 //----------------------------------------------------------//
-size_t CMsgServerKeyExchange::Serialize(CSerializer& serializer)
+size_t CMsgServerKeyExchange::Serialize(ISerializer& serializer)
 {
 	size_t nSize = CMessage::Serialize(serializer);
 	nSize += serializer.SerializeU8(m_nServerKey, 'skey');

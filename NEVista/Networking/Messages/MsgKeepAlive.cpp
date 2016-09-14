@@ -58,7 +58,7 @@ CMsgKeepAlive::~CMsgKeepAlive()
 //----------------------------------------------------------//
 //--Description
 //----------------------------------------------------------//
-size_t CMsgKeepAlive::Serialize(CSerializer& serializer)
+size_t CMsgKeepAlive::Serialize(ISerializer& serializer)
 {
 	size_t nSize = CMessage::Serialize(serializer);
 	return nSize;

@@ -67,7 +67,7 @@ class CMsgChat : public CMessage
 		virtual ~CMsgChat();
 
 		//-- CMessage
-		virtual size_t						Serialize(CSerializer& serializer);
+		virtual size_t						Serialize(ISerializer& serializer);
 
 		Type::Enum							GetType(void) const;
 		void								SetType(Type::Enum eType);

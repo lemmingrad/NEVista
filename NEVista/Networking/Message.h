@@ -15,7 +15,7 @@
 
 
 #include "Types.h"
-#include "Serialized.h"
+#include "ISerializable.h"
 #include <map>
 
 
@@ -32,7 +32,7 @@
 //----------------------------------------------------------//
 
 
-class CSerializer;
+class ISerializer;
 
 
 //----------------------------------------------------------//
@@ -44,7 +44,7 @@ class CSerializer;
 //----------------------------------------------------------//
 
 
-class CMessage : public CSerialized
+class CMessage : public ISerializable
 {
 	public:
 
@@ -73,8 +73,8 @@ class CMessage : public CSerialized
 		bool					CanBeCompressed(bool bRecommended) const;
 		bool					IsForcedEnd(void) const;
 
-		//-- CSerialized
-		virtual size_t			Serialize(CSerializer& Serializer);
+		//-- ISerializable
+		virtual size_t			Serialize(ISerializer& Serializer);
 
 	protected:
 

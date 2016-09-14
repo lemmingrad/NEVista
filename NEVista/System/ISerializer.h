@@ -32,7 +32,7 @@
 //----------------------------------------------------------//
 
 
-class FixedString;
+//class FixedString;
 
 
 class ISerializer
@@ -65,7 +65,7 @@ class ISerializer
 		virtual	size_t			SerializeBitfield(bitfield& nFlags, u32 nFourCC = 'bits') = 0; 
 		virtual size_t			SerializeBytes(u8* pData, size_t nDataSize, u32 nFourCC = 'data') = 0;
 		virtual size_t			SerializeBool(bool& bValue, u32 nFourCC = 'bool') = 0;
-		virtual size_t			SerializeFixedString(FixedString& fixedString, u32 nFourCC = "fstr") = 0;
+//		virtual size_t			SerializeFixedString(FixedString& fixedString, u32 nFourCC = 'fstr') = 0;
 
 		Mode::Enum				GetMode(void) const { return m_eMode; }
 

@@ -12,7 +12,7 @@
 
 
 #include "Types.h"
-#include "Serializer.h"
+#include "ISerializer.h"
 
 
 //----------------------------------------------------------//
@@ -40,7 +40,7 @@
 //----------------------------------------------------------//
 
 
-class CPacketSerializer : public CSerializer
+class CPacketSerializer : public ISerializer
 {
 	public:
 
@@ -81,7 +81,7 @@ class CPacketSerializer : public CSerializer
 		virtual	size_t			SerializeBitfield(bitfield& nFlags, u32 nFourCC = 'bits'); 
 		virtual size_t			SerializeBytes(u8* pData, size_t nDataSize, u32 nFourCC = 'data');
 		virtual size_t			SerializeBool(bool& bValue, u32 nFourCC = 'bool');
-		virtual size_t			SerializeFixedString(FixedString& fixedString, u32 nFourCC = 'fstr');
+//		virtual size_t			SerializeFixedString(FixedString& fixedString, u32 nFourCC = 'fstr');
 
 	protected:
 

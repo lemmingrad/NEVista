@@ -22,7 +22,7 @@
 // CSimpleBufferSerializer::CSimpleBufferSerializer
 //----------------------------------------------------------//
 CSimpleBufferSerializer::CSimpleBufferSerializer(CSimpleBuffer& Buffer, bool bCompress, bool bIncludeFourCCs)
-: ISerializer(ISerializer::Mode:Serializing)
+: ISerializer(ISerializer::Mode::Serializing)
 , m_Buffer(Buffer)
 , m_eError(Error::Ok)
 , m_bCompress(bCompress)
@@ -34,17 +34,8 @@ CSimpleBufferSerializer::CSimpleBufferSerializer(CSimpleBuffer& Buffer, bool bCo
 //----------------------------------------------------------//
 // CSimpleBufferSerializer::~CSimpleBufferSerializer
 //----------------------------------------------------------//
-CPacketSerializer::~CPacketSerializer()
+CSimpleBufferSerializer::~CSimpleBufferSerializer()
 {
-}
-
-
-//----------------------------------------------------------//
-// CSimpleBufferSerializer::GetSize
-//----------------------------------------------------------//
-u8* CPacketSerializer::GetBuffer(void)
-{
-	return m_pBuffer;
 }
 
 

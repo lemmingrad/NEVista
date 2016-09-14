@@ -28,7 +28,7 @@
 //----------------------------------------------------------//
 
 
-class CSerializer;
+class ISerializer;
 
 
 //----------------------------------------------------------//
@@ -50,7 +50,7 @@ class CMsgClientKeyExchange : public CMessage
 		virtual ~CMsgClientKeyExchange();
 
 		//-- CMessage
-		virtual size_t			Serialize(CSerializer& serializer);
+		virtual size_t			Serialize(ISerializer& serializer);
 
 		void					SetKey(u8 nClientKey);
 		u8						GetKey(void) const;

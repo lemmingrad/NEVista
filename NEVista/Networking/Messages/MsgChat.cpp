@@ -76,7 +76,7 @@ CMsgChat::~CMsgChat()
 //----------------------------------------------------------//
 //--Description
 //----------------------------------------------------------//
-size_t CMsgChat::Serialize(CSerializer& serializer)
+size_t CMsgChat::Serialize(ISerializer& serializer)
 {
 	size_t nSize = CMessage::Serialize(serializer);
 
@@ -91,7 +91,7 @@ size_t CMsgChat::Serialize(CSerializer& serializer)
 
 		nSize += serializer.SerializeBytes(pBuffer, m_nStrLength, 'text');
 		
-		if (CSerializer::Mode::Deserializing == serializer.GetMode())
+		if (ISerializer::Mode::Deserializing == serializer.GetMode())
 		{
 			//-- If deserializing, make sure the string is null terminated.
 			pBuffer[m_nStrLength] = 0;

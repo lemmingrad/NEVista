@@ -79,7 +79,7 @@ CClient::Error::Enum CClient::Reset(CClient::Error::Enum eError)
 	m_recvMessageList.clear();
 	m_sendMessageList.clear();
 
-	if (IS_PTR(m_pConnection.ptr()))
+	if (IS_PTR(m_pConnection.get()))
 	{
 		m_pConnection->Close(CTCPConnection::Error::Ok);
 		m_pConnection = SysSmartPtr<CTCPConnection>();
@@ -132,7 +132,7 @@ CClient::Error::Enum CClient::Update(void)
 		case State::Disconnecting:
 		default:
 		{
-			if (IS_PTR(m_pConnection.ptr()))
+			if (IS_PTR(m_pConnection.get()))
 			{
 				CTCPConnection::Error::Enum eConRecvEr = m_pConnection->UpdateRecv(m_recvMessageList, m_sendMessageList);
 				switch (eConRecvEr)
@@ -163,7 +163,7 @@ CClient::Error::Enum CClient::Update(void)
 				return Reset(eNotifyError);
 			}
 
-			if (IS_PTR(m_pConnection.ptr()))
+			if (IS_PTR(m_pConnection.get()))
 			{
 				CTCPConnection::Error::Enum eConSendEr = m_pConnection->UpdateSend(m_sendMessageList);
 				switch (eConSendEr)
@@ -244,7 +244,7 @@ s32 CClient::ClientStateChangeHandler(SysSmartPtr<CMessage> pMessage, void* pDat
 			}
 
 			SysSmartPtr<CMessage> pMessage(new CMsgLoginRequest());
-			CMsgLoginRequest* pLogin = (CMsgLoginRequest*)pMessage.ptr();
+			CMsgLoginRequest* pLogin = (CMsgLoginRequest*)pMessage.get();
 			if (IS_NULL_PTR(pLogin))
 			{
 				return -1;
@@ -340,7 +340,7 @@ CClient::Error::Enum CClient::Disconnect(void)
 	//-- CTCPConnection will do the rest.
 
 	SysSmartPtr<CMessage> pMessage(new CMsgBye(CMsgBye::Reason::ClientDisconnected));
-	CMsgBye* pBye = (CMsgBye*)pMessage.ptr();
+	CMsgBye* pBye = (CMsgBye*)pMessage.get();
 	if (IS_PTR(pBye))
 	{
 		return SendMessage(pMessage);
@@ -410,7 +410,7 @@ CClient::Error::Enum CClient::NotifyRecvMessageHandlers(void)
 
 CClient::Error::Enum CClient::SendMessage(SysSmartPtr<CMessage> pMessage)
 {
-	if (IS_PTR(pMessage.ptr()))
+	if (IS_PTR(pMessage.get()))
 	{
 		m_sendMessageList.push_back(pMessage);		
 		return Error::Ok;

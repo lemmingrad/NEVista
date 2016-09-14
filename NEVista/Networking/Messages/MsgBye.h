@@ -33,7 +33,7 @@
 //----------------------------------------------------------//
 
 
-class CSerializer;
+class ISerializer;
 
 
 //----------------------------------------------------------//
@@ -80,7 +80,7 @@ class CMsgBye : public CMessage
 		virtual ~CMsgBye();
 
 		//-- CMessage
-		virtual size_t						Serialize(CSerializer& serializer);
+		virtual size_t						Serialize(ISerializer& serializer);
 
 		Reason::Enum						GetReason(void) const;
 		void								SetReason(Reason::Enum eReason);

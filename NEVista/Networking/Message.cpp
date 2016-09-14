@@ -53,11 +53,11 @@ CMessage::~CMessage()
 //----------------------------------------------------------//
 //--Description
 //----------------------------------------------------------//
-size_t CMessage::Serialize(CSerializer& serializer)
+size_t CMessage::Serialize(ISerializer& serializer)
 {
 	size_t nSize = 0;
 
-	if (CSerializer::Mode::Serializing == serializer.GetMode())
+	if (ISerializer::Mode::Serializing == serializer.GetMode())
 	{
 		nSize += serializer.SerializeU32(m_nType, 'type');
 	}
