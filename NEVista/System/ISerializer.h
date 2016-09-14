@@ -1,17 +1,18 @@
-#ifndef _SERIALIZER_H_
-#define _SERIALIZER_H_
+#ifndef _ISERIALIZER_H_
+#define _ISERIALIZER_H_
 #pragma once
 
 //----------------------------------------------------------//
-// SERIALIZER.H
+// ISERIALIZER.H
 //----------------------------------------------------------//
 //-- Description			
-// Base class definition for a serialiser class
+// Interface defining a serializer class.
+// Yes, I know it breaks true interface design by including
+// an enum and a non-abstract class.
 //----------------------------------------------------------//
 
 
 #include "Types.h"
-#include "FixedString.h"
 
 
 //----------------------------------------------------------//
@@ -31,7 +32,10 @@
 //----------------------------------------------------------//
 
 
-class CSerializer
+class FixedString;
+
+
+class ISerializer
 {
 	public:
 
@@ -45,8 +49,8 @@ class CSerializer
 			};
 		};
 
-		CSerializer(Mode::Enum eMode) : m_eMode(eMode) {}
-		virtual ~CSerializer() {}
+		ISerializer(Mode::Enum eMode) : m_eMode(eMode) {}
+		virtual ~ISerializer() {}
 
 		virtual	size_t			SerializeF32(f32& fValue, u32 nFourCC = 'f32 ') = 0; 
 		virtual	size_t			SerializeF64(f64& fValue, u32 nFourCC = 'f64 ') = 0; 

@@ -36,6 +36,20 @@ class CSimpleBuffer
 {
 	public:
 
+		struct Error
+		{
+			enum Enum
+			{
+				MoveFailed = -6,
+				CopyFailed = -5,
+				BadParameter = -4,
+				WouldUnderflow = -3,
+				WouldOverflow = -2,
+				Fail = -1,
+				Ok = 0
+			};
+		}; 
+		
 		CSimpleBuffer()
 		{
 			Clear();
@@ -67,44 +81,70 @@ class CSimpleBuffer
 			return Size() - UsedSize();
 		}
 
+		Error::Enum GetError() const
+		{
+			return m_eError;
+		}
+
 		void Clear(void)
 		{
 			m_nFilledSize = 0;
+			m_eError = Error::Ok;
 		}
 
 		bool IsEmpty(void)
 		{
-			return IS_TRUE(m_nFilledSize > 0);
+			return IS_TRUE(0 == m_nFilledSize);
 		}
 
 		u8* InsHead(const u8* pIn, size_t nInSize)
 		{
-			size_t nRemaining = S - m_nFilledSize;
-			if (nInSize <= nRemaining)
+			if (nInSize > 0)
 			{
-				if (IS_PTR(SysMemory::Memmove(m_Buffer + nInSize, S - nInSize, m_Buffer, m_nFilledSize)))
+				size_t nRemaining = S - m_nFilledSize;
+				if (nInSize <= nRemaining)
 				{
-					if (IS_PTR(pIn))
+					if (IS_PTR(SysMemory::Memmove(m_Buffer + nInSize, S - nInSize, m_Buffer, m_nFilledSize)))
 					{
-						if (IS_PTR(SysMemory::Memcpy(m_Buffer, nInSize, pIn, nInSize)))
+						if (IS_PTR(pIn))
 						{
-							//-- Copy success.
+							if (IS_PTR(SysMemory::Memcpy(m_Buffer, nInSize, pIn, nInSize)))
+							{
+								//-- Copy success.
+								m_eError = Error::Ok;
+							}
+							else
+							{
+								//-- Copy failed.
+								m_eError = Error::CopyFailed;
+
+								SysMemory::Memclear(m_Buffer, nInSize);
+							}
 						}
 						else
 						{
-							//-- Copy failed.
+							//-- Nothing to copy.
+							m_eError = Error::Ok;
+
 							SysMemory::Memclear(m_Buffer, nInSize);
 						}
+
+						m_nFilledSize += nInSize;
+						return m_Buffer;
 					}
 					else
 					{
-						//-- Nothing to copy.
-						SysMemory::Memclear(m_Buffer, nInSize);
+						m_eError = Error::MoveFailed;
 					}
-
-					m_nFilledSize += nInSize;
-					return m_Buffer;
 				}
+				else
+				{
+					m_eError = Error::WouldOverflow;
+				}
+			}
+			else
+			{
+				m_eError = Error::BadParameter;
 			}
 
 			//-- Failed.
@@ -124,22 +164,35 @@ class CSimpleBuffer
 						if (IS_PTR(SysMemory::Memcpy(pBuf, nRemaining, pIn, nInSize)))
 						{
 							//-- Copy success.
+							m_eError = Error::Ok;
 						}
 						else
 						{
 							//-- Copy failed.
+							m_eError = Error::CopyFailed;
+
 							SysMemory::Memclear(pBuf, nInSize);
 						}
 					}
 					else
 					{
 						//-- Nothing to copy.
+						m_eError = Error::Ok;
+
 						SysMemory::Memclear(pBuf, nInSize);
 					}
 
 					m_nFilledSize += nInSize;
 					return pBuf;
 				}
+				else
+				{
+					m_eError = Error::WouldOverflow;
+				}
+			}
+			else
+			{
+				m_eError = Error::BadParameter;
 			}
 
 			//-- Failed.
@@ -155,10 +208,24 @@ class CSimpleBuffer
 					if (IS_PTR(SysMemory::Memmove(m_Buffer, S - nOutSize, m_Buffer + nOutSize, m_nFilledSize)))
 					{
 						//-- Success.
+						m_eError = Error::Ok;
+
 						m_nFilledSize -= nOutSize;
 						return m_Buffer;
 					}
+					else
+					{
+						m_eError = Error::MoveFailed;
+					}
 				}
+				else 
+				{
+					m_eError = Error::WouldUnderflow;
+				}
+			}
+			else
+			{
+				m_eError = Error::BadParameter;
 			}
 
 			//-- Failed.
@@ -172,9 +239,19 @@ class CSimpleBuffer
 				if (nOutSize <= m_nFilledSize)
 				{
 					//-- Success.
+					m_eError = Error::Ok;
+
 					m_nFilledSize -= nOutSize;
 					return m_Buffer;
 				}
+				else
+				{
+					m_eError = Error::WouldUnderflow;
+				}
+			}
+			else
+			{
+				m_eError = Error::BadParameter;
 			}
 
 			//-- Failed.
@@ -183,8 +260,9 @@ class CSimpleBuffer
 
 	private:
 
-		u8			m_Buffer[S];
-		size_t		m_nFilledSize;
+		u8				m_Buffer[S];
+		size_t			m_nFilledSize;
+		Error::Enum		m_eError;
 };
 
 

@@ -1,12 +1,12 @@
-#ifndef _SERIALIZED_H_
-#define _SERIALIZED_H_
+#ifndef _ISERIALIZABLE_H_
+#define _ISERIALIZABLE_H_
 #pragma once
 
 //----------------------------------------------------------//
-// SERIALIZED.H
+// ISERIALIZABLE.H
 //----------------------------------------------------------//
 //-- Description			
-// Base class definition for a serialised class
+// Interface defining a serializable class
 //----------------------------------------------------------//
 
 
@@ -26,7 +26,7 @@
 //----------------------------------------------------------//
 
 
-class CSerializer;
+class ISerializer;
 
 
 //----------------------------------------------------------//
@@ -38,14 +38,14 @@ class CSerializer;
 //----------------------------------------------------------//
 
 
-class CSerialized
+class ISerializable
 {
 	public:
 
-		CSerialized() {};
-		virtual ~CSerialized() {};
+		ISerializable() {};
+		virtual ~ISerializable() {};
 
-		virtual size_t Serialize(CSerializer& Serializer) = 0;
+		virtual size_t Serialize(ISerializer& Serializer) = 0;
 };
 
 
@@ -57,4 +57,4 @@ class CSerialized
 // EOF
 //----------------------------------------------------------//
 
-#endif //_SERIALIZER_H_
+#endif //_ISERIALIZABLE_H_
