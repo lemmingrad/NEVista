@@ -22,7 +22,7 @@
 // CSimpleBufferSerializer::CSimpleBufferSerializer
 //----------------------------------------------------------//
 CSimpleBufferSerializer::CSimpleBufferSerializer(CSimpleBuffer& Buffer, bool bCompress, bool bIncludeFourCCs)
-: ISerializer(ISerializer::Mode::Serializing)
+: CSerializer(CSerializer::Mode::Serializing)
 , m_Buffer(Buffer)
 , m_eError(Error::Ok)
 , m_bCompress(bCompress)
@@ -49,30 +49,90 @@ CSimpleBufferSerializer::Error::Enum CSimpleBufferSerializer::GetError() const
 
 
 //----------------------------------------------------------//
-// CSimpleBufferSerializer::SerializeReserve
+// CSimpleBufferSerializer::SerializeSignedCompressed
 //----------------------------------------------------------//
-u8* CSimpleBufferSerializer::SerializeReserve(size_t nReservedSize)
+// Compress and serialize an integer of bytes using LEB128.
+// Input value should be 16-bit or more.
+//----------------------------------------------------------//
+template<class TType>
+size_t CSimpleBufferSerializer::SerializeSignedCompressed<TType>(TType& value, u32 nFourCC)
 {
-	u8* pBuffer = m_Buffer.InsTail(NULL, nReservedSize);
-	if (IS_PTR(pBuffer))
+	m_eError = Error::Ok;
+
+	if (IS_PTR(pData)
+		&& (nDataSize > 0))
 	{
-		//-- Success
-		m_eError = Error::Ok;
+		UBAu64 tempStore;
+		u8* pByte = tempStore.m_Bytes;
+		size_t nCount = 0;
+		bool bKeepGoing = true;
+
+		while (IS_TRUE(bKeepGoing))
+		{
+			bool bSignBitSet = IS_NOT_ZERO(value & 0x40);
+			*pByte = u8(value & 0x7f);
+			value >>= 7;
+			bKeepGoing = (IS_FALSE(bSignBitSet) && IS_NOT_ZERO(value)) || (IS_TRUE(bSignBitSet) && (value != TType(-1)));
+			*pByte |= (bKeepGoing) ? (1 << 7) : 0;
+			++pByte;
+			++nCount;
+		}
+
+		return SerializeBytes(tempStore.m_Bytes, nCount, nFourCC);
 	}
 	else
 	{
-		//-- Failed
-		m_eError = ConvertError(m_buffer.GetError());
+		m_eError = Error::BadParameter;
 	}
 
-	return pBuffer;
+	return 0;
+}
+
+
+//----------------------------------------------------------//
+// CSimpleBufferSerializer::SerializeUnsignedCompressed
+//----------------------------------------------------------//
+// Compress and serialize an integer using ULEB128.
+// Input value should be 16-bit or more.
+//----------------------------------------------------------//
+template<class TType>
+size_t CSimpleBufferSerializer::SerializeUnsignedCompressed<TType>(TType& value, u32 nFourCC)
+{
+	m_eError = Error::Ok;
+
+	if (IS_PTR(pData)
+		&& (nDataSize > 0))
+	{
+		UBAu64 tempStore;
+		u8* pByte = tempStore.m_Bytes;
+		size_t nCount = 0;
+		bool bKeepGoing = true;
+
+		while (IS_TRUE(bKeepGoing))
+		{
+			*pByte = u8(value & 0x7f);
+			value >>= 7;
+			bKeepGoing = (value > 0);
+			*pByte |= (bKeepGoing) ? (1 << 7) : 0;
+			++pByte;
+			++nCount;
+		}
+
+		return SerializeBytes(tempStore.m_Bytes, nCount, nFourCC);
+	}
+	else
+	{
+		m_eError = Error::BadParameter;
+	}
+
+	return 0;
 }
 
 
 //----------------------------------------------------------//
 // CSimpleBufferSerializer::SerializeBytes
 //----------------------------------------------------------//
-// Serialize in/out a number of bytes.
+// Serialize a number of bytes.
 // Also does debug FourCC if required.
 //----------------------------------------------------------//
 size_t CSimpleBufferSerializer::SerializeBytes(u8* pData, size_t nDataSize, u32 nFourCC)
@@ -141,629 +201,226 @@ size_t CSimpleBufferSerializer::SerializeBytes(u8* pData, size_t nDataSize, u32 
 	return 0;
 }
 
-	/*
-#if defined(PACKET_SERIALIZER_USES_DEBUG_FOURCC)
-				//-- FourCC is compared to input if present.
-				if (IS_PTR(SysMemory::Memcpy(FCC.m_Bytes, nFourCCSize, pBuffer, nFourCCSize)))
-				{
-					m_nOffset += nFourCCSize;
-					nRemaining -= nFourCCSize;
-					pBuffer += nFourCCSize;
-
-					if (IS_FALSE(SysMemory::IsSystemBigEndian()))
-					{
-						//-- little-endian system. Convert data from big-endian
-						SysMemory::EndianSwap(FCC.m_Bytes, nFourCCSize);
-					}
-
-					assert(nFourCC == FCC.m_nValue);
-					if (nFourCC != FCC.m_nValue)
-					{
-						//-- FourCC mismatch!
-						m_eError = Error::FourCCMismatch;				
-						return 0;
-					}
-				}
-				else
-				{
-					m_eError = Error::CopyFailed;
-					return 0;
-				}
-#endif //PACKET_SERIALIZER_USES_DEBUG_FOURCC
-
-				//-- Mode::Deserializing, buffer to output variables.
-				if (IS_PTR(SysMemory::Memcpy(pData, nDataSize, pBuffer, nDataSize)))
-				{
-					m_nOffset += nDataSize;
-					return nRequired;
-				}
-				else
-				{
-					m_eError = Error::CopyFailed;
-					return 0;
-				}
-			}
-		}
-		else
-		{
-			m_eError = Error::EndReached;
-		}
-	}
-	else
-	{
-		m_eError = Error::BadParameter;
-	}
-
-	//-- Failed
-	return 0;
-}
-	*/	
 	
 //----------------------------------------------------------//
-// CPacketSerializer::SerializeF32
+// CSimpleBufferSerializer::SerializeF32
 //----------------------------------------------------------//
-size_t CPacketSerializer::SerializeF32(f32& fValue, u32 nFourCC)
+size_t CSimpleBufferSerializer::SerializeF32(f32& fValue, u32 nFourCC)
 {
 	UBAf32 convertor;
-	size_t nConvertorSize = sizeof(convertor);
 	convertor.m_fValue = fValue;
 
-	if (m_bCompress)
-	{
-		return SerializeCompressed<f32>(fValue, u32 nFourCC);
-	}
-	else
-	{
-		return SerializeBytes(convertor.m_Bytes, nConvertorSize, nFourCC);
-	}
+	return SerializeBytes(convertor.m_Bytes, sizeof(convertor.m_Bytes), nFourCC);
 }
 
-	/*
-else
-	{
-		size_t nExpectedSize = nConvertorSize;
-#if defined(PACKET_SERIALIZER_USES_DEBUG_FOURCC)
-		nExpectedSize += sizeof(UBAFourCC);
-#endif //PACKET_SERIALIZER_USES_DEBUG_FOURCC
-
-		if (nExpectedSize == SerializeBytes(convertor.m_Bytes, nConvertorSize, nFourCC))
-		{
-			if (IS_FALSE(SysMemory::IsSystemBigEndian()))
-			{
-				//-- little-endian system. Convert data from big-endian
-				SysMemory::EndianSwap(convertor.m_Bytes, nConvertorSize);
-			}
-
-			fValue = convertor.m_fValue;
-			return nExpectedSize;
-		}
-	}
-
-	//-- Failed.
-	if (Error::Ok == m_eError)
-	{
-		m_eError = Error::Fail;
-	}
-	return 0;
-}
-*/
 
 //----------------------------------------------------------//
-// CPacketSerializer::SerializeF64
+// CSimpleBufferSerializer::SerializeF64
 //----------------------------------------------------------//
-size_t CPacketSerializer::SerializeF64(f64& fValue, u32 nFourCC)
+size_t CSimpleBufferSerializer::SerializeF64(f64& fValue, u32 nFourCC)
 {
 	UBAf64 convertor;
+	convertor.m_fValue = fValue;
 
-	size_t nConvertorSize = sizeof(convertor);
-
-	if (Mode::Serializing == m_eMode)
-	{	
-		convertor.m_fValue = fValue;
-		
-		//-- To be consistent with big-endian network traffic,
-		//-- apply endian swap if system is little-endian.
-		if (IS_FALSE(SysMemory::IsSystemBigEndian()))
-		{
-			//-- little-endian system. Convert data to big-endian
-			SysMemory::EndianSwap(convertor.m_Bytes, nConvertorSize);
-		}
-		
-		return SerializeBytes(convertor.m_Bytes, nConvertorSize, nFourCC);
-	}
-	else
-	{
-		size_t nExpectedSize = nConvertorSize;
-#if defined(PACKET_SERIALIZER_USES_DEBUG_FOURCC)
-		nExpectedSize += sizeof(UBAFourCC);
-#endif //PACKET_SERIALIZER_USES_DEBUG_FOURCC
-
-		if (nExpectedSize == SerializeBytes(convertor.m_Bytes, nConvertorSize, nFourCC))
-		{
-			if (IS_FALSE(SysMemory::IsSystemBigEndian()))
-			{
-				//-- little-endian system. Convert data from big-endian
-				SysMemory::EndianSwap(convertor.m_Bytes, nConvertorSize);
-			}
-
-			fValue = convertor.m_fValue;
-			return nExpectedSize;
-		}
-	}
-
-	//-- Failed.
-	if (Error::Ok == m_eError)
-	{
-		m_eError = Error::Fail;
-	}
-	return 0;
+	return SerializeBytes(convertor.m_Bytes, sizeof(convertor.m_Bytes), nFourCC);
 }
 
 
 //----------------------------------------------------------//
-// CPacketSerializer::SerializeS32
+// CSimpleBufferSerializer::SerializeS32
 //----------------------------------------------------------//
-size_t CPacketSerializer::SerializeS32(s32& nValue, u32 nFourCC)
+size_t CSimpleBufferSerializer::SerializeS32(s32& nValue, u32 nFourCC)
 {
-	UBAs32 convertor;
-
-	size_t nConvertorSize = sizeof(convertor);
-
-	if (Mode::Serializing == m_eMode)
-	{	
-		convertor.m_nValue = nValue;
-		
-		//-- To be consistent with big-endian network traffic,
-		//-- apply endian swap if system is little-endian.
-		if (IS_FALSE(SysMemory::IsSystemBigEndian()))
-		{
-			//-- little-endian system. Convert data to big-endian
-			SysMemory::EndianSwap(convertor.m_Bytes, nConvertorSize);
-		}
-		
-		return SerializeBytes(convertor.m_Bytes, nConvertorSize, nFourCC);
+	if (IS_TRUE(m_bCompress))
+	{
+		return SerializeSignedCompressed<s32>(nValue, nFourCC);
 	}
 	else
 	{
-		size_t nExpectedSize = nConvertorSize;
-#if defined(PACKET_SERIALIZER_USES_DEBUG_FOURCC)
-		nExpectedSize += sizeof(UBAFourCC);
-#endif //PACKET_SERIALIZER_USES_DEBUG_FOURCC
-	
-		if (nExpectedSize == SerializeBytes(convertor.m_Bytes, nConvertorSize, nFourCC))
-		{
-			if (IS_FALSE(SysMemory::IsSystemBigEndian()))
-			{
-				//-- little-endian system. Convert data from big-endian
-				SysMemory::EndianSwap(convertor.m_Bytes, nConvertorSize);
-			}
+		UBAs32 convertor;
+		convertor.m_nValue = nValue;
 
-			nValue = convertor.m_nValue;
-			return nExpectedSize;
-		}
+		return SerializeBytes(convertor.m_Bytes, sizeof(convertor.m_Bytes), nFourCC);
 	}
-
-	//-- Failed.
-	if (Error::Ok == m_eError)
-	{
-		m_eError = Error::Fail;
-	}
-	return 0;
 }
 
 
 //----------------------------------------------------------//
-// CPacketSerializer::SerializeU32
+// CSimpleBufferSerializer::SerializeU32
 //----------------------------------------------------------//
-size_t CPacketSerializer::SerializeU32(u32& nValue, u32 nFourCC)
+size_t CSimpleBufferSerializer::SerializeU32(u32& nValue, u32 nFourCC)
 {
-	UBAu32 convertor;
-
-	size_t nConvertorSize = sizeof(convertor);
-
-	if (Mode::Serializing == m_eMode)
-	{	
-		convertor.m_nValue = nValue;
-		
-		//-- To be consistent with big-endian network traffic,
-		//-- apply endian swap if system is little-endian.
-		if (IS_FALSE(SysMemory::IsSystemBigEndian()))
-		{
-			//-- little-endian system. Convert data to big-endian
-			SysMemory::EndianSwap(convertor.m_Bytes, nConvertorSize);
-		}
-		
-		return SerializeBytes(convertor.m_Bytes, nConvertorSize, nFourCC);
+	if (IS_TRUE(m_bCompress))
+	{
+		return SerializeUnsignedCompressed<u32>(nValue, nFourCC);
 	}
 	else
 	{
-		size_t nExpectedSize = nConvertorSize;
-#if defined(PACKET_SERIALIZER_USES_DEBUG_FOURCC)
-		nExpectedSize += sizeof(UBAFourCC);
-#endif //PACKET_SERIALIZER_USES_DEBUG_FOURCC
-	
-		if (nExpectedSize == SerializeBytes(convertor.m_Bytes, nConvertorSize, nFourCC))
-		{
-			if (IS_FALSE(SysMemory::IsSystemBigEndian()))
-			{
-				//-- little-endian system. Convert data from big-endian
-				SysMemory::EndianSwap(convertor.m_Bytes, nConvertorSize);
-			}
+		UBAu32 convertor;
+		convertor.m_nValue = nValue;
 
-			nValue = convertor.m_nValue;
-			return nExpectedSize;
-		}
+		return SerializeBytes(convertor.m_Bytes, sizeof(convertor.m_Bytes), nFourCC);
 	}
-
-	//-- Failed.
-	if (Error::Ok == m_eError)
-	{
-		m_eError = Error::Fail;
-	}
-	return 0;
 }
 
 
 //----------------------------------------------------------//
-// CPacketSerializer::SerializeS8
+// CSimpleBufferSerializer::SerializeS8
 //----------------------------------------------------------//
-size_t CPacketSerializer::SerializeS8(s8& nValue, u32 nFourCC) 
+size_t CSimpleBufferSerializer::SerializeS8(s8& nValue, u32 nFourCC)
 {
 	u8* pByte = (u8*)&nValue;
 
-	size_t nConvertorSize = sizeof(u8);
-
-	if (Mode::Serializing == m_eMode)
-	{	
-		return SerializeBytes(pByte, nConvertorSize, nFourCC);
-	}
-	else
-	{
-		size_t nExpectedSize = nConvertorSize;
-#if defined(PACKET_SERIALIZER_USES_DEBUG_FOURCC)
-		nExpectedSize += sizeof(UBAFourCC);
-#endif //PACKET_SERIALIZER_USES_DEBUG_FOURCC
-
-		if (nExpectedSize == SerializeBytes(pByte, nConvertorSize, nFourCC))
-		{
-			return nExpectedSize;
-		}
-	}
-
-	//-- Failed.
-	if (Error::Ok == m_eError)
-	{
-		m_eError = Error::Fail;
-	}
-	return 0;
+	return SerializeBytes(pByte, sizeof(pByte), nFourCC);
 }
 
 
 //----------------------------------------------------------//
-// CPacketSerializer::SerializeU8
+// CSimpleBufferSerializer::SerializeU8
 //----------------------------------------------------------//
-size_t CPacketSerializer::SerializeU8(u8& nValue, u32 nFourCC)
+size_t CSimpleBufferSerializer::SerializeU8(u8& nValue, u32 nFourCC)
 {
 	u8* pByte = (u8*)&nValue;
 
-	size_t nConvertorSize = sizeof(u8);
-
-	if (Mode::Serializing == m_eMode)
-	{	
-		return SerializeBytes(pByte, nConvertorSize, nFourCC);
-	}
-	else
-	{
-		size_t nExpectedSize = nConvertorSize;
-#if defined(PACKET_SERIALIZER_USES_DEBUG_FOURCC)
-		nExpectedSize += sizeof(UBAFourCC);
-#endif //PACKET_SERIALIZER_USES_DEBUG_FOURCC
-
-		if (nExpectedSize == SerializeBytes(pByte, nConvertorSize, nFourCC))
-		{
-			return nExpectedSize;
-		}
-	}
-
-	//-- Failed.
-	if (Error::Ok == m_eError)
-	{
-		m_eError = Error::Fail;
-	}
-	return 0;
+	return SerializeBytes(pByte, sizeof(pByte), nFourCC);
 }
 
 
 //----------------------------------------------------------//
-// CPacketSerializer::SerializeS16
+// CSimpleBufferSerializer::SerializeS16
 //----------------------------------------------------------//
-size_t CPacketSerializer::SerializeS16(s16& nValue, u32 nFourCC) 
+size_t CSimpleBufferSerializer::SerializeS16(s16& nValue, u32 nFourCC)
 {
-	UBAs16 convertor;
-	
-	size_t nConvertorSize = sizeof(convertor);
-
-	if (Mode::Serializing == m_eMode)
-	{	
-		convertor.m_nValue = nValue;
-		
-		//-- To be consistent with big-endian network traffic,
-		//-- apply endian swap if system is little-endian.
-		if (IS_FALSE(SysMemory::IsSystemBigEndian()))
-		{
-			//-- little-endian system. Convert data to big-endian
-			SysMemory::EndianSwap(convertor.m_Bytes, nConvertorSize);
-		}
-		
-		return SerializeBytes(convertor.m_Bytes, nConvertorSize, nFourCC);
+	if (IS_TRUE(m_bCompress))
+	{
+		return SerializeSignedCompressed<s16>(nValue, nFourCC);
 	}
 	else
 	{
-		size_t nExpectedSize = nConvertorSize;
-#if defined(PACKET_SERIALIZER_USES_DEBUG_FOURCC)
-		nExpectedSize += sizeof(UBAFourCC);
-#endif //PACKET_SERIALIZER_USES_DEBUG_FOURCC
+		UBAs16 convertor;
+		convertor.m_nValue = nValue;
 
-		if (nExpectedSize == SerializeBytes(convertor.m_Bytes, nConvertorSize, nFourCC))
-		{
-			if (IS_FALSE(SysMemory::IsSystemBigEndian()))
-			{
-				//-- little-endian system. Convert data from big-endian
-				SysMemory::EndianSwap(convertor.m_Bytes, nConvertorSize);
-			}
-
-			nValue = convertor.m_nValue;
-			return nExpectedSize;
-		}
+		return SerializeBytes(convertor.m_Bytes, sizeof(convertor.m_Bytes), nFourCC);
 	}
-
-	//-- Failed.
-	if (Error::Ok == m_eError)
-	{
-		m_eError = Error::Fail;
-	}
-	return 0;
 }
 
 
 //----------------------------------------------------------//
-// CPacketSerializer::SerializeU16
+// CSimpleBufferSerializer::SerializeU16
 //----------------------------------------------------------//
-size_t CPacketSerializer::SerializeU16(u16& nValue, u32 nFourCC) 
+size_t CSimpleBufferSerializer::SerializeU16(u16& nValue, u32 nFourCC)
 {
-	UBAu16 convertor;
-
-	size_t nConvertorSize = sizeof(convertor);
-
-	if (Mode::Serializing == m_eMode)
-	{	
-		convertor.m_nValue = nValue;
-		
-		//-- To be consistent with big-endian network traffic,
-		//-- apply endian swap if system is little-endian.
-		if (IS_FALSE(SysMemory::IsSystemBigEndian()))
-		{
-			//-- little-endian system. Convert data to big-endian
-			SysMemory::EndianSwap(convertor.m_Bytes, nConvertorSize);
-		}
-		
-		return SerializeBytes(convertor.m_Bytes, nConvertorSize, nFourCC);
+	if (IS_TRUE(m_bCompress))
+	{
+		return SerializeUnsignedCompressed<u16>(nValue, nFourCC);
 	}
 	else
 	{
-		size_t nExpectedSize = nConvertorSize;
-#if defined(PACKET_SERIALIZER_USES_DEBUG_FOURCC)
-		nExpectedSize += sizeof(UBAFourCC);
-#endif //PACKET_SERIALIZER_USES_DEBUG_FOURCC
+		UBAu16 convertor;
+		convertor.m_nValue = nValue;
 
-		if (nExpectedSize == SerializeBytes(convertor.m_Bytes, nConvertorSize, nFourCC))
-		{
-			if (IS_FALSE(SysMemory::IsSystemBigEndian()))
-			{
-				//-- little-endian system. Convert data from big-endian
-				SysMemory::EndianSwap(convertor.m_Bytes, nConvertorSize);
-			}
-
-			nValue = convertor.m_nValue;
-			return nExpectedSize;
-		}
+		return SerializeBytes(convertor.m_Bytes, sizeof(convertor.m_Bytes), nFourCC);
 	}
-
-	//-- Failed.
-	if (Error::Ok == m_eError)
-	{
-		m_eError = Error::Fail;
-	}
-	return 0;
 }
 
 
 //----------------------------------------------------------//
-// CPacketSerializer::SerializeS64
+// CSimpleBufferSerializer::SerializeS64
 //----------------------------------------------------------//
-size_t CPacketSerializer::SerializeS64(s64& nValue, u32 nFourCC)
+size_t CSimpleBufferSerializer::SerializeS64(s64& nValue, u32 nFourCC)
 {
-	UBAs64 convertor;
-
-	size_t nConvertorSize = sizeof(convertor);
-
-	size_t nExpectedSize = nConvertorSize;
-#if defined(PACKET_SERIALIZER_USES_DEBUG_FOURCC)
-	nExpectedSize += sizeof(UBAFourCC);
-#endif //PACKET_SERIALIZER_USES_DEBUG_FOURCC
-
-	if (Mode::Serializing == m_eMode)
-	{	
-		convertor.m_nValue = nValue;
-		
-		//-- To be consistent with big-endian network traffic,
-		//-- apply endian swap if system is little-endian.
-		if (IS_FALSE(SysMemory::IsSystemBigEndian()))
-		{
-			//-- little-endian system. Convert data to big-endian
-			SysMemory::EndianSwap(convertor.m_Bytes, nConvertorSize);
-		}
-		
-		return SerializeBytes(convertor.m_Bytes, nConvertorSize, nFourCC);
+	if (IS_TRUE(m_bCompress))
+	{
+		return SerializeSignedCompressed<s64>(nValue, nFourCC);
 	}
 	else
 	{
-		size_t nExpectedSize = nConvertorSize;
-#if defined(PACKET_SERIALIZER_USES_DEBUG_FOURCC)
-		nExpectedSize += sizeof(UBAFourCC);
-#endif //PACKET_SERIALIZER_USES_DEBUG_FOURCC
+		UBAs64 convertor;
+		convertor.m_nValue = nValue;
 
-		if (nExpectedSize == SerializeBytes(convertor.m_Bytes, nConvertorSize, nFourCC))
-		{
-			if (IS_FALSE(SysMemory::IsSystemBigEndian()))
-			{
-				//-- little-endian system. Convert data from big-endian
-				SysMemory::EndianSwap(convertor.m_Bytes, nConvertorSize);
-			}
-
-			nValue = convertor.m_nValue;
-			return nExpectedSize;
-		}
+		return SerializeBytes(convertor.m_Bytes, sizeof(convertor.m_Bytes), nFourCC);
 	}
-
-	//-- Failed.
-	if (Error::Ok == m_eError)
-	{
-		m_eError = Error::Fail;
-	}
-	return 0;
 }
 
 
 //----------------------------------------------------------//
-// CPacketSerializer::SerializeU64
+// CSimpleBufferSerializer::SerializeU64
 //----------------------------------------------------------//
-size_t CPacketSerializer::SerializeU64(u64& nValue, u32 nFourCC)
+size_t CSimpleBufferSerializer::SerializeU64(u64& nValue, u32 nFourCC)
 {
-	UBAu64 convertor;
-
-	size_t nConvertorSize = sizeof(convertor);
-
-	if (Mode::Serializing == m_eMode)
-	{	
-		convertor.m_nValue = nValue;
-		
-		//-- To be consistent with big-endian network traffic,
-		//-- apply endian swap if system is little-endian.
-		if (IS_FALSE(SysMemory::IsSystemBigEndian()))
-		{
-			//-- little-endian system. Convert data to big-endian
-			SysMemory::EndianSwap(convertor.m_Bytes, nConvertorSize);
-		}
-		
-		return SerializeBytes(convertor.m_Bytes, nConvertorSize, nFourCC);
+	if (IS_TRUE(m_bCompress))
+	{
+		return SerializeUnsignedCompressed<u64>(nValue, nFourCC);
 	}
 	else
 	{
-		size_t nExpectedSize = nConvertorSize;
-#if defined(PACKET_SERIALIZER_USES_DEBUG_FOURCC)
-		nExpectedSize += sizeof(UBAFourCC);
-#endif //PACKET_SERIALIZER_USES_DEBUG_FOURCC
+		UBAu64 convertor;
+		convertor.m_nValue = nValue;
 
-		if (nExpectedSize == SerializeBytes(convertor.m_Bytes, nConvertorSize, nFourCC))
-		{
-			if (IS_FALSE(SysMemory::IsSystemBigEndian()))
-			{
-				//-- little-endian system. Convert data from big-endian
-				SysMemory::EndianSwap(convertor.m_Bytes, nConvertorSize);
-			}
-
-			nValue = convertor.m_nValue;
-			return nExpectedSize;
-		}
+		return SerializeBytes(convertor.m_Bytes, sizeof(convertor.m_Bytes), nFourCC);
 	}
-
-	//-- Failed.
-	if (Error::Ok == m_eError)
-	{
-		m_eError = Error::Fail;
-	}
-	return 0;
 }
 
 
 //----------------------------------------------------------//
-// CPacketSerializer::SerializeBitfield
+// CSimpleBufferSerializer::SerializeBitfield
 //----------------------------------------------------------//
-size_t CPacketSerializer::SerializeBitfield(bitfield& nFlags, u32 nFourCC) 
+size_t CSimpleBufferSerializer::SerializeBitfield(bitfield& nFlags, u32 nFourCC)
 {
 	UBAbitfield convertor;
+	convertor.m_nValue = nFlags;
 
-	size_t nConvertorSize = sizeof(convertor);
-
-	if (Mode::Serializing == m_eMode)
-	{	
-		convertor.m_nValue = nFlags;
-		
-		//-- To be consistent with big-endian network traffic,
-		//-- apply endian swap if system is little-endian.
-		if (IS_FALSE(SysMemory::IsSystemBigEndian()))
-		{
-			//-- little-endian system. Convert data to big-endian
-			SysMemory::EndianSwap(convertor.m_Bytes, nConvertorSize);
-		}
-		
-		return SerializeBytes(convertor.m_Bytes, nConvertorSize, nFourCC);
+	if (IS_TRUE(m_bCompress))
+	{
+		return SerializeUnsignedCompressed<bitfield>(convertor.m_nValue, nFourCC);
 	}
 	else
 	{
-		size_t nExpectedSize = nConvertorSize;
-#if defined(PACKET_SERIALIZER_USES_DEBUG_FOURCC)
-		nExpectedSize += sizeof(UBAFourCC);
-#endif //PACKET_SERIALIZER_USES_DEBUG_FOURCC
-
-		if (nExpectedSize == SerializeBytes(convertor.m_Bytes, nConvertorSize, nFourCC))
-		{
-			if (IS_FALSE(SysMemory::IsSystemBigEndian()))
-			{
-				//-- little-endian system. Convert data from big-endian
-				SysMemory::EndianSwap(convertor.m_Bytes, nConvertorSize);
-			}
-
-			nFlags = convertor.m_nValue;
-			return nExpectedSize;
-		}
+		return SerializeBytes(convertor.m_Bytes, sizeof(convertor.m_Bytes), nFourCC);
 	}
-
-	//-- Failed.
-	if (Error::Ok == m_eError)
-	{
-		m_eError = Error::Fail;
-	}
-	return 0;
 }
 
 
 //----------------------------------------------------------//
-// CPacketSerializer::SerializeBool
+// CSimpleBufferSerializer::SerializeBool
 //----------------------------------------------------------//
-size_t CPacketSerializer::SerializeBool(bool& bValue, u32 nFourCC)
+size_t CSimpleBufferSerializer::SerializeBool(bool& bValue, u32 nFourCC)
 {
 	u8 nByte;
+	nByte = IS_TRUE(bValue) ? 1 : 0;
 
-	if (Mode::Serializing == m_eMode)
-	{
-		nByte = bValue ? 1 : 0;
-		return SerializeU8(nByte, nFourCC);
-	}
-	else 
-	{
-		size_t nSize = SerializeU8(nByte, nFourCC);
-		bValue = (nByte != 0);
-		return nSize;
-	}
+	return SerializeU8(nByte, nFourCC);
 }
 
 
 //----------------------------------------------------------//
-// CPacketSerializer::SerializeFixedString
+// CSimpleBufferSerializer::SerializeString
 //----------------------------------------------------------//
-size_t CPacketSerializer::SerializeFixedString(FixedString& fixedString, u32 nFourCC)
+size_t CPacketSerializer::SerializeString(std::string& strng, u32 nFourCC)
+{
+	m_eError = Error::Ok;
+
+	u32 nSize = 0;
+	size_t nReturn = 0;
+
+	nSize = (u32)strng.length();
+	
+	nReturn += SerializeU32(nSize, "slen");
+	
+	if (Error::Ok == m_eError)
+	{
+		nReturn += SerializeBytes(strng.c_str(), nSize, nFourCC);
+	}
+
+	return nReturn;
+}
+
+
+//----------------------------------------------------------//
+// CSimpleBufferSerializer::SerializeFixedString
+//----------------------------------------------------------//
+/*
+size_t CSimpleBufferSerializer::SerializeFixedString(IFixedString& fixedString, u32 nFourCC)
 {
 	u64 nSize = 0;
 	size_t nReturn = 0;
@@ -794,6 +451,54 @@ size_t CPacketSerializer::SerializeFixedString(FixedString& fixedString, u32 nFo
 				}
 			}
 		}
+	}
+}
+*/
+
+
+//----------------------------------------------------------//
+// CSimpleBufferSerializer::ConvertError
+//----------------------------------------------------------//
+CSimpleBufferSerializer::Error::Enum CSimpleBufferSerializer::ConvertError(CSimpleBuffer::Error::Enum e)
+{
+	switch (e)
+	{
+		case CSimpleBuffer::Error::MoveFailed:
+		{
+			return Error::MoveFailed;
+		}
+		break;
+		case CSimpleBuffer::Error::CopyFailed
+		{
+			return Error::CopyFailed;
+		}
+		break;
+		case CSimpleBuffer::Error::BadParameter:
+		{
+			return Error::BadParameter;
+		}
+		break;
+		case CSimpleBuffer::Error::WouldUnderflow:
+		{
+			return Error::WouldUnderflow;
+		}
+		break;
+		case CSimpleBuffer::Error::WouldOverflow:
+		{
+			return Error::WouldOverflow;
+		}
+		break;
+		case CSimpleBuffer::Error::Fail:
+		{
+			return Error::Fail;
+		}
+		break;
+		case CSimpleBuffer::Error::Ok:
+		default:
+		{
+			return Error::Ok;
+		}
+		break;
 	}
 }
 
