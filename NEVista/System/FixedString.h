@@ -12,6 +12,7 @@
 
 #include "Types.h"
 #include "SysString.h"
+#include "IFixedString.h"
 
 
 //----------------------------------------------------------//
@@ -32,7 +33,7 @@
 
 
 template <size_t S>
-class FixedString
+class FixedString : public IFixedString
 {
 	public:
 
@@ -45,84 +46,84 @@ class FixedString
 			Clear();
 			Set(strIn);
 		}
-		template <size_t S2> FixedString(FixedString<S2>& in)
+		FixedString(const IFixedString& in)
 		{
 			Clear();
 			Set(in);
 		}
 
-		~FixedString() {};
+		virtual ~FixedString() {}
 		
-		s8* Buffer(void)
+		virtual s8* Buffer(void)
 		{
 			assert(IS_ZERO(m_strBuffer[S-1]));
 			return m_strBuffer;
 		}
-		const s8* ConstBuffer(void) const
+		virtual const s8* ConstBuffer(void) const
 		{
 			assert(IS_ZERO(m_strBuffer[S-1]));
 			return m_strBuffer;
 		}
-		size_t Length(void)
+		virtual size_t Length(void) const
 		{
 			return SysString::Strlen(m_strBuffer);
 		}
-		size_t Size(void) const
+		virtual size_t Size(void) const
 		{
 			return S;
 		}
 
-		SysString::Hash GenerateHash(void) const
+		virtual SysString::Hash GenerateHash(void) const
 		{
 			return SysString::GenerateHash(m_strBuffer);
 		}
 
-		void Clear(void)
+		virtual void Clear(void)
 		{
 			m_strBuffer[0] = 0;
 			m_strBuffer[S-1] = 0;
 		}
 
-		bool IsEmpty(void)
+		virtual bool IsEmpty(void) const
 		{
 			return IS_TRUE(SysString::IsEmpty(m_strBuffer));
 		}
 
-		s8* Set(const s8* strIn)
+		virtual s8* Set(const s8* strIn)
 		{
 			s8* pRet = SysString::Strcpy(m_strBuffer, S, strIn);
 			m_strBuffer[S-1] = 0;
 			return pRet;
 		}
-		s8* Set(const s8* strIn, size_t nStrInLength)
+		virtual s8* Set(const s8* strIn, size_t nStrInLength)
 		{
 			s8* pRet = SysString::Strncpy(m_strBuffer, S, strIn, nStrInLength);
 			m_strBuffer[S-1] = 0;
 			return pRet;
 		}
-		template <size_t S2> s8* Set(FixedString<S2>& in)
+		virtual s8* Set(const IFixedString& in)
 		{
-			return Set(in.Buffer(), in.Length());
+			return Set(in.ConstBuffer(), in.Length());
 		}
 
-		s8* Append(const s8* strIn)
+		virtual s8* Append(const s8* strIn)
 		{
 			return SysString::Strcat(m_strBuffer, S, strIn);
 		}
-		s8* operator+=(const s8* strIn)
+		virtual s8* operator+=(const s8* strIn)
 		{
 			return Append(strIn);
 		}
-		template <size_t S2> s8* Append(FixedString<S2>& in)
+		virtual s8* Append(const IFixedString& in)
 		{
 			return Append(in.ConstBuffer());
 		}
-		template <size_t S2> s8* operator+=(FixedString<S2>& in)
+		virtual s8* operator+=(const IFixedString& in)
 		{
 			return Append(in);
 		}
 
-		s32 Format(const s8 *strIn, ...)
+		virtual s32 Format(const s8 *strIn, ...)
 		{
 			va_list ArgList;
 			va_start(ArgList, strIn);

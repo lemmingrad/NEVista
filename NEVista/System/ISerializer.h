@@ -13,6 +13,7 @@
 
 
 #include "Types.h"
+#include <string>
 
 
 //----------------------------------------------------------//
@@ -32,12 +33,22 @@
 //----------------------------------------------------------//
 
 
-//class FixedString;
+class IFixedString;
 
 
 class ISerializer
 {
 	public:
+
+		struct Mode
+		{
+			enum Enum
+			{
+				Unknown = 0,
+				Serializing,
+				Deserializing
+			};
+		};
 
 		virtual ~ISerializer() {}
 
@@ -55,9 +66,9 @@ class ISerializer
 		virtual size_t			SerializeBytes(u8* pData, size_t nDataSize, u32 nFourCC = 'data') = 0;
 		virtual size_t			SerializeBool(bool& bValue, u32 nFourCC = 'bool') = 0;
 		virtual size_t			SerializeString(std::string& strng, u32 nFourCC = 'sstr') = 0;
-//		virtual size_t			SerializeFixedString(IFixedString& fixedString, u32 nFourCC = 'fstr') = 0;
+		virtual size_t			SerializeFixedString(IFixedString& fixedString, u32 nFourCC = 'fstr') = 0;
 
-		Mode::Enum				GetMode(void) const = 0;
+		virtual Mode::Enum		GetMode(void) const = 0;
 };
 
 

@@ -10,6 +10,7 @@
 //----------------------------------------------------------//
 
 
+#include "ISerializer.h"
 #include "Types.h"
 
 
@@ -30,26 +31,17 @@
 //----------------------------------------------------------//
 
 
-//class FixedString;
+class IFixedString;
 
 
 class CSerializer : public ISerializer
 {
 	public:
 
-		struct Mode
-		{
-			enum Enum 
-			{
-				Unknown					= 0,
-				Serializing,
-				Deserializing
-			};
-		};
-
 		CSerializer(Mode::Enum eMode) : m_eMode(eMode) {}
 		virtual ~CSerializer() {}
 
+		// ISerializer
 		virtual	size_t			SerializeF32(f32& fValue, u32 nFourCC = 'f32 ') = 0; 
 		virtual	size_t			SerializeF64(f64& fValue, u32 nFourCC = 'f64 ') = 0; 
 		virtual	size_t			SerializeS32(s32& nValue, u32 nFourCC = 's32 ') = 0; 
@@ -64,9 +56,9 @@ class CSerializer : public ISerializer
 		virtual size_t			SerializeBytes(u8* pData, size_t nDataSize, u32 nFourCC = 'data') = 0;
 		virtual size_t			SerializeBool(bool& bValue, u32 nFourCC = 'bool') = 0;
 		virtual size_t			SerializeString(std::string& strng, u32 nFourCC = 'sstr') = 0;
-//		virtual size_t			SerializeFixedString(IFixedString& fixedString, u32 nFourCC = 'fstr') = 0;
-
-		Mode::Enum				GetMode(void) const { return m_eMode; }
+		virtual size_t			SerializeFixedString(IFixedString& fixedString, u32 nFourCC = 'fstr') = 0;
+		virtual Mode::Enum		GetMode(void) const { return m_eMode; }
+		// ~ISerializer
 
 	protected:
 

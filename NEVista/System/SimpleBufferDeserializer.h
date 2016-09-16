@@ -10,8 +10,9 @@
 //----------------------------------------------------------//
 
 
+#include "Serializer.h"
 #include "Types.h"
-#include "CSerializer.h"
+#include "ISimpleBuffer.h"
 
 
 //----------------------------------------------------------//
@@ -31,9 +32,6 @@
 //----------------------------------------------------------//
 
 
-class CSimpleBuffer;
-
-
 class CSimpleBufferDeserializer : public CSerializer
 {
 	public:
@@ -42,6 +40,7 @@ class CSimpleBufferDeserializer : public CSerializer
 		{
 			enum Enum
 			{
+				SizeMismatch = -8,
 				FourCCMismatch = -7,
 				MoveFailed = -6,
 				CopyFailed = -5,
@@ -53,7 +52,7 @@ class CSimpleBufferDeserializer : public CSerializer
 			};
 		};
 
-		CSimpleBufferDeserializer(CSimpleBuffer& Buffer, bool bDecompress = false, bool bExpectFourCCs = false);
+		CSimpleBufferDeserializer(ISimpleBuffer& Buffer, bool bDecompress = false, bool bExpectFourCCs = false);
 		virtual ~CSimpleBufferDeserializer();
 
 		// ISerializer
@@ -71,19 +70,67 @@ class CSimpleBufferDeserializer : public CSerializer
 		virtual size_t			SerializeBytes(u8* pData, size_t nDataSize, u32 nFourCC = 'data');
 		virtual size_t			SerializeBool(bool& bValue, u32 nFourCC = 'bool');
 		virtual size_t			SerializeString(std::string& strng, u32 nFourCC = 'sstr');
-		//virtual size_t			SerializeFixedString(FixedString& fixedString, u32 nFourCC = "fstr"); 
+		virtual size_t			SerializeFixedString(IFixedString& fixedString, u32 nFourCC = 'fstr'); 
 		// ~ISerializer
 
 		Error::Enum				GetError() const;
 
 	private:
 
-		size_t					SerializeSignedDecompressed(u8* pData, size_t nDataSize, u32 nFourCC);
-		size_t					SerializeUnsignedDecompressed(u8* pData, size_t nDataSize, u32 nFourCC);
+		template <class TType>
+		size_t SerializeSignedDecompressed(TType& value, u32 nFourCC)
+		{
+			return 0;
+		}
+		
+		template <class TType>
+		size_t SerializeUnsignedDecompressed(TType& value, u32 nFourCC)
+		{
+			return 0;
+		}
 
-		Error::Enum				ConvertError(CSimpleBuffer::Error::Enum e);
 
-		CSimpleBuffer&			m_Buffer;
+		/*
+		template<typename T_Visitor, typename T_Type>
+		static void decodeULEB128(T_Visitor& visitor, const char* name, T_Type& value)
+		{
+		uint32 shift = 0;
+		uint8 encodedByte;
+
+		value = 0;
+		do
+		{
+		visitor.Serialize(name, encodedByte);
+		value |= T_Type(encodedByte & 0x7f) << shift;
+		shift += 7;
+		} while (encodedByte >= 0x80);
+		}
+
+		template<typename T_Visitor, typename T_Type>
+		static void decodeSLEB128(T_Visitor& visitor, const char* name, T_Type& value)
+		{
+		uint32 shift = 0;
+		uint8 encodedByte;
+
+		value = 0;
+		do
+		{
+		visitor.Serialize(name, encodedByte);
+		value |= T_Type(encodedByte & 0x7f) << shift;
+		shift += 7;
+		} while (encodedByte >= 0x80);
+
+		// Sign extend negative numbers
+		if ((shift < 8 * sizeof(T_Type)) && (encodedByte & 0x40))
+		value |= T_Type(-1) << shift;
+		}
+		*/
+
+
+
+		Error::Enum				ConvertError(ISimpleBuffer::Error::Enum e);
+
+		ISimpleBuffer&			m_Buffer;
 		Error::Enum				m_eError;
 		bool					m_bDecompress;
 		bool					m_bExpectFourCCs;

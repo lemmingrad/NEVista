@@ -8,6 +8,7 @@
 
 #include "SimpleBufferSerializer.h"
 #include "Types.h"
+#include "IFixedString.h"
 
 
 //----------------------------------------------------------//
@@ -21,7 +22,7 @@
 //----------------------------------------------------------//
 // CSimpleBufferSerializer::CSimpleBufferSerializer
 //----------------------------------------------------------//
-CSimpleBufferSerializer::CSimpleBufferSerializer(CSimpleBuffer& Buffer, bool bCompress, bool bIncludeFourCCs)
+CSimpleBufferSerializer::CSimpleBufferSerializer(ISimpleBuffer& Buffer, bool bCompress, bool bIncludeFourCCs)
 : CSerializer(CSerializer::Mode::Serializing)
 , m_Buffer(Buffer)
 , m_eError(Error::Ok)
@@ -49,87 +50,6 @@ CSimpleBufferSerializer::Error::Enum CSimpleBufferSerializer::GetError() const
 
 
 //----------------------------------------------------------//
-// CSimpleBufferSerializer::SerializeSignedCompressed
-//----------------------------------------------------------//
-// Compress and serialize an integer of bytes using LEB128.
-// Input value should be 16-bit or more.
-//----------------------------------------------------------//
-template<class TType>
-size_t CSimpleBufferSerializer::SerializeSignedCompressed<TType>(TType& value, u32 nFourCC)
-{
-	m_eError = Error::Ok;
-
-	if (IS_PTR(pData)
-		&& (nDataSize > 0))
-	{
-		UBAu64 tempStore;
-		u8* pByte = tempStore.m_Bytes;
-		size_t nCount = 0;
-		bool bKeepGoing = true;
-
-		while (IS_TRUE(bKeepGoing))
-		{
-			bool bSignBitSet = IS_NOT_ZERO(value & 0x40);
-			*pByte = u8(value & 0x7f);
-			value >>= 7;
-			bKeepGoing = (IS_FALSE(bSignBitSet) && IS_NOT_ZERO(value)) || (IS_TRUE(bSignBitSet) && (value != TType(-1)));
-			*pByte |= (bKeepGoing) ? (1 << 7) : 0;
-			++pByte;
-			++nCount;
-		}
-
-		return SerializeBytes(tempStore.m_Bytes, nCount, nFourCC);
-	}
-	else
-	{
-		m_eError = Error::BadParameter;
-	}
-
-	return 0;
-}
-
-
-//----------------------------------------------------------//
-// CSimpleBufferSerializer::SerializeUnsignedCompressed
-//----------------------------------------------------------//
-// Compress and serialize an integer using ULEB128.
-// Input value should be 16-bit or more.
-//----------------------------------------------------------//
-template<class TType>
-size_t CSimpleBufferSerializer::SerializeUnsignedCompressed<TType>(TType& value, u32 nFourCC)
-{
-	m_eError = Error::Ok;
-
-	if (IS_PTR(pData)
-		&& (nDataSize > 0))
-	{
-		UBAu64 tempStore;
-		u8* pByte = tempStore.m_Bytes;
-		size_t nCount = 0;
-		bool bKeepGoing = true;
-
-		while (IS_TRUE(bKeepGoing))
-		{
-			*pByte = u8(value & 0x7f);
-			value >>= 7;
-			bKeepGoing = (value > 0);
-			*pByte |= (bKeepGoing) ? (1 << 7) : 0;
-			++pByte;
-			++nCount;
-		}
-
-		return SerializeBytes(tempStore.m_Bytes, nCount, nFourCC);
-	}
-	else
-	{
-		m_eError = Error::BadParameter;
-	}
-
-	return 0;
-}
-
-
-//----------------------------------------------------------//
 // CSimpleBufferSerializer::SerializeBytes
 //----------------------------------------------------------//
 // Serialize a number of bytes.
@@ -142,13 +62,14 @@ size_t CSimpleBufferSerializer::SerializeBytes(u8* pData, size_t nDataSize, u32 
 	if (IS_PTR(pData)
 		&& (nDataSize > 0))
 	{
-		size_t nRequired = nDataSize;
+		size_t nActualSize = 0;
+		size_t nRequiredSize = nDataSize;
 		if (IS_TRUE(m_bIncludeFourCCs))
 		{
-			nRequired += sizeof(UBAFourCC);
+			nRequiredSize += sizeof(UBAFourCC);
 		}
 
-		if (m_Buffer.UnusedSize() >= nRequired)
+		if (m_Buffer.UnusedSize() >= nRequiredSize)
 		{
 			if (IS_TRUE(m_bIncludeFourCCs))
 			{
@@ -159,18 +80,18 @@ size_t CSimpleBufferSerializer::SerializeBytes(u8* pData, size_t nDataSize, u32 
 				if (IS_FALSE(SysMemory::IsSystemBigEndian()))
 				{
 					//-- little-endian system. Convert data to big-endian
-					SysMemory::EndianSwap(FCC.m_Bytes, sizeof(FCC.m_nBytes));
+					SysMemory::EndianSwap(FCC.m_Bytes, sizeof(FCC.m_Bytes));
 				}
 
-				if (IS_PTR(m_Buffer.InsTail(&FCC.m_Bytes, sizeof(FCC.m_nBytes))))
+				if (IS_PTR(m_Buffer.InsTail(FCC.m_Bytes, sizeof(FCC.m_Bytes))))
 				{
 					//-- Success.
-					m_eError = Error::Ok;
+					nActualSize += sizeof(FCC.m_Bytes);
 				}
 				else
 				{
 					//-- Failed.
-					m_eError = ConvertError(m_buffer.GetError());
+					m_eError = ConvertError(m_Buffer.GetError());
 				}
 			}
 
@@ -179,12 +100,22 @@ size_t CSimpleBufferSerializer::SerializeBytes(u8* pData, size_t nDataSize, u32 
 				if (IS_PTR(m_Buffer.InsTail(pData, nDataSize)))
 				{
 					//-- Success.
-					m_eError = Error::Ok;
+					nActualSize += nDataSize;
+
+					if (nActualSize == nRequiredSize)
+					{
+						return nActualSize;
+					}
+					else
+					{
+						//-- Error occurred.
+						m_eError = Error::SizeMismatch;
+					}
 				}
 				else
 				{
 					//-- Failed.
-					m_eError = ConvertError(m_buffer.GetError());
+					m_eError = ConvertError(m_Buffer.GetError());
 				}
 			}
 		}
@@ -396,105 +327,76 @@ size_t CSimpleBufferSerializer::SerializeBool(bool& bValue, u32 nFourCC)
 //----------------------------------------------------------//
 // CSimpleBufferSerializer::SerializeString
 //----------------------------------------------------------//
-size_t CPacketSerializer::SerializeString(std::string& strng, u32 nFourCC)
+size_t CSimpleBufferSerializer::SerializeString(std::string& strng, u32 nFourCC)
 {
-	m_eError = Error::Ok;
-
-	u32 nSize = 0;
-	size_t nReturn = 0;
-
-	nSize = (u32)strng.length();
+	u32 nSize = (u32)strng.length();
 	
-	nReturn += SerializeU32(nSize, "slen");
-	
-	if (Error::Ok == m_eError)
+	size_t nActualSize = SerializeU32(nSize, 'slen');
+	if (IS_NOT_ZERO(nActualSize))
 	{
-		nReturn += SerializeBytes(strng.c_str(), nSize, nFourCC);
+		nActualSize += SerializeBytes((u8*)strng.c_str(), strng.length(), nFourCC);
 	}
 
-	return nReturn;
+	return nActualSize;
 }
 
 
 //----------------------------------------------------------//
 // CSimpleBufferSerializer::SerializeFixedString
 //----------------------------------------------------------//
-/*
 size_t CSimpleBufferSerializer::SerializeFixedString(IFixedString& fixedString, u32 nFourCC)
 {
-	u64 nSize = 0;
-	size_t nReturn = 0;
+	u32 nSize = (u32)fixedString.Length();
 
-	if (Mode::Serializing == m_eMode)
+	size_t nActualSize = SerializeU32(nSize, 'slen');
+	if (IS_NOT_ZERO(nActualSize))
 	{
-		nSize = (u64)fixedString.Size();
-		nReturn += SerializeU64(nSize, "slen");
-		if (Error::Ok == m_eError)
-		{
-			nReturn += SerializeBytes(fixedString.Buffer(), fixedString.Size(), nFourCC);
-		}
+		nActualSize += SerializeBytes((u8*)fixedString.ConstBuffer(), fixedString.Length(), nFourCC);
 	}
-	else
-	{
-		nReturn += SerializeU64(nSize, "slen");
-		if (Error::Ok == m_Error)
-		{
-			if (fixedString.Size() >= nSize)
-			{
-				nReturn += SerializeBytes(fixedString.Buffer(), fixedString.Size(), nFourCC);
-			}
-			else
-			{
-				if (IS_PTR(SerializeReserve(nSize)))
-				{
-					nReturn += nSize;
-				}
-			}
-		}
-	}
+
+	return nActualSize;
 }
-*/
 
 
 //----------------------------------------------------------//
 // CSimpleBufferSerializer::ConvertError
 //----------------------------------------------------------//
-CSimpleBufferSerializer::Error::Enum CSimpleBufferSerializer::ConvertError(CSimpleBuffer::Error::Enum e)
+CSimpleBufferSerializer::Error::Enum CSimpleBufferSerializer::ConvertError(ISimpleBuffer::Error::Enum e)
 {
 	switch (e)
 	{
-		case CSimpleBuffer::Error::MoveFailed:
+		case ISimpleBuffer::Error::MoveFailed:
 		{
 			return Error::MoveFailed;
 		}
 		break;
-		case CSimpleBuffer::Error::CopyFailed
+		case ISimpleBuffer::Error::CopyFailed:
 		{
 			return Error::CopyFailed;
 		}
 		break;
-		case CSimpleBuffer::Error::BadParameter:
+		case ISimpleBuffer::Error::BadParameter:
 		{
 			return Error::BadParameter;
 		}
 		break;
-		case CSimpleBuffer::Error::WouldUnderflow:
+		case ISimpleBuffer::Error::WouldUnderflow:
 		{
 			return Error::WouldUnderflow;
 		}
 		break;
-		case CSimpleBuffer::Error::WouldOverflow:
+		case ISimpleBuffer::Error::WouldOverflow:
 		{
 			return Error::WouldOverflow;
 		}
 		break;
-		case CSimpleBuffer::Error::Fail:
+		case ISimpleBuffer::Error::Fail:
+		default:
 		{
 			return Error::Fail;
 		}
 		break;
-		case CSimpleBuffer::Error::Ok:
-		default:
+		case ISimpleBuffer::Error::Ok:
 		{
 			return Error::Ok;
 		}
