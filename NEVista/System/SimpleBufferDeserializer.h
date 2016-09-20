@@ -81,34 +81,30 @@ class CSimpleBufferDeserializer : public CSerializer
 		size_t SerializeSignedDecompressed(TType& value, u32 nFourCC)
 		{
 			u8 byte;
+			u8* pByte = &byte;
 			u32 nShift = 0;
 			size_t nBytesRead = 0;
+			size_t nOffset = 0;
 
 			value = 0;
 
 			//-- Always read at least one byte the normal way.
 			//-- (to handle the fourCC)
-			nBytesRead += SerializeBytes(&byte, 1, nFourCC);
+			nBytesRead += SerializeBytes(pByte, 1, nFourCC);
 			if (nBytesRead > 0)
 			{
-				value |= TType(byte & 0x7f) << nShift;
+				value |= TType(*pByte & 0x7f) << nShift;
 				nShift += 7;
-	
-				while (byte >= 0x80)
+
+				while ((nBytesRead > 0) && (*pByte >= 0x80))
 				{
-					if (IS_PTR(m_Buffer.StripHead(&byte, 1)))
-					{
-						value |= TType(byte & 0x7f) << nShift;
-						nShift += 7;
-						++nBytesRead;
-					}
-					else
-					{
-						//-- Error in read. Manually set m_eError.
-						m_eError = ConvertError(m_Buffer.GetError());
-						byte = 0;
-						nBytesRead = 0;
-					}
+					pByte = m_Buffer.Buffer() + nOffset;
+
+					value |= TType(*pByte & 0x7f) << nShift;
+					nShift += 7;
+
+					++nBytesRead;
+					++nOffset;
 
 					if (nBytesRead > (sizeof(u32) + sizeof(u64)))
 					{
@@ -116,15 +112,29 @@ class CSimpleBufferDeserializer : public CSerializer
 						//-- With LEB128 it should be less, but if we ever read more than 12,
 						//-- we know something is wrong and we can stop.
 						m_eError = Error::SizeMismatch;
-						byte = 0;
 						nBytesRead = 0;
+						nOffset = 0;
 					}
-				} 
+				}
 
 				//-- Sign extend negative numbers
-				if ((nShift < 8 * sizeof(TType)) && (byte & 0x40))
+				if ((nShift < 8 * sizeof(TType)) && (*pByte & 0x40))
 				{
 					value |= TType(-1) << nShift;
+				}
+
+				if (nOffset > 0)
+				{
+					if (IS_PTR(m_Buffer.StripHead(NULL, nOffset)))
+					{
+						//-- Success.
+					}
+					else
+					{
+						//-- Failed.
+						m_eError = ConvertError(m_Buffer.GetError());
+						nBytesRead = 0;
+					}
 				}
 			}
 			else
@@ -139,8 +149,10 @@ class CSimpleBufferDeserializer : public CSerializer
 		size_t SerializeUnsignedDecompressed(TType& value, u32 nFourCC)
 		{
 			u8 byte;
+			u8* pByte = &byte;
 			u32 nShift = 0;
 			size_t nBytesRead = 0;
+			size_t nOffset = 0;
 
 			value = 0;
 
@@ -149,25 +161,18 @@ class CSimpleBufferDeserializer : public CSerializer
 			nBytesRead += SerializeBytes(&byte, 1, nFourCC);
 			if (nBytesRead > 0)
 			{
-				value |= TType(byte & 0x7f) << nShift;
+				value |= TType(*pByte & 0x7f) << nShift;
 				nShift += 7;
-	
-				while (byte >= 0x80)
-				{
-					if (IS_PTR(m_Buffer.StripHead(&byte, 1)))
-					{
-						value |= TType(byte & 0x7f) << nShift;
-						nShift += 7;
-						++nBytesRead;
-					}
-					else
-					{
-						//-- Error in read. Manually set m_eError.
-						m_eError = ConvertError(m_Buffer.GetError());
-						byte = 0;
-						nBytesRead = 0;
-					}
 
+				while ((nBytesRead > 0) && (*pByte >= 0x80))
+				{
+					pByte = m_Buffer.Buffer() + nOffset;
+
+					value |= TType(*pByte & 0x7f) << nShift;
+					nShift += 7;
+
+					++nBytesRead;
+					++nOffset;
 
 					if (nBytesRead > (sizeof(u32) + sizeof(u64)))
 					{
@@ -175,10 +180,24 @@ class CSimpleBufferDeserializer : public CSerializer
 						//-- With LEB128 it should be less, but if we ever read more than 12,
 						//-- we know something is wrong and we can stop.
 						m_eError = Error::SizeMismatch;
-						byte = 0;
+						nBytesRead = 0;
+						nOffset = 0;
+					}
+				}
+
+				if (nOffset > 0)
+				{
+					if (IS_PTR(m_Buffer.StripHead(NULL, nOffset)))
+					{
+						//-- Success.
+					}
+					else
+					{
+						//-- Failed.
+						m_eError = ConvertError(m_Buffer.GetError());
 						nBytesRead = 0;
 					}
-				} 
+				}
 			}
 			else
 			{

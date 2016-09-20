@@ -77,7 +77,7 @@ class CSimpleBufferSerializer : public CSerializer
 	private:
 	
 		template <class TType>
-		size_t SerializeSignedCompressed(TType& value, u32 nFourCC)
+		size_t SerializeSignedCompressed(TType value, u32 nFourCC)
 		{
 			m_eError = Error::Ok;
 
@@ -101,7 +101,7 @@ class CSimpleBufferSerializer : public CSerializer
 		}
 
 		template <class TType> 
-		size_t SerializeUnsignedCompressed(TType& value, u32 nFourCC)
+		size_t SerializeUnsignedCompressed(TType value, u32 nFourCC)
 		{
 			m_eError = Error::Ok;
 
