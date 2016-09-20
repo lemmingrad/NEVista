@@ -12,7 +12,7 @@
 
 
 #include "Types.h"
-#include "ISerializer.h"
+#include "Serializer.h"
 
 
 //----------------------------------------------------------//
@@ -40,7 +40,10 @@
 //----------------------------------------------------------//
 
 
-class CPacketSerializer : public ISerializer
+class IFixedString;
+
+
+class CPacketSerializer : public CSerializer
 {
 	public:
 
@@ -67,7 +70,7 @@ class CPacketSerializer : public ISerializer
 
 		u8*						SerializeReserve(size_t nReservedSize);
 
-		//-- CSerializer
+		// ISerializer
 		virtual	size_t			SerializeF32(f32& fValue, u32 nFourCC = 'f32 '); 
 		virtual	size_t			SerializeF64(f64& fValue, u32 nFourCC = 'f64 '); 
 		virtual	size_t			SerializeS32(s32& nValue, u32 nFourCC = 's32 '); 
@@ -81,7 +84,9 @@ class CPacketSerializer : public ISerializer
 		virtual	size_t			SerializeBitfield(bitfield& nFlags, u32 nFourCC = 'bits'); 
 		virtual size_t			SerializeBytes(u8* pData, size_t nDataSize, u32 nFourCC = 'data');
 		virtual size_t			SerializeBool(bool& bValue, u32 nFourCC = 'bool');
-//		virtual size_t			SerializeFixedString(FixedString& fixedString, u32 nFourCC = 'fstr');
+		virtual size_t			SerializeString(std::string& strng, u32 nFourCC = 'sstr');
+		virtual size_t			SerializeFixedString(IFixedString& fixedString, u32 nFourCC = 'fstr');
+		// ~ISerializer
 
 	protected:
 

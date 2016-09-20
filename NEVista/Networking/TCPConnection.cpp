@@ -182,7 +182,7 @@ CTCPConnection::Error::Enum CTCPConnection::UpdateRecv(TMessageList& recvList, T
 			case CPacket::Error::Ok:
 			{
 				//-- Success.
-				if (IS_PTR(m_RecvBuffer.StripHead(packetDeserializer.GetOffset())))
+				if (IS_PTR(m_RecvBuffer.StripHead(NULL, packetDeserializer.GetOffset())))
 				{
 					//-- Success, so safe to append the packetMessages list to the end of the
 					//-- recvList.
@@ -513,7 +513,7 @@ CTCPConnection::Error::Enum CTCPConnection::UpdateSend(TMessageList& sendList)
 		s32 nBytes = SysSocket::Send(m_nSocket, (const s8*)m_SendBuffer.ConstBuffer(), m_SendBuffer.UsedSize());
 		if (nBytes > 0)
 		{
-			if (IS_NULL_PTR(m_SendBuffer.StripHead(nBytes)))
+			if (IS_NULL_PTR(m_SendBuffer.StripHead(NULL, nBytes)))
 			{
 				return Close(Error::BadFail);
 			}

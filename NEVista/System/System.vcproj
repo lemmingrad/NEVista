@@ -158,6 +158,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\SimpleBufferDeserializer.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\SimpleBufferSerializer.cpp"
 				>
 			</File>
@@ -260,6 +264,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\IFixedString.h"
+				>
+			</File>
+			<File
 				RelativePath=".\Ini.h"
 				>
 			</File>
@@ -272,11 +280,19 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ISimpleBuffer.h"
+				>
+			</File>
+			<File
 				RelativePath=".\Log.h"
 				>
 			</File>
 			<File
 				RelativePath=".\SimpleBuffer.h"
+				>
+			</File>
+			<File
+				RelativePath=".\SimpleBufferDeserializer.h"
 				>
 			</File>
 			<File

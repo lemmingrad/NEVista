@@ -80,53 +80,113 @@ class CSimpleBufferDeserializer : public CSerializer
 		template <class TType>
 		size_t SerializeSignedDecompressed(TType& value, u32 nFourCC)
 		{
-			return 0;
+			u8 byte;
+			u32 nShift = 0;
+			size_t nBytesRead = 0;
+
+			value = 0;
+
+			//-- Always read at least one byte the normal way.
+			//-- (to handle the fourCC)
+			nBytesRead += SerializeBytes(&byte, 1, nFourCC);
+			if (nBytesRead > 0)
+			{
+				value |= TType(byte & 0x7f) << nShift;
+				nShift += 7;
+	
+				while (byte >= 0x80)
+				{
+					if (IS_PTR(m_Buffer.StripHead(&byte, 1)))
+					{
+						value |= TType(byte & 0x7f) << nShift;
+						nShift += 7;
+						++nBytesRead;
+					}
+					else
+					{
+						//-- Error in read. Manually set m_eError.
+						m_eError = ConvertError(m_Buffer.GetError());
+						byte = 0;
+						nBytesRead = 0;
+					}
+
+					if (nBytesRead > (sizeof(u32) + sizeof(u64)))
+					{
+						//-- Safety test - we can never read more than 12 bytes. (fourcc + u64)
+						//-- With LEB128 it should be less, but if we ever read more than 12,
+						//-- we know something is wrong and we can stop.
+						m_eError = Error::SizeMismatch;
+						byte = 0;
+						nBytesRead = 0;
+					}
+				} 
+
+				//-- Sign extend negative numbers
+				if ((nShift < 8 * sizeof(TType)) && (byte & 0x40))
+				{
+					value |= TType(-1) << nShift;
+				}
+			}
+			else
+			{
+				//-- Error in read. m_eError already set by SerializeBytes().
+			}
+
+			return nBytesRead;
 		}
 		
 		template <class TType>
 		size_t SerializeUnsignedDecompressed(TType& value, u32 nFourCC)
 		{
-			return 0;
+			u8 byte;
+			u32 nShift = 0;
+			size_t nBytesRead = 0;
+
+			value = 0;
+
+			//-- Always read at least one byte the normal way.
+			//-- (to handle the fourCC)
+			nBytesRead += SerializeBytes(&byte, 1, nFourCC);
+			if (nBytesRead > 0)
+			{
+				value |= TType(byte & 0x7f) << nShift;
+				nShift += 7;
+	
+				while (byte >= 0x80)
+				{
+					if (IS_PTR(m_Buffer.StripHead(&byte, 1)))
+					{
+						value |= TType(byte & 0x7f) << nShift;
+						nShift += 7;
+						++nBytesRead;
+					}
+					else
+					{
+						//-- Error in read. Manually set m_eError.
+						m_eError = ConvertError(m_Buffer.GetError());
+						byte = 0;
+						nBytesRead = 0;
+					}
+
+
+					if (nBytesRead > (sizeof(u32) + sizeof(u64)))
+					{
+						//-- Safety test - we can never read more than 12 bytes. (fourcc + u64)
+						//-- With LEB128 it should be less, but if we ever read more than 12,
+						//-- we know something is wrong and we can stop.
+						m_eError = Error::SizeMismatch;
+						byte = 0;
+						nBytesRead = 0;
+					}
+				} 
+			}
+			else
+			{
+				//-- Error in read. m_eError already set by SerializeBytes().
+			}
+
+			return nBytesRead;
 		}
-
-
-		/*
-		template<typename T_Visitor, typename T_Type>
-		static void decodeULEB128(T_Visitor& visitor, const char* name, T_Type& value)
-		{
-		uint32 shift = 0;
-		uint8 encodedByte;
-
-		value = 0;
-		do
-		{
-		visitor.Serialize(name, encodedByte);
-		value |= T_Type(encodedByte & 0x7f) << shift;
-		shift += 7;
-		} while (encodedByte >= 0x80);
-		}
-
-		template<typename T_Visitor, typename T_Type>
-		static void decodeSLEB128(T_Visitor& visitor, const char* name, T_Type& value)
-		{
-		uint32 shift = 0;
-		uint8 encodedByte;
-
-		value = 0;
-		do
-		{
-		visitor.Serialize(name, encodedByte);
-		value |= T_Type(encodedByte & 0x7f) << shift;
-		shift += 7;
-		} while (encodedByte >= 0x80);
-
-		// Sign extend negative numbers
-		if ((shift < 8 * sizeof(T_Type)) && (encodedByte & 0x40))
-		value |= T_Type(-1) << shift;
-		}
-		*/
-
-
 
 		Error::Enum				ConvertError(ISimpleBuffer::Error::Enum e);
 

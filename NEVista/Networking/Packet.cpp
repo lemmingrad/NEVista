@@ -290,7 +290,7 @@ CPacket::Error::Enum CPacket::Serialize(CPacketSerializer& serializer)
 				return Error::EncryptionFailed;
 			}
 
-			if (IS_NULL_PTR(m_DataBuffer.StripHead(m_DataBuffer.UsedSize())))
+			if (IS_NULL_PTR(m_DataBuffer.StripHead(NULL, m_DataBuffer.UsedSize())))
 			{
 				//-- Failed.
 				//-- DataBuffer wasn't full enough
@@ -320,7 +320,7 @@ CPacket::Error::Enum CPacket::Serialize(CPacketSerializer& serializer)
 				return Error::CopyFailed;
 			}
 
-			if (IS_NULL_PTR(m_DataBuffer.StripHead(m_HeaderV1.m_nDataSize)))
+			if (IS_NULL_PTR(m_DataBuffer.StripHead(NULL, m_HeaderV1.m_nDataSize)))
 			{
 				//-- Failed.
 				//-- DataBuffer wasn't full enough

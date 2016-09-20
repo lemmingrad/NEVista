@@ -25,7 +25,7 @@
 // CPacketSerializer::CPacketSerializer
 //----------------------------------------------------------//
 CPacketSerializer::CPacketSerializer(Mode::Enum eMode, u8* pBuffer, size_t nSize, size_t nOffset)
-: ISerializer(eMode)
+: CSerializer(eMode)
 , m_pBuffer(pBuffer)
 , m_nSize(nSize)
 , m_nOffset(nOffset)
@@ -806,12 +806,21 @@ size_t CPacketSerializer::SerializeBool(bool& bValue, u32 nFourCC)
 
 
 //----------------------------------------------------------//
+// CPacketSerializer::SerializeString
+//----------------------------------------------------------//
+size_t CPacketSerializer::SerializeString(std::string& strng, u32 nFourCC)
+{
+	return 0;
+}
+
+
+//----------------------------------------------------------//
 // CPacketSerializer::SerializeFixedString
 //----------------------------------------------------------//
-/*
-size_t CPacketSerializer::SerializeFixedString(FixedString& fixedString, u32 nFourCC)
+size_t CPacketSerializer::SerializeFixedString(IFixedString& fixedString, u32 nFourCC)
 {
-	u32 nSize = 0;
+	return 0;
+/*	u32 nSize = 0;
 	size_t nReturn = 0;
 
 	if (Mode::Serializing == m_eMode)
@@ -841,8 +850,8 @@ size_t CPacketSerializer::SerializeFixedString(FixedString& fixedString, u32 nFo
 			}
 		}
 	}
-}
 */
+}
 
 
 //----------------------------------------------------------//
