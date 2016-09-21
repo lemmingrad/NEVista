@@ -75,6 +75,7 @@ class CMessage : public ISerializable
 
 		//-- ISerializable
 		virtual size_t			Serialize(ISerializer& Serializer);
+		//-- ~ISerializable
 
 	protected:
 

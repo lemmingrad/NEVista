@@ -4,6 +4,7 @@
 
 
 #include "Types.h"
+#include "SysSmartPtr.h"
 #include "SysFileIO.h"
 #include "SysMemory.h"
 #include "SysString.h"
