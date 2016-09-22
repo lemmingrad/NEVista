@@ -6,16 +6,13 @@
 // FILEDIRECTTEXTREADER.H
 //----------------------------------------------------------//
 //-- Description
-// CFileAccessorDirectTextReader class. Derived from
-// CFileAccessorDirectReader.
-//
-// CFileProcessorDirectTextReader class. Derived from
-// CFileProcessorDirectReader.
+// CFileDirectTextReader class. Derived from
+// CFileDirectReader.
 //----------------------------------------------------------//
 
 
-#include "Types.h"
 #include "FileDirectReader.h"
+#include "Types.h"
 
 
 //----------------------------------------------------------//
@@ -34,40 +31,35 @@
 // FORWARD REFERENCES
 //----------------------------------------------------------//
 
-
-class CFileData;
-
-
 //----------------------------------------------------------//
 // CLASSES
 //----------------------------------------------------------//
 
 
-class CFileAccessorDirectTextReader : public CFileAccessorDirectReader
+class CFileDirectTextReader : public CFileDirectReader
 {
 	public:
 
-		CFileAccessorDirectTextReader(CFileData* pData);
-		virtual ~CFileAccessorDirectTextReader();
+		CFileDirectTextReader(const s8* strFileName);
+		CFileDirectTextReader(const IFixedString& strFileName);
+		virtual ~CFileDirectTextReader();
 
-		virtual bool							ValidateData(void) const;
+		// IFile
+		virtual bool				Validate(void) const;
+		// ~IFile
 
-		s8*										GetString(s8* pDstBuffer, size_t nDstBufferSize);
-};
+		s8*							GetString(s8* pDstBuffer, size_t nDstBufferSize);
+		IFixedString&				GetString(IFixedString& strString);
 
+		//-- In DirectReader and DirectWriter, Open and Close are public
+		//-- so they can be used anywhere.
+		virtual Error::Enum			Open(void);
+		virtual Error::Enum			Close(void);
 
-class CFileProcessorDirectTextReader : public CFileProcessorDirectReader
-{
-	public:
+	private:
 
-		CFileProcessorDirectTextReader(CFileData* pData);
-		virtual ~CFileProcessorDirectTextReader();
-
-		virtual bool							ValidateData(void) const;
-
-		virtual Error::Enum						Open(void);
-		virtual Error::Enum						Close(void);
-		virtual Error::Enum						Update(void);
+		//-- In DirectReader and DirectWriter. Update is private and never used.
+		virtual Error::Enum			Update(void);
 };
 
 

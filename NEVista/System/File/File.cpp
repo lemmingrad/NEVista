@@ -1,18 +1,15 @@
 //----------------------------------------------------------//
-// FILEDATA.CPP
+// FILE.CPP
 //----------------------------------------------------------//
 //-- Description
-// CFileData is a structure to be held in lists within the 
-// FileManager containing the actual file status. 
-// This data should not be accessible directly:
-// Use a FileAccessor to read/write to the file, and let the 
-// FileManager do all the updating via a FileProcessor.
+// CFile base class.
 //----------------------------------------------------------//
 
 
-#include "FileData.h"
+#include "File.h"
 #include "Types.h"
 #include "SysString.h"
+#include "FixedString.h"
 
 
 //----------------------------------------------------------//
@@ -23,11 +20,10 @@
 // GLOBALS
 //----------------------------------------------------------//
 
-
 //----------------------------------------------------------//
-// CFileData::CFileData
+// CFile::CFile
 //----------------------------------------------------------//
-CFileData::CFileData(const s8* strFileName, CFileData::Type::Enum eType, CFileData::AccessMethod::Enum eAccess)
+CFile::CFile(const s8* strFileName, IFile::Type::Enum eType, IFile::AccessMethod::Enum eAccess)
 : m_strFileName()
 , m_nHash(SysString::INVALID_HASH)
 , m_eFileType(eType)
@@ -39,88 +35,90 @@ CFileData::CFileData(const s8* strFileName, CFileData::Type::Enum eType, CFileDa
 
 
 //----------------------------------------------------------//
-// CFileData::~CFileData
+// CFile::CFile
 //----------------------------------------------------------//
-CFileData::~CFileData()
+CFile::CFile(const IFixedString& strFileName, IFile::Type::Enum eType, IFile::AccessMethod::Enum eAccess)
+	: m_strFileName()
+	, m_nHash(SysString::INVALID_HASH)
+	, m_eFileType(eType)
+	, m_eAccessMethod(eAccess)
+{
+	m_strFileName.Set(strFileName);
+	m_nHash = SysString::GenerateHash(strFileName.ConstBuffer());
+}
+
+
+//----------------------------------------------------------//
+// CFile::~CFile
+//----------------------------------------------------------//
+CFile::~CFile()
 {
 }
 
 
 //----------------------------------------------------------//
-// CFileData::Validate
+// CFile::GetFileType
 //----------------------------------------------------------//
-bool CFileData::Validate(CFileData::Type::Enum eType, CFileData::AccessMethod::Enum eAccess) const
-{
-	if (SysString::INVALID_HASH != GetHash())
-	{
-		switch (eType)
-		{
-			case Type::Any:
-			break;
-			default:
-			{
-				if (eType != GetFileType())
-				{
-					return false;
-				}
-			}
-			break;
-		}
-
-		switch (eAccess)
-		{
-			case AccessMethod::Any:
-			break;
-			default:
-			{
-				if (eAccess != GetAccessMethod())
-				{
-					return false;
-				}
-			}
-			break;
-		}
-
-		return true;
-	}
-
-	return false;
-}
-
-
-//----------------------------------------------------------//
-// CFileData::GetFileType
-//----------------------------------------------------------//
-CFileData::Type::Enum CFileData::GetFileType(void) const
+IFile::Type::Enum CFile::GetFileType(void) const
 {
 	return m_eFileType;
 }
 
 
 //----------------------------------------------------------//
-// CFileData::GetAccessMethod
+// CFile::GetAccessMethod
 //----------------------------------------------------------//
-CFileData::AccessMethod::Enum CFileData::GetAccessMethod(void) const
+IFile::AccessMethod::Enum CFile::GetAccessMethod(void) const
 {
 	return m_eAccessMethod;
 }
 
 
 //----------------------------------------------------------//
-// CFileData::GetFileName
+// CFile::GetFileName
 //----------------------------------------------------------//
-const s8* CFileData::GetFileName(void) const
+const IFixedString& CFile::GetFileName(void) const
 {
-	return m_strFileName.ConstBuffer();
+	return m_strFileName;
 }
 
 
 //----------------------------------------------------------//
-// CFileData::GetHash
+// CFile::GetHash
 //----------------------------------------------------------//
-SysString::Hash CFileData::GetHash(void) const
+SysString::Hash CFile::GetHash(void) const
 {
 	return m_nHash;
+}
+
+
+//----------------------------------------------------------//
+// CFile::IsTypeAccess
+//----------------------------------------------------------//
+bool CFile::IsTypeAccess(IFile::Type::Enum eType, IFile::AccessMethod::Enum eAccess) const
+{
+	if (SysString::INVALID_HASH == GetHash())
+	{
+		return false;
+	}
+
+	if (Type::Any != eType)
+	{
+		if (GetFileType() != eType)
+		{
+			return false;
+		}
+	}
+
+	if (AccessMethod::Any != eAccess)
+	{
+		if (GetAccessMethod() != eAccess)
+		{
+			return false;
+		}
+	}
+
+	return true;
 }
 
 

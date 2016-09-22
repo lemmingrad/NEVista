@@ -2,19 +2,15 @@
 // FILEDIRECTTEXTWRITER.CPP
 //----------------------------------------------------------//
 //-- Description
-// CFileAccessorDirectTextWriter class. Derived from
-// CFileAccessorDirectWriter.
-//
-// CFileProcessorDirectTextWriter class. Derived from
-// CFileProcessorDirectWriter.
+// CFileDirectTextWriter class. Derived from
+// CFileDirectWriter.
 //----------------------------------------------------------//
 
 
 #include "FileDirectTextWriter.h"
-#include "FileData.h"
 #include "Types.h"
-#include "SysString.h"
 #include "SysFileIO.h"
+#include "SysString.h"
 
 
 //----------------------------------------------------------//
@@ -25,77 +21,60 @@
 // GLOBALS
 //----------------------------------------------------------//
 
-
 //----------------------------------------------------------//
-// CFileAccessorDirectTextWriter::CFileAccessorDirectTextWriter
+// CFileDirectTextWriter::CFileDirectTextWriter
 //----------------------------------------------------------//
-CFileAccessorDirectTextWriter::CFileAccessorDirectTextWriter(CFileData* pData)
-: CFileAccessorDirectWriter(pData)
+CFileDirectTextWriter::CFileDirectTextWriter(const s8* strFileName)
+: CFileDirectWriter(strFileName, Type::Text)
 {
 }
 
 
 //----------------------------------------------------------//
-// CFileAccessorDirectTextWriter::~CFileAccessorDirectTextWriter
+// CFileDirectTextWriter::CFileDirectTextWriter
 //----------------------------------------------------------//
-CFileAccessorDirectTextWriter::~CFileAccessorDirectTextWriter()
+CFileDirectTextWriter::CFileDirectTextWriter(const IFixedString& strFileName)
+: CFileDirectWriter(strFileName, Type::Text)
 {
 }
 
 
 //----------------------------------------------------------//
-// CFileAccessorDirectTextWriter::ValidateData
+// CFileDirectTextWriter::~CFileDirectTextWriter
 //----------------------------------------------------------//
-bool CFileAccessorDirectTextWriter::ValidateData(void) const
+CFileDirectTextWriter::~CFileDirectTextWriter()
 {
-	if (IS_PTR(m_pData))
-	{
-		if (IS_TRUE(m_pData->Validate(CFileData::Type::Text, CFileData::AccessMethod::DirectWrite)))
-		{
-			//-- Data validated
-			return true;
-		}
-	}
-
-	//-- Failed to validate data
-	return false;
 }
 
 
 //----------------------------------------------------------//
-// CFileAccessorDirectTextWriter::Printf
+// CFileDirectTextWriter::Validate
+//----------------------------------------------------------//
+bool CFileDirectTextWriter::Validate(void) const
+{
+	return IsTypeAccess(Type::Text, AccessMethod::DirectWrite);
+}
+
+
+size_t CFileDirectTextWriter::Printf(const s8* strFormatting, ...)
+{
+	return 0;
+}
+		
+//----------------------------------------------------------//
+// CFileDirectTextWriter::PutString
 //----------------------------------------------------------//
 //-- Description
-// Uses printf-style formatting to put a string directly into
-// an open file.
+// Write a string into an open file.
 //----------------------------------------------------------//
-size_t CFileAccessorDirectTextWriter::Printf(const s8* strFormatting, ...)
+size_t CFileDirectTextWriter::PutString(const s8* pSrcBuffer)
 {
-	m_strWorkingBuffer.Clear();
-
-	va_list ArgList;
-	va_start(ArgList, strFormatting);
-	SysString::Vsprintf(m_strWorkingBuffer.Buffer(), m_strWorkingBuffer.Size(), strFormatting, ArgList);
-	va_end(ArgList);
-
-	return PutString(m_strWorkingBuffer.ConstBuffer());
-}
-
-
-//----------------------------------------------------------//
-// CFileAccessorDirectTextWriter::PutString
-//----------------------------------------------------------//
-//-- Description 
-// Attempts to put a complete string into an open file.
-//----------------------------------------------------------//
-size_t CFileAccessorDirectTextWriter::PutString(const s8* strSrcBuffer)
-{
-	if ( IS_TRUE(ValidateData())
+	if ( IS_TRUE(Validate())
 		&& IS_TRUE(IsOpen())
-		&& strSrcBuffer )
+		&& IS_FALSE(SysString::IsEmpty(pSrcBuffer)) )
 	{
-		size_t nBytes = SysFileIO::Fputs(m_pData->m_DirectWriterData.m_pFile, strSrcBuffer);
-		SysFileIO::Fflush(m_pData->m_DirectWriterData.m_pFile);
+		size_t nBytes = SysFileIO::Fputs(m_pFile, pSrcBuffer);
+		SysFileIO::Fflush(m_pFile);
 		return nBytes;
 	}
 
@@ -104,72 +83,97 @@ size_t CFileAccessorDirectTextWriter::PutString(const s8* strSrcBuffer)
 
 
 //----------------------------------------------------------//
-// CFileProcessorDirectTextWriter::CFileProcessorDirectTextWriter
+// CFileDirectTextWriter::PutString
 //----------------------------------------------------------//
-CFileProcessorDirectTextWriter::CFileProcessorDirectTextWriter(CFileData* pData)
-: CFileProcessorDirectWriter(pData)
+//-- Description
+// Write a string into an open file.
+//----------------------------------------------------------//
+size_t CFileDirectTextWriter::PutString(const std::string& strString)
 {
-}
-
-
-//----------------------------------------------------------//
-// CFileProcessorDirectTextWriter::~CFileProcessorDirectTextWriter
-//----------------------------------------------------------//
-CFileProcessorDirectTextWriter::~CFileProcessorDirectTextWriter()
-{
-}
-
-
-//----------------------------------------------------------//
-// CFileProcessorDirectTextWriter::ValidateData
-//----------------------------------------------------------//
-bool CFileProcessorDirectTextWriter::ValidateData(void) const
-{
-	if (IS_PTR(m_pData))
+	if ( IS_TRUE(Validate())
+		&& IS_TRUE(IsOpen())
+		&& (strString.length() > 0) )
 	{
-		if (IS_TRUE(m_pData->Validate(CFileData::Type::Text, CFileData::AccessMethod::DirectWrite)))
-		{
-			//-- Data validated
-			return true;
-		}
+		size_t nBytes = SysFileIO::Fputs(m_pFile, strString.c_str());
+		SysFileIO::Fflush(m_pFile);
+		return nBytes;
 	}
 
-	//-- Failed to validate data
-	return false;
+	return 0;
 }
 
 
-CFileProcessor::Error::Enum CFileProcessorDirectTextWriter::Open(void)
+//----------------------------------------------------------//
+// CFileDirectTextWriter::PutString
+//----------------------------------------------------------//
+//-- Description
+// Write a string into an open file.
+//----------------------------------------------------------//
+size_t CFileDirectTextWriter::PutString(const IFixedString& strString)
 {
-	if (IS_TRUE(ValidateData()))
+	if ( IS_TRUE(Validate())
+		&& IS_TRUE(IsOpen())
+		&& IS_FALSE(strString.IsEmpty()) )
 	{
-		Error::Enum eResult = CFileProcessorDirectWriter::Open();
-		if (Error::Ok == eResult)
+		size_t nBytes = SysFileIO::Fputs(m_pFile, strString.ConstBuffer());
+		SysFileIO::Fflush(m_pFile);
+		return nBytes;
+	}
+
+	return 0;
+}
+
+
+//----------------------------------------------------------//
+// CFileDirectTextWriter::Open
+//----------------------------------------------------------//
+CFile::Error::Enum CFileDirectTextWriter::Open(void)
+{
+	if (IS_TRUE(Validate()))
+	{
+		if (IS_FALSE(IsOpen()))
 		{
-			m_pData->m_DirectWriterData.m_pFile = SysFileIO::Fopen(m_pData->m_strFileName.ConstBuffer(), "wt");
-			if (IS_FALSE(IsOpen()))
+			m_pFile = SysFileIO::Fopen(m_strFileName.ConstBuffer(), "wt");
+			m_nSize = 0;
+
+			if (IS_TRUE(IsOpen()))
 			{
-				//-- Failed to open file
-				return Error::Failed;
+				return Error::Ok;
 			}
 
-			return Error::Ok;
+			return Error::FileOpenFailed;
 		}
+
+		return Error::FileAlreadyOpen;
 	}
 
 	return Error::Failed;
 }
 
 
-CFileProcessor::Error::Enum CFileProcessorDirectTextWriter::Close(void)
+//----------------------------------------------------------//
+// CFileDirectTextWriter::Close
+//----------------------------------------------------------//
+CFile::Error::Enum CFileDirectTextWriter::Close(void)
 {
-	return CFileProcessorDirectWriter::Close();
+	if (IS_TRUE(IsOpen()))
+	{
+		SysFileIO::Fclose(m_pFile);
+	}
+
+	m_pFile = SysFileIO::INVALID_HANDLE;
+	m_nSize = 0;
+
+	return Error::Ok;
 }
 
 
-CFileProcessor::Error::Enum CFileProcessorDirectTextWriter::Update(void)
+//----------------------------------------------------------//
+// CFileDirectTextWriter::Update
+//----------------------------------------------------------//
+CFile::Error::Enum CFileDirectTextWriter::Update(void)
 {
-	return CFileProcessorDirectWriter::Update();
+	return Error::Ok;
 }
 
 

@@ -18,10 +18,6 @@
 // DEFINES
 //----------------------------------------------------------//
 
-
-#define SYSTIME_BUFFER_SIZE			(26)
-
-
 //----------------------------------------------------------//
 // ENUMS
 //----------------------------------------------------------//
@@ -38,6 +34,8 @@
 class SysTime
 {
 	public:
+
+		static const size_t	CTIME_BUFFER_SIZE = 26;
 
 		static time_t Time(time_t* pTime);
 		static s8* Ctime(s8* strDest, size_t nDestSize, const time_t* pTime);

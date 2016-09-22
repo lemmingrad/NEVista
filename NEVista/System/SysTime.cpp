@@ -74,7 +74,7 @@ s8* SysTime::Ctime(s8* strDest, size_t nDestSize, const time_t* pTime)
 #else
 
 	if ( IS_NULL_PTR(strDest) 
-		|| (nDestSize < SYSTIME_BUFFER_SIZE)
+		|| (nDestSize < SysTime::CTIME_BUFFER_SIZE)
 		|| (IS_NULL_PTR(pTime)) )
 	{
 		//-- Be consistent with the behavior of ctime_s.

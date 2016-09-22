@@ -1,23 +1,26 @@
-#ifndef _FILEDIRECTTEXTREADER_H_
-#define _FILEDIRECTTEXTREADER_H_
+#ifndef _IFILE_H_
+#define _IFILE_H_
 #pragma once
 
 //----------------------------------------------------------//
-// FILEDIRECTTEXTREADER.H
+// IFILE.H
 //----------------------------------------------------------//
 //-- Description
-// CFileDirectTextReader class. Derived from
-// CFileDirectReader.
+// Interface for a CFile Object
 //----------------------------------------------------------//
 
 
-#include "FileDirectReader.h"
 #include "Types.h"
+#include "SysString.h"
 
 
 //----------------------------------------------------------//
 // DEFINES
 //----------------------------------------------------------//
+
+
+#define FILE_MAX_FILENAME_LENGTH					(256)
+
 
 //----------------------------------------------------------//
 // ENUMS
@@ -32,7 +35,7 @@
 //----------------------------------------------------------//
 
 
-class CFileData;
+class IFixedString;
 
 
 //----------------------------------------------------------//
@@ -40,28 +43,49 @@ class CFileData;
 //----------------------------------------------------------//
 
 
-class CFileDirectTextReader : public CFileDirectReader
+class IFile
 {
 	public:
 
-		CFileDirectTextReader(const s8* strFileName);
-		CFileDirectTextReader(const IFixedString& strFileName);
-		virtual ~CFileDirectTextReader();
+		struct Type
+		{
+			enum Enum
+			{
+				Unknown = 0,
+				Text,
+				Binary,
+				ArcEntry,
+				Archive,
+				Any
+			};
+		};
 
-		// IFile
-		virtual bool				Validate(void) const;
-		// ~IFile
+		struct AccessMethod
+		{
+			enum Enum
+			{
+				Unknown			= 0x00,
+				DirectRead		= 0x01,
+				DirectWrite		= 0x11,
+				BufferedRead	= 0x02,
+				BufferedWrite	= 0x12,
+				AsyncRead		= 0x04,
+				AsyncWrite		= 0x14,
+				StreamedRead	= 0x08,
+				Any				= 0xFF
+			};
+		};
 
-		s8*							GetString(s8* pDstBuffer, size_t nDstBufferSize);
-		IFixedString&				GetString(IFixedString& strString);
+		virtual ~IFile() {}
 
-	protected:
+		virtual Type::Enum						GetFileType(void) const = 0;
+		virtual AccessMethod::Enum				GetAccessMethod(void) const = 0;
+		virtual const IFixedString&				GetFileName(void) const = 0;
+		virtual SysString::Hash					GetHash(void) const = 0;
 
-		// Protected. Only CFileManager will be allowed to access Open/Close/Update.
-		friend CFileManager;
-		virtual Error::Enum			Open(void);
-		virtual Error::Enum			Close(void);
-		virtual Error::Enum			Update(void);
+		virtual bool							Validate(void) const = 0;
+		virtual bool							IsOpen(void) const = 0;
+		virtual bool							IsTypeAccess(Type::Enum eType, AccessMethod::Enum eAccess) const = 0;
 };
 
 
@@ -73,4 +97,4 @@ class CFileDirectTextReader : public CFileDirectReader
 // EOF
 //----------------------------------------------------------//
 
-#endif //_FILEDIRECTTEXTREADER_H_
+#endif //_IFILE_H_

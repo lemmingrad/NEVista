@@ -193,11 +193,7 @@
 				Name="File"
 				>
 				<File
-					RelativePath=".\File\FileAccessor.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\File\FileData.cpp"
+					RelativePath=".\File\File.cpp"
 					>
 				</File>
 				<File
@@ -214,14 +210,6 @@
 				</File>
 				<File
 					RelativePath=".\File\FileDirectWriter.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\File\FileManager.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\File\FileProcessor.cpp"
 					>
 				</File>
 			</Filter>
@@ -339,11 +327,7 @@
 				Name="File"
 				>
 				<File
-					RelativePath=".\File\FileAccessor.h"
-					>
-				</File>
-				<File
-					RelativePath=".\File\FileData.h"
+					RelativePath=".\File\File.h"
 					>
 				</File>
 				<File
@@ -363,11 +347,7 @@
 					>
 				</File>
 				<File
-					RelativePath=".\File\FileManager.h"
-					>
-				</File>
-				<File
-					RelativePath=".\File\FileProcessor.h"
+					RelativePath=".\File\IFile.h"
 					>
 				</File>
 			</Filter>

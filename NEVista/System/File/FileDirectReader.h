@@ -6,21 +6,16 @@
 // FILEDIRECTREADER.H
 //----------------------------------------------------------//
 //-- Description
-// CFileAccessorDirectReader utility class. Derives from 
-// CFileAccessor class, and will be sub-classed into 
-// CFileAccessorDirectTextReader and
-// CFileAccessorDirectBinaryReader.
-//
-// CFileProcessorDirectReader utility class. Derives from 
-// CFileProcessor class, and will be sub-classed into 
-// CFileProcessorDirectTextReader and
-// CFileProcessorDirectBinaryReader.
+// CFileDirectReader derives from CFile, and will be 
+// sub-classed into
+// CFileDirectTextReader and
+// CFileDirectBinaryReader.
 //----------------------------------------------------------//
 
 
+#include "File.h"
 #include "Types.h"
-#include "FileAccessor.h"
-#include "FileProcessor.h"
+#include "SysFileIO.h"
 
 
 //----------------------------------------------------------//
@@ -39,42 +34,29 @@
 // FORWARD REFERENCES
 //----------------------------------------------------------//
 
-
-class CFileData;
-
-
 //----------------------------------------------------------//
 // CLASSES
 //----------------------------------------------------------//
 
 
-class CFileAccessorDirectReader : public CFileAccessor
+class CFileDirectReader : public CFile
 {
 	public:
 
-		CFileAccessorDirectReader(CFileData* pData);
-		virtual ~CFileAccessorDirectReader();
-
-		virtual bool				ValidateData(void) const = 0;
+		CFileDirectReader(const s8* strFileName, Type::Enum eType);
+		CFileDirectReader(const IFixedString& strFileName, Type::Enum eType);
+		virtual ~CFileDirectReader();
+	
+		// IFile
 		virtual bool				IsOpen(void) const;
+		// ~IFile
 
 		size_t						Read(size_t nRequestedSize, s8* pDstBuffer, size_t nDstBufferSize);
-};
 
+	protected:
 
-class CFileProcessorDirectReader : public CFileProcessor
-{
-	public:
-
-		CFileProcessorDirectReader(CFileData* pData);
-		virtual ~CFileProcessorDirectReader();
-
-		virtual bool				ValidateData(void) const = 0;
-		virtual bool				IsOpen(void) const;
-
-		virtual Error::Enum			Open(void);
-		virtual Error::Enum			Close(void);
-		virtual Error::Enum			Update(void);
+		SysFileIO::Handle			m_pFile;
+		size_t						m_nSize;
 };
 
 

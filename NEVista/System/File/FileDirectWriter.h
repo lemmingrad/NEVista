@@ -6,21 +6,16 @@
 // FILEDIRECTWRITER.H
 //----------------------------------------------------------//
 //-- Description
-// CFileAccessorDirectWriter utility class. Derives from 
-// CFileAccessor class, and will be sub-classed into 
-// CFileAccessorDirectTextWriter and 
-// CFileAccessorDirectBinaryWriter.
-//
-// CFileProcessorDirectWriter utility class. Derives from 
-// CFileProcessor class, and will be sub-classed into 
-// CFileProcessorDirectTextWriter and 
-// CFileProcessorDirectBinaryWriter.
+// CFileDirectWriter derives from CFile, and will be 
+// sub-classed into
+// CFileDirectTextWriter and
+// CFileDirectBinaryWriter.
 //----------------------------------------------------------//
 
 
+#include "File.h"
 #include "Types.h"
-#include "FileAccessor.h"
-#include "FileProcessor.h"
+#include "SysFileIO.h"
 
 
 //----------------------------------------------------------//
@@ -39,43 +34,31 @@
 // FORWARD REFERENCES
 //----------------------------------------------------------//
 
-
-class CFileData;
-
-
 //----------------------------------------------------------//
 // CLASSES
 //----------------------------------------------------------//
 
 
-class CFileAccessorDirectWriter : public CFileAccessor
+class CFileDirectWriter : public CFile
 {
 	public:
 
-		CFileAccessorDirectWriter(CFileData* pData);
-		virtual ~CFileAccessorDirectWriter();
-
-		virtual bool				ValidateData(void) const = 0;
+		CFileDirectWriter(const s8* strFileName, Type::Enum eType);
+		CFileDirectWriter(const IFixedString& strFileName, Type::Enum eType);
+		virtual ~CFileDirectWriter();
+	
+		// IFile
 		virtual bool				IsOpen(void) const;
+		// ~IFile
 
-		size_t						Write(size_t nRequestedSize, s8* pSrcBuffer, size_t nSrcBufferSize);
+		size_t						Write(size_t nRequestedSize, const s8* pDstBuffer, size_t nDstBufferSize);
+
+	protected:
+
+		SysFileIO::Handle			m_pFile;
+		size_t						m_nSize;
 };
 
-
-class CFileProcessorDirectWriter : public CFileProcessor
-{
-	public:
-
-		CFileProcessorDirectWriter(CFileData* pData);
-		virtual ~CFileProcessorDirectWriter();
-
-		virtual bool				ValidateData(void) const = 0;
-		virtual bool				IsOpen(void) const;
-
-		virtual Error::Enum			Open(void);
-		virtual Error::Enum			Close(void);
-		virtual Error::Enum			Update(void);
-};
 
 //----------------------------------------------------------//
 // EXTERNALS

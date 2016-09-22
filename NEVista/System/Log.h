@@ -12,7 +12,6 @@
 
 #include "Types.h"
 #include "SysString.h"
-#include "File/FileData.h"
 #include "File/FileDirectTextWriter.h"
 
 
@@ -77,9 +76,7 @@ class CLog
 		
 		FixedString<LOG_WORKING_BUFFER_SIZE>		m_strWorkingBuffer;
 
-		CFileData									m_FileData;
-		CFileAccessorDirectTextWriter				m_FileAccessor;
-		CFileProcessorDirectTextWriter				m_FileProcessor;
+		CFileDirectTextWriter						m_File;
 	
 		s8											m_strMarkupHistory[LOG_MARKUP_HISTORY_SIZE];
 		u32											m_nMarkupHistoryIndex;

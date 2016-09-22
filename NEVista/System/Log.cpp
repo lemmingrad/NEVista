@@ -10,7 +10,6 @@
 #include "Types.h"
 #include "SysTime.h"
 #include "SysString.h"
-#include "File/FileData.h"
 #include "File/FileDirectTextWriter.h"
 
 
@@ -29,9 +28,7 @@
 // Constructor for log object.
 //----------------------------------------------------------//
 CLog::CLog()
-: m_FileData("", CFileData::Type::Unknown, CFileData::AccessMethod::Unknown)
-, m_FileAccessor(NULL)
-, m_FileProcessor(NULL)
+: m_File("")
 , m_nMarkupHistoryIndex(0)
 , m_nNumericListCounter(0)
 {
@@ -76,19 +73,20 @@ bool CLog::Initialise(const s8* strFileName)
 	m_nMarkupHistoryIndex = 0;
 	m_nNumericListCounter = 0;
 
-	m_FileData = CFileData(strFileName, CFileData::Type::Text, CFileData::AccessMethod::DirectWrite);
-	m_FileAccessor = CFileAccessorDirectTextWriter(&m_FileData);
-	m_FileProcessor = CFileProcessorDirectTextWriter(&m_FileData);
-
-	if (CFileProcessor::Error::Ok != m_FileProcessor.Open())
+	m_File = CFileDirectTextWriter(strFileName);
+	if (CFile::Error::Ok != m_File.Open())
+	{
+		return false;
+	}
+	if (IS_FALSE(m_File.IsOpen()))
 	{
 		return false;
 	}
 
 	time(&m_nStartTime);
-	FixedString<SYSTIME_BUFFER_SIZE> strTime;
+	FixedString<SysTime::CTIME_BUFFER_SIZE> strTime;
 	SysTime::Ctime(strTime.Buffer(), strTime.Size(), &m_nStartTime);
-	m_FileAccessor.Printf("Log created %s\n", strTime.ConstBuffer());
+	m_File.Printf("Log created %s\n", strTime.ConstBuffer());
 
 	return true;
 }
@@ -102,15 +100,15 @@ bool CLog::Initialise(const s8* strFileName)
 //----------------------------------------------------------//
 bool CLog::Shutdown(void)
 {
-	if (IS_TRUE(m_FileAccessor.IsOpen()))
+	if (IS_TRUE(m_File.IsOpen()))
 	{
 		time_t nLogTime;
 		time(&nLogTime);
-		FixedString<SYSTIME_BUFFER_SIZE> strTime;
+		FixedString<SysTime::CTIME_BUFFER_SIZE> strTime;
 		SysTime::Ctime(strTime.Buffer(), strTime.Size(), &nLogTime);
-		m_FileAccessor.Printf("\n\nLog closed %s", strTime.ConstBuffer());
+		m_File.Printf("\n\nLog closed %s", strTime.ConstBuffer());
 
-		m_FileProcessor.Close();
+		m_File.Close();
 	}
 
 	return true;
@@ -286,7 +284,7 @@ s8 CLog::GetCurrentMarkup(void) const
 //----------------------------------------------------------//
 void CLog::PrintLineFront(s32 nBack)
 {
-	if (IS_TRUE(m_FileAccessor.IsOpen()))
+	if (IS_TRUE(m_File.IsOpen()))
 	{
 		//-- Add time since start to each line
 		time_t nCurTime;
@@ -295,7 +293,7 @@ void CLog::PrintLineFront(s32 nBack)
 		u32 nMinutes = (u32)(fTotalSeconds / 60.0f);
 		u32 nSeconds = (u32)fTotalSeconds % 60;
 
-		m_FileAccessor.Printf("<%d:%02d> ", nMinutes, nSeconds);
+		m_File.Printf("<%d:%02d> ", nMinutes, nSeconds);
 
 		s32 nHistoryLoops = m_nMarkupHistoryIndex + nBack;
 
@@ -309,14 +307,14 @@ void CLog::PrintLineFront(s32 nBack)
 				case '{':
 				{
 					//-- Need an extra indent
-					m_FileAccessor.Printf("  ");
+					m_File.Printf("  ");
 				}
 				break;
 
 				case '!':
 				{
 					//-- Add a !
-					m_FileAccessor.Printf("! ");
+					m_File.Printf("! ");
 				}
 				break;
 
@@ -325,11 +323,11 @@ void CLog::PrintLineFront(s32 nBack)
 					//-- Add a *
 					if (nIndex == (nHistoryLoops - 1))
 					{
-						m_FileAccessor.Printf("* ");
+						m_File.Printf("* ");
 					}
 					else
 					{
-						m_FileAccessor.Printf("  ");
+						m_File.Printf("  ");
 					}
 				}
 				break;
@@ -339,11 +337,11 @@ void CLog::PrintLineFront(s32 nBack)
 					//-- Add a number
 					if (nIndex == (nHistoryLoops - 1))
 					{
-						m_FileAccessor.Printf("%02d. ", m_nNumericListCounter++);
+						m_File.Printf("%02d. ", m_nNumericListCounter++);
 					}
 					else
 					{
-						m_FileAccessor.Printf("    ");
+						m_File.Printf("    ");
 					}
 				}
 				break;
@@ -364,7 +362,7 @@ void CLog::PrintLineFront(s32 nBack)
 //----------------------------------------------------------//
 void CLog::StartFormatted(s8 cMarkup, const s8* strText)
 {
-	if (IS_TRUE(m_FileAccessor.IsOpen()))
+	if (IS_TRUE(m_File.IsOpen()))
 	{
 		switch (cMarkup)
 		{
@@ -374,7 +372,7 @@ void CLog::StartFormatted(s8 cMarkup, const s8* strText)
 			{
 				//-- Start of Indent block.
 				PrintLineFront();
-				m_FileAccessor.Printf("%s\n", strText);
+				m_File.Printf("%s\n", strText);
 			}
 			break;
 
@@ -382,7 +380,7 @@ void CLog::StartFormatted(s8 cMarkup, const s8* strText)
 			{
 				//-- Start of Warning block.
 				PrintLineFront(-1);
-				m_FileAccessor.Printf("!!! %s !!!\n", strText);
+				m_File.Printf("!!! %s !!!\n", strText);
 			}
 			break;
 
@@ -390,7 +388,7 @@ void CLog::StartFormatted(s8 cMarkup, const s8* strText)
 			{
 				//-- Start of Bracket block.
 				PrintLineFront(-1);
-				m_FileAccessor.Printf("%s [\n", strText);
+				m_File.Printf("%s [\n", strText);
 			}
 			break;
 
@@ -398,7 +396,7 @@ void CLog::StartFormatted(s8 cMarkup, const s8* strText)
 			{
 				//-- Start of Curly block.
 				PrintLineFront(-1);
-				m_FileAccessor.Printf("%s {\n", strText);
+				m_File.Printf("%s {\n", strText);
 			}
 			break;
 
@@ -417,7 +415,7 @@ void CLog::StartFormatted(s8 cMarkup, const s8* strText)
 //----------------------------------------------------------//
 void CLog::EndFormatted(s8 cMarkup, const s8* strText)
 {
-	if (IS_TRUE(m_FileAccessor.IsOpen()))
+	if (IS_TRUE(m_File.IsOpen()))
 	{
 		switch (cMarkup)
 		{
@@ -430,7 +428,7 @@ void CLog::EndFormatted(s8 cMarkup, const s8* strText)
 				if (IS_FALSE(SysString::IsEmpty(strText)))
 				{
 					PrintLineFront(-1);
-					m_FileAccessor.Printf("%s\n", strText);
+					m_File.Printf("%s\n", strText);
 				}
 			}
 			break;
@@ -439,7 +437,7 @@ void CLog::EndFormatted(s8 cMarkup, const s8* strText)
 			{
 				//-- End of Bracket block.
 				PrintLineFront(-1);
-				m_FileAccessor.Printf("] %s\n", strText);
+				m_File.Printf("] %s\n", strText);
 			}
 			break;
 
@@ -447,14 +445,14 @@ void CLog::EndFormatted(s8 cMarkup, const s8* strText)
 			{
 				//-- End of Curly block.
 				PrintLineFront(-1);
-				m_FileAccessor.Printf("} %s\n", strText);
+				m_File.Printf("} %s\n", strText);
 			}
 			break;
 
 			default:
 			{
 				PrintLineFront(-1);
-				m_FileAccessor.Printf("%s\n", strText);
+				m_File.Printf("%s\n", strText);
 			}
 			break;
 		}
@@ -470,7 +468,7 @@ void CLog::EndFormatted(s8 cMarkup, const s8* strText)
 //----------------------------------------------------------//
 void CLog::PrintFormatted(const s8* strText)
 {
-	if (IS_TRUE(m_FileAccessor.IsOpen()))
+	if (IS_TRUE(m_File.IsOpen()))
 	{
 		s8* next_token1 = NULL;
 		s8* strLine = SysString::Strtok((s8*)strText, "\n", next_token1);
@@ -479,7 +477,7 @@ void CLog::PrintFormatted(const s8* strText)
 			if (IS_FALSE(SysString::IsEmpty(strLine)))
 			{
 				PrintLineFront();
-				m_FileAccessor.Printf("%s\n", strLine);
+				m_File.Printf("%s\n", strLine);
 			}
 
 			strLine = SysString::Strtok(NULL, "\n", next_token1);
@@ -498,7 +496,7 @@ void CLog::PrintFormatted(const s8* strText)
 //----------------------------------------------------------//
 void CLog::Printf(const s8 *strText, ...)
 {
-	if (IS_TRUE(m_FileAccessor.IsOpen()))
+	if (IS_TRUE(m_File.IsOpen()))
 	{
 		m_strWorkingBuffer.Clear();
 
@@ -571,14 +569,14 @@ void CLog::Printf(const s8 *strText, ...)
 //----------------------------------------------------------//
 void CLog::AddTimeStamp(void)
 {
-	if (IS_TRUE(m_FileAccessor.IsOpen()))
+	if (IS_TRUE(m_File.IsOpen()))
 	{
 		time_t nLogTime;
 		time(&nLogTime);
-		FixedString<SYSTIME_BUFFER_SIZE> strTime;
+		FixedString<SysTime::CTIME_BUFFER_SIZE> strTime;
 		SysTime::Ctime(strTime.Buffer(), strTime.Size(), &nLogTime);
 		
-		m_FileAccessor.Printf("[%s]\n", strTime.ConstBuffer());
+		m_File.Printf("[%s]\n", strTime.ConstBuffer());
 	}
 }
 
@@ -591,9 +589,9 @@ void CLog::AddTimeStamp(void)
 //----------------------------------------------------------//
 void CLog::AddBreakLine(void)
 {
-	if (IS_TRUE(m_FileAccessor.IsOpen()))
+	if (IS_TRUE(m_File.IsOpen()))
 	{
-		m_FileAccessor.Printf("--------------------------------------------------------------------------------------\n");
+		m_File.Printf("--------------------------------------------------------------------------------------\n");
 	}
 }	
 
@@ -606,9 +604,9 @@ void CLog::AddBreakLine(void)
 //----------------------------------------------------------//
 void CLog::AddBlankLine(void)
 {
-	if (IS_TRUE(m_FileAccessor.IsOpen()))
+	if (IS_TRUE(m_File.IsOpen()))
 	{
-		m_FileAccessor.Printf("\n");
+		m_File.Printf("\n");
 	}
 }
 

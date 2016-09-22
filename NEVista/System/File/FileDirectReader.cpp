@@ -2,20 +2,14 @@
 // FILEDIRECTREADER.CPP
 //----------------------------------------------------------//
 //-- Description
-// CFileAccessorDirectReader utility class. Derives from 
-// CFileAccessor class, and will be sub-classed into 
-// CFileAccessorDirectTextReader and
-// CFileAccessorDirectBinaryReader.
-//
-// CFileProcessorDirectReader utility class. Derives from 
-// CFileProcessor class, and will be sub-classed into 
-// CFileProcessorDirectTextReader and
-// CFileProcessorDirectBinaryReader.
+// CFileDirectReader derives from CFile, and will be 
+// sub-classed into
+// CFileDirectTextReader and
+// CFileDirectBinaryReader.
 //----------------------------------------------------------//
 
 
 #include "FileDirectReader.h"
-#include "FileData.h"
 #include "Types.h"
 #include "SysFileIO.h"
 
@@ -28,133 +22,68 @@
 // GLOBALS
 //----------------------------------------------------------//
 
-
 //----------------------------------------------------------//
-// CFileAccessorDirectReader::CFileAccessorDirectReader
+// CFileDirectReader::CFileDirectReader
 //----------------------------------------------------------//
-CFileAccessorDirectReader::CFileAccessorDirectReader(CFileData* pData)
-: CFileAccessor(pData)
+CFileDirectReader::CFileDirectReader(const s8* strFileName, Type::Enum eType)
+: CFile(strFileName, eType, AccessMethod::DirectRead)
+, m_pFile(SysFileIO::INVALID_HANDLE)
+, m_nSize(0)
 {
 }
 
 
 //----------------------------------------------------------//
-// CFileAccessorDirectReader::~CFileAccessorDirectReader
+// CFileDirectReader::CFileDirectReader
 //----------------------------------------------------------//
-CFileAccessorDirectReader::~CFileAccessorDirectReader()
+CFileDirectReader::CFileDirectReader(const IFixedString& strFileName, Type::Enum eType)
+: CFile(strFileName, eType, AccessMethod::DirectRead)
+, m_pFile(SysFileIO::INVALID_HANDLE)
+, m_nSize(0)
 {
 }
 
 
 //----------------------------------------------------------//
-// CFileAccessorDirectReader::IsOpen
+// CFileDirectReader::~CFileDirectReader
+//----------------------------------------------------------//
+CFileDirectReader::~CFileDirectReader()
+{
+}
+
+
+//----------------------------------------------------------//
+// CFileDirectReader::IsOpen
 //----------------------------------------------------------//
 //-- Description
 // Returns whether file is open or not.
+// For Direct reader, we just test the file handle.
 //----------------------------------------------------------//
-bool CFileAccessorDirectReader::IsOpen(void) const
+bool CFileDirectReader::IsOpen(void) const
 {
-	if (IS_TRUE(ValidateData()))
-	{
-		return (SysFileIO::INVALID_HANDLE != m_pData->m_DirectReaderData.m_pFile);
-	}
-
-	//-- Not open
-	return false;
+	return (SysFileIO::INVALID_HANDLE != m_pFile);
 }
 
 
 //----------------------------------------------------------//
-// CFileAccessorDirectReader::Read
+// CFileDirectReader::Read
 //----------------------------------------------------------//
 //-- Description
 // Read bytes from an open direct access file.
 // Note that reading '\r\n' from a text file may be converted
 // to only '\n' in the buffer on some systems.
 //----------------------------------------------------------//
-size_t CFileAccessorDirectReader::Read(size_t nRequestedSize, s8* pDstBuffer, size_t nDstBufferSize)
+size_t CFileDirectReader::Read(size_t nRequestedSize, s8* pDstBuffer, size_t nDstBufferSize)
 {
-	if ( IS_TRUE(ValidateData())
+	if ( IS_TRUE(Validate())
 		&& IS_TRUE(IsOpen())
 		&& IS_PTR(pDstBuffer)
 		&& (nDstBufferSize >= nRequestedSize) )
 	{
-		return SysFileIO::Fread(m_pData->m_DirectReaderData.m_pFile, 1, nRequestedSize, pDstBuffer, nDstBufferSize);
+		return SysFileIO::Fread(m_pFile, 1, nRequestedSize, pDstBuffer, nDstBufferSize);
 	}
 
 	return 0;
-}
-
-
-//----------------------------------------------------------//
-// CFileProcessorDirectReader::CFileProcessorDirectReader
-//----------------------------------------------------------//
-CFileProcessorDirectReader::CFileProcessorDirectReader(CFileData* pData)
-: CFileProcessor(pData)
-{
-}
-
-
-//----------------------------------------------------------//
-// CFileProcessorDirectReader::~CFileProcessorDirectReader
-//----------------------------------------------------------//
-CFileProcessorDirectReader::~CFileProcessorDirectReader()
-{
-}
-
-
-//----------------------------------------------------------//
-// CFileProcessorDirectReader::IsOpen
-//----------------------------------------------------------//
-//-- Description
-// Returns whether file is open or not.
-//----------------------------------------------------------//
-bool CFileProcessorDirectReader::IsOpen(void) const
-{
-	if (IS_TRUE(ValidateData()))
-	{
-		return (SysFileIO::INVALID_HANDLE != m_pData->m_DirectReaderData.m_pFile);
-	}
-
-	//-- Not open
-	return false;
-}
-
-
-CFileProcessor::Error::Enum CFileProcessorDirectReader::Open(void)
-{
-	if (IS_TRUE(ValidateData()))
-	{
-		m_pData->m_DirectReaderData.m_pFile = SysFileIO::INVALID_HANDLE;
-		m_pData->m_DirectReaderData.m_nSize = 0;
-
-		return Error::Ok;
-	}
-
-	return Error::Failed;
-}
-
-
-CFileProcessor::Error::Enum CFileProcessorDirectReader::Close(void)
-{
-	if (IS_TRUE(ValidateData()))
-	{
-		if (IS_TRUE(IsOpen()))
-		{
-			SysFileIO::Fclose(m_pData->m_DirectReaderData.m_pFile);
-		}
-		m_pData->m_DirectReaderData.m_nSize = 0;
-
-		return Error::Ok;
-	}
-
-	return Error::Failed;
-}
-
-
-CFileProcessor::Error::Enum CFileProcessorDirectReader::Update(void)
-{
-	return Error::Ok;
 }
 
 

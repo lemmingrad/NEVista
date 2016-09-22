@@ -2,16 +2,12 @@
 // FILEDIRECTTEXTREADER.CPP
 //----------------------------------------------------------//
 //-- Description
-// CFileAccessorDirectTextReader class. Derived from
-// CFileAccessorDirectReader.
-//
-// CFileProcessorDirectTextReader class. Derived from
-// CFileProcessorDirectReader.
+// CFileDirectTextReader class. Derived from
+// CFileDirectReader.
 //----------------------------------------------------------//
 
 
 #include "FileDirectTextReader.h"
-#include "FileData.h"
 #include "Types.h"
 #include "SysFileIO.h"
 
@@ -26,43 +22,42 @@
 
 
 //----------------------------------------------------------//
-// CFileAccessorDirectTextReader::CFileAccessorDirectTextReader
+// CFileDirectTextReader::CFileDirectTextReader
 //----------------------------------------------------------//
-CFileAccessorDirectTextReader::CFileAccessorDirectTextReader(CFileData* pData)
-: CFileAccessorDirectReader(pData)
+CFileDirectTextReader::CFileDirectTextReader(const s8* strFileName)
+: CFileDirectReader(strFileName, Type::Text)
 {
 }
 
 
 //----------------------------------------------------------//
-// CFileAccessorDirectTextReader::~CFileAccessorDirectTextReader
+// CFileDirectTextReader::CFileDirectTextReader
 //----------------------------------------------------------//
-CFileAccessorDirectTextReader::~CFileAccessorDirectTextReader()
+CFileDirectTextReader::CFileDirectTextReader(const IFixedString& strFileName)
+: CFileDirectReader(strFileName, Type::Text)
 {
 }
 
 
 //----------------------------------------------------------//
-// CFileAccessorDirectTextReader::ValidateData
+// CFileDirectTextReader::~CFileDirectTextReader
 //----------------------------------------------------------//
-bool CFileAccessorDirectTextReader::ValidateData(void) const
+CFileDirectTextReader::~CFileDirectTextReader()
 {
-	if (IS_PTR(m_pData))
-	{
-		if (IS_TRUE(m_pData->Validate(CFileData::Type::Text, CFileData::AccessMethod::DirectRead)))
-		{
-			//-- Data validated
-			return true;
-		}
-	}
-
-	//-- Failed to validate data
-	return false;
 }
 
 
 //----------------------------------------------------------//
-// CFileAccessorDirectTextReader::GetString
+// CFileDirectTextReader::Validate
+//----------------------------------------------------------//
+bool CFileDirectTextReader::Validate(void) const
+{
+	return IsTypeAccess(Type::Text, AccessMethod::DirectRead);
+}
+
+
+//----------------------------------------------------------//
+// CFileDirectTextReader::GetString
 //----------------------------------------------------------//
 //-- Description
 // Read a string from an open direct access file.
@@ -70,14 +65,14 @@ bool CFileAccessorDirectTextReader::ValidateData(void) const
 // character or the end of file. Any trailing newline will be
 // stripped from the output string.
 //----------------------------------------------------------//
-s8* CFileAccessorDirectTextReader::GetString(s8* pDstBuffer, size_t nDstBufferSize)
+s8* CFileDirectTextReader::GetString(s8* pDstBuffer, size_t nDstBufferSize)
 {
-	if ( IS_TRUE(ValidateData())
+	if ( IS_TRUE(Validate())
 		&& IS_TRUE(IsOpen())
 		&& IS_PTR(pDstBuffer)
 		&& (nDstBufferSize > 0) )
 	{
-		return SysFileIO::Fgets(m_pData->m_DirectReaderData.m_pFile, pDstBuffer, nDstBufferSize);
+		return SysFileIO::Fgets(m_pFile, pDstBuffer, nDstBufferSize);
 	}
 
 	return NULL;
@@ -85,76 +80,85 @@ s8* CFileAccessorDirectTextReader::GetString(s8* pDstBuffer, size_t nDstBufferSi
 
 
 //----------------------------------------------------------//
-// CFileProcessorDirectTextReader::CFileProcessorDirectTextReader
+// CFileDirectTextReader::GetString
 //----------------------------------------------------------//
-CFileProcessorDirectTextReader::CFileProcessorDirectTextReader(CFileData* pData)
-: CFileProcessorDirectReader(pData)
+//-- Description
+// Read a string from an open direct access file.
+// A string is determined as terminated by a newline
+// character or the end of file. Any trailing newline will be
+// stripped from the output string.
+//----------------------------------------------------------//
+IFixedString& CFileDirectTextReader::GetString(IFixedString& strString)
 {
-}
-
-
-//----------------------------------------------------------//
-// CFileProcessorDirectTextReader::~CFileProcessorDirectTextReader
-//----------------------------------------------------------//
-CFileProcessorDirectTextReader::~CFileProcessorDirectTextReader()
-{
-}
-
-
-//----------------------------------------------------------//
-// CFileProcessorDirectTextReader::ValidateData
-//----------------------------------------------------------//
-bool CFileProcessorDirectTextReader::ValidateData(void) const
-{
-	if (IS_PTR(m_pData))
+	if (IS_TRUE(Validate())
+		&& IS_TRUE(IsOpen()) )
 	{
-		if (IS_TRUE(m_pData->Validate(CFileData::Type::Text, CFileData::AccessMethod::DirectRead)))
+		if (IS_NULL_PTR(SysFileIO::Fgets(m_pFile, strString.Buffer(), strString.Size())))
 		{
-			//-- Data validated
-			return true;
+			//-- fgets got nothing. Mirror that in the FixedString.
+			strString.Clear();
 		}
 	}
 
-	//-- Failed to validate data
-	return false;
+	return strString;
 }
 
 
-CFileProcessor::Error::Enum CFileProcessorDirectTextReader::Open(void)
+//----------------------------------------------------------//
+// CFileDirectTextReader::Open
+//----------------------------------------------------------//
+CFile::Error::Enum CFileDirectTextReader::Open(void)
 {
-	if (IS_TRUE(ValidateData()))
+	if (IS_TRUE(Validate()))
 	{
-		Error::Enum eResult = CFileProcessorDirectReader::Open();
-		if (Error::Ok == eResult)
+		if (IS_FALSE(IsOpen()))
 		{
-			m_pData->m_DirectReaderData.m_pFile = SysFileIO::Fopen(m_pData->m_strFileName.ConstBuffer(), "rt");
-			if (IS_FALSE(IsOpen()))
+			m_pFile = SysFileIO::Fopen(m_strFileName.ConstBuffer(), "rt");
+			m_nSize = 0;
+
+			if (IS_TRUE(IsOpen()))
 			{
-				//-- Failed to open file
-				return Error::Failed;
+				SysFileIO::Fseek(m_pFile, 0, SEEK_END);
+				m_nSize = SysFileIO::Ftell(m_pFile);
+				SysFileIO::Fseek(m_pFile, 0, SEEK_SET);
+
+				return Error::Ok;
 			}
 
-			SysFileIO::Fseek(m_pData->m_DirectReaderData.m_pFile, 0, SEEK_END);
-			m_pData->m_DirectReaderData.m_nSize = SysFileIO::Ftell(m_pData->m_DirectReaderData.m_pFile);
-			SysFileIO::Fseek(m_pData->m_DirectReaderData.m_pFile, 0, SEEK_SET);
-
-			return Error::Ok;
+			return Error::FileOpenFailed;
 		}
+
+		return Error::FileAlreadyOpen;
 	}
 
 	return Error::Failed;
 }
 
 
-CFileProcessor::Error::Enum CFileProcessorDirectTextReader::Close(void)
+//----------------------------------------------------------//
+// CFileDirectTextReader::Close
+//----------------------------------------------------------//
+CFile::Error::Enum CFileDirectTextReader::Close(void)
 {
-	return CFileProcessorDirectReader::Close();
+	if (IS_TRUE(IsOpen()))
+	{
+		SysFileIO::Fclose(m_pFile);
+	}
+
+	m_pFile = SysFileIO::INVALID_HANDLE;
+	m_nSize = 0;
+
+	return Error::Ok;
 }
 
 
-CFileProcessor::Error::Enum CFileProcessorDirectTextReader::Update(void)
+//----------------------------------------------------------//
+// CFileDirectTextReader::Update
+//----------------------------------------------------------//
+
+CFile::Error::Enum CFileDirectTextReader::Update(void)
 {
-	return CFileProcessorDirectReader::Update();
+	return Error::Ok;
 }
 
 

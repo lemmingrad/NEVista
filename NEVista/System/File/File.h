@@ -1,26 +1,24 @@
-#ifndef _IFILE_H_
-#define _IFILE_H_
+#ifndef _FILE_H_
+#define _FILE_H_
 #pragma once
 
 //----------------------------------------------------------//
-// IFILE.H
+// FILE.H
 //----------------------------------------------------------//
 //-- Description
-// Interface for a CFile Object
+// CFile base class.
 //----------------------------------------------------------//
 
 
+#include "IFile.h"
 #include "Types.h"
 #include "SysString.h"
+#include "FixedString.h"
 
 
 //----------------------------------------------------------//
 // DEFINES
 //----------------------------------------------------------//
-
-
-#define FILE_MAX_FILENAME_LENGTH					(256)
-
 
 //----------------------------------------------------------//
 // ENUMS
@@ -43,49 +41,46 @@ class IFixedString;
 //----------------------------------------------------------//
 
 
-class IFile
+class CFile : public IFile
 {
 	public:
 
-		struct Type
+		struct Error
 		{
 			enum Enum
 			{
-				Unknown = 0,
-				Text,
-				Binary,
-				ArcEntry,
-				Archive,
-				Any
+				FileAlreadyOpen					= 0x80000003,
+				FileOpenFailed					= 0x80000002,
+				FileNotFound					= 0x80000001,
+				Failed							= -1,
+				Ok								= 0
 			};
 		};
 
-		struct AccessMethod
-		{
-			enum Enum
-			{
-				Unknown			= 0x00,
-				DirectRead		= 0x01,
-				DirectWrite		= 0x11,
-				BufferedRead	= 0x02,
-				BufferedWrite	= 0x12,
-				AsyncRead		= 0x04,
-				AsyncWrite		= 0x14,
-				StreamedRead	= 0x08,
-				Any				= 0xFF
-			};
-		};
+		CFile(const s8* strFileName, Type::Enum eType, AccessMethod::Enum eAccess);
+		CFile(const IFixedString& strFileName, Type::Enum eType, AccessMethod::Enum eAccess);
+		virtual ~CFile();
 
-		virtual ~IFile() {}
+		// IFile
+		virtual Type::Enum						GetFileType(void) const;
+		virtual AccessMethod::Enum				GetAccessMethod(void) const;
+		virtual const IFixedString&				GetFileName(void) const;
+		virtual SysString::Hash					GetHash(void) const;
 
-		virtual Type::Enum						GetFileType(void) const = 0;
-		virtual AccessMethod::Enum				GetAccessMethod(void) const = 0;
-		virtual const IFixedString&				GetFileName(void) const = 0;
-		virtual SysString::Hash					GetHash(void) const = 0;
+		virtual bool							IsTypeAccess(Type::Enum eType, AccessMethod::Enum eAccess) const;
+		// ~IFile
 
-		virtual bool							Validate(void) = 0;
-		virtual bool							IsOpen(void) const = 0;
-		virtual bool							IsTypeAccess(Type::Enum eType, AccessMethod::Enum eAccess) const = 0;
+	protected:
+
+		// Protected. CFileManager will be allowed to access Open/Close/Update, via derived classes.
+//		virtual Error::Enum						Open(void) = 0;
+//		virtual Error::Enum						Close(void) = 0;
+//		virtual Error::Enum						Update(void) = 0;
+
+		FixedString<FILE_MAX_FILENAME_LENGTH>	m_strFileName;
+		SysString::Hash							m_nHash;
+		Type::Enum								m_eFileType;
+		AccessMethod::Enum						m_eAccessMethod;
 };
 
 
@@ -97,4 +92,4 @@ class IFile
 // EOF
 //----------------------------------------------------------//
 
-#endif //_IFILE_H_
+#endif //_FILE_H_

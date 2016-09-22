@@ -6,25 +6,18 @@
 // FILEDIRECTTEXTWRITER.H
 //----------------------------------------------------------//
 //-- Description
-// CFileAccessorDirectTextWriter utility class. Derives from 
-// CFileAccessorDirectWriter class.
-//
-// CFileProcessorDirectTextWriter utility class. Derives from 
-// CFileProcessorDirectWriter class.
+// CFileDirectTextWriter class. Derived from
+// CFileDirectWriter.
 //----------------------------------------------------------//
 
 
-#include "Types.h"
 #include "FileDirectWriter.h"
+#include "Types.h"
 
 
 //----------------------------------------------------------//
 // DEFINES
 //----------------------------------------------------------//
-
-
-#define FILE_WORKING_TEXT_BUFFER_SIZE				(2048)
-
 
 //----------------------------------------------------------//
 // ENUMS
@@ -38,45 +31,37 @@
 // FORWARD REFERENCES
 //----------------------------------------------------------//
 
-
-class CFileData;
-
-
 //----------------------------------------------------------//
 // CLASSES
 //----------------------------------------------------------//
 
 
-class CFileAccessorDirectTextWriter : public CFileAccessorDirectWriter
-{
-	protected:
-
-		FixedString<FILE_WORKING_TEXT_BUFFER_SIZE> m_strWorkingBuffer;
-
-	public:
-
-		CFileAccessorDirectTextWriter(CFileData* pData);
-		virtual ~CFileAccessorDirectTextWriter();
-
-		virtual bool							ValidateData(void) const;
-
-		size_t									Printf(const s8* strFormatting, ...);
-		size_t									PutString(const s8* pDstBuffer);
-};
-
-
-class CFileProcessorDirectTextWriter : public CFileProcessorDirectWriter
+class CFileDirectTextWriter : public CFileDirectWriter
 {
 	public:
 
-		CFileProcessorDirectTextWriter(CFileData* pData);
-		virtual ~CFileProcessorDirectTextWriter();
+		CFileDirectTextWriter(const s8* strFileName);
+		CFileDirectTextWriter(const IFixedString& strFileName);
+		virtual ~CFileDirectTextWriter();
 
-		virtual bool							ValidateData(void) const;
+		// IFile
+		virtual bool				Validate(void) const;
+		// ~IFile
 
-		virtual Error::Enum						Open(void);
-		virtual Error::Enum						Close(void);
-		virtual Error::Enum						Update(void);
+		size_t						Printf(const s8* strFormatting, ...);
+		size_t						PutString(const s8* pSrcBuffer);
+		size_t						PutString(const std::string& strString);
+		size_t						PutString(const IFixedString& strString);
+
+		//-- In DirectReader and DirectWriter, Open and Close are public
+		//-- so they can be used anywhere.
+		virtual Error::Enum			Open(void);
+		virtual Error::Enum			Close(void);
+			
+	private:
+		
+		//-- In DirectReader and DirectWriter. Update is private and never used.
+		virtual Error::Enum			Update(void);
 };
 
 
