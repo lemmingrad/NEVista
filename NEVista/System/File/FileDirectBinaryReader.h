@@ -1,17 +1,17 @@
-#ifndef _FILEDIRECTTEXTWRITER_H_
-#define _FILEDIRECTTEXTWRITER_H_
+#ifndef _FILEDIRECTBINARYREADER_H_
+#define _FILEDIRECTBINARYREADER_H_
 #pragma once
 
 //----------------------------------------------------------//
-// FILEDIRECTTEXTWRITER.H
+// FILEDIRECTBINARYREADER.H
 //----------------------------------------------------------//
 //-- Description
-// CFileDirectTextWriter class. Derived from
-// CFileDirectWriter.
+// CFileDirectBinaryReader class. Derived from
+// CFileDirectReader.
 //----------------------------------------------------------//
 
 
-#include "FileDirectWriter.h"
+#include "FileDirectReader.h"
 #include "Types.h"
 
 
@@ -36,36 +36,27 @@
 //----------------------------------------------------------//
 
 
-class CFileDirectTextWriter : public CFileDirectWriter
+class CFileDirectBinaryReader : public CFileDirectReader
 {
 	public:
 
-		static const size_t PRINTF_BUFFER_SIZE = 1024;
-
-		CFileDirectTextWriter(const s8* strFileName);
-		CFileDirectTextWriter(const IFixedString& strFileName);
-		virtual ~CFileDirectTextWriter();
+		CFileDirectBinaryReader(const s8* strFileName);
+		CFileDirectBinaryReader(const IFixedString& strFileName);
+		virtual ~CFileDirectBinaryReader();
 
 		// IFile
 		virtual bool				Validate(void) const;
 		// ~IFile
 
-		size_t						Printf(const s8* strFormatting, ...);
-		size_t						PutString(const s8* pSrcBuffer);
-		size_t						PutString(const std::string& strString);
-		size_t						PutString(const IFixedString& strString);
-
 		//-- In DirectReader and DirectWriter, Open and Close are public
 		//-- so they can be used anywhere.
 		virtual Error::Enum			Open(void);
 		virtual Error::Enum			Close(void);
-			
+
 	private:
-		
+
 		//-- In DirectReader and DirectWriter. Update is private and never used.
 		virtual Error::Enum			Update(void);
-
-		FixedString<PRINTF_BUFFER_SIZE>		m_PrintfBuffer;
 };
 
 
@@ -77,4 +68,4 @@ class CFileDirectTextWriter : public CFileDirectWriter
 // EOF
 //----------------------------------------------------------//
 
-#endif //_FILEDIRECTTEXTWRITER_H_
+#endif //_FILEDIRECTBINARYREADER_H_

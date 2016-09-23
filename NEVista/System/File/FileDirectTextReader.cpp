@@ -155,7 +155,6 @@ CFile::Error::Enum CFileDirectTextReader::Close(void)
 //----------------------------------------------------------//
 // CFileDirectTextReader::Update
 //----------------------------------------------------------//
-
 CFile::Error::Enum CFileDirectTextReader::Update(void)
 {
 	return Error::Ok;

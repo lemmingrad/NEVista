@@ -72,7 +72,7 @@ class CFile : public IFile
 
 	protected:
 
-		// Protected. CFileManager will be allowed to access Open/Close/Update, via derived classes.
+		// Protected. Only CFileManager will be allowed to access Open/Close/Update, via derived classes.
 //		virtual Error::Enum						Open(void) = 0;
 //		virtual Error::Enum						Close(void) = 0;
 //		virtual Error::Enum						Update(void) = 0;

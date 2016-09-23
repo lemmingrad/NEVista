@@ -1,12 +1,12 @@
-#ifndef _FILEDIRECTTEXTWRITER_H_
-#define _FILEDIRECTTEXTWRITER_H_
+#ifndef _FILEDIRECTBINARYWRITER_H_
+#define _FILEDIRECTBINARYWRITER_H_
 #pragma once
 
 //----------------------------------------------------------//
-// FILEDIRECTTEXTWRITER.H
+// FILEDIRECTBINARYWRITER.H
 //----------------------------------------------------------//
 //-- Description
-// CFileDirectTextWriter class. Derived from
+// CFileDirectBinaryWriter class. Derived from
 // CFileDirectWriter.
 //----------------------------------------------------------//
 
@@ -36,24 +36,19 @@
 //----------------------------------------------------------//
 
 
-class CFileDirectTextWriter : public CFileDirectWriter
+class CFileDirectBinaryWriter : public CFileDirectWriter
 {
 	public:
 
 		static const size_t PRINTF_BUFFER_SIZE = 1024;
 
-		CFileDirectTextWriter(const s8* strFileName);
-		CFileDirectTextWriter(const IFixedString& strFileName);
-		virtual ~CFileDirectTextWriter();
+		CFileDirectBinaryWriter(const s8* strFileName);
+		CFileDirectBinaryWriter(const IFixedString& strFileName);
+		virtual ~CFileDirectBinaryWriter();
 
 		// IFile
 		virtual bool				Validate(void) const;
 		// ~IFile
-
-		size_t						Printf(const s8* strFormatting, ...);
-		size_t						PutString(const s8* pSrcBuffer);
-		size_t						PutString(const std::string& strString);
-		size_t						PutString(const IFixedString& strString);
 
 		//-- In DirectReader and DirectWriter, Open and Close are public
 		//-- so they can be used anywhere.
@@ -64,8 +59,6 @@ class CFileDirectTextWriter : public CFileDirectWriter
 		
 		//-- In DirectReader and DirectWriter. Update is private and never used.
 		virtual Error::Enum			Update(void);
-
-		FixedString<PRINTF_BUFFER_SIZE>		m_PrintfBuffer;
 };
 
 
@@ -77,4 +70,4 @@ class CFileDirectTextWriter : public CFileDirectWriter
 // EOF
 //----------------------------------------------------------//
 
-#endif //_FILEDIRECTTEXTWRITER_H_
+#endif //_FILEDIRECTBINARYWRITER_H_

@@ -56,11 +56,25 @@ bool CFileDirectTextWriter::Validate(void) const
 }
 
 
-size_t CFileDirectTextWriter::Printf(const s8* strFormatting, ...)
+//----------------------------------------------------------//
+// CFileDirectTextWriter::Printf
+//----------------------------------------------------------//
+size_t CFileDirectTextWriter::Printf(const s8* strFormating, ...)
 {
+	va_list ArgList;
+	va_start(ArgList, strFormating);
+	size_t nSymbolsConverted = SysString::Vsprintf(m_PrintfBuffer.Buffer(), m_PrintfBuffer.Size(), strFormating, ArgList);
+	va_end(ArgList);
+
+	if (nSymbolsConverted > 0)
+	{
+		return PutString(m_PrintfBuffer);
+	}
+
 	return 0;
 }
 		
+
 //----------------------------------------------------------//
 // CFileDirectTextWriter::PutString
 //----------------------------------------------------------//
