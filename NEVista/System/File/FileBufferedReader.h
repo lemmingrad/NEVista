@@ -1,26 +1,26 @@
-#ifndef _IFILE_H_
-#define _IFILE_H_
+#ifndef _FILEBUFFEREDREADER_H_
+#define _FILEBUFFEREDREADER_H_
 #pragma once
 
 //----------------------------------------------------------//
-// IFILE.H
+// FILEBUFFEREDREADER.H
 //----------------------------------------------------------//
 //-- Description
-// Interface for a CFile Object
+// CFileBufferedReader derives from CFile, and will be 
+// sub-classed into
+// CFileBufferedTextReader and
+// CFileBufferedBinaryReader.
 //----------------------------------------------------------//
 
 
+#include "File.h"
 #include "Types.h"
-#include "SysString.h"
+#include "SysFileIO.h"
 
 
 //----------------------------------------------------------//
 // DEFINES
 //----------------------------------------------------------//
-
-
-#define FILE_MAX_FILENAME_LENGTH					(256)
-
 
 //----------------------------------------------------------//
 // ENUMS
@@ -34,56 +34,32 @@
 // FORWARD REFERENCES
 //----------------------------------------------------------//
 
-
-class IFixedString;
-
-
 //----------------------------------------------------------//
 // CLASSES
 //----------------------------------------------------------//
 
 
-struct IFile
+class CFileBufferedReader : public CFile
 {
-	struct Type
-	{
-		enum Enum
-		{
-			Unknown = 0,
-			Text,
-			Binary,
-			ArcEntry,
-			Archive,
-			Any
-		};
-	};
+	public:
 
-	struct AccessMethod
-	{
-		enum Enum
-		{
-			Unknown			= 0x00,
-			DirectRead		= 0x01,
-			DirectWrite		= 0x11,
-			BufferedRead	= 0x02,
-			BufferedWrite	= 0x12,
-			AsyncRead		= 0x04,
-			AsyncWrite		= 0x14,
-			StreamedRead	= 0x08,
-			Any				= 0xFF
-		};
-	};
+		CFileBufferedReader(const s8* strFileName, Type::Enum eType);
+		CFileBufferedReader(const IFixedString& strFileName, Type::Enum eType);
+		virtual ~CFileBufferedReader();
+	
+		// IFile
+		virtual bool				IsOpen(void) const;
+		// ~IFile
 
-	virtual ~IFile() {}
+		bool						IsBufferAttached(void) const;
+		size_t						Read(size_t nRequestedSize, s8* pDstBuffer, size_t nDstBufferSize);
+		void						Flush(void);
 
-	virtual Type::Enum						GetFileType(void) const = 0;
-	virtual AccessMethod::Enum				GetAccessMethod(void) const = 0;
-	virtual const IFixedString&				GetFileName(void) const = 0;
-	virtual SysString::Hash					GetHash(void) const = 0;
+	protected:
 
-	virtual bool							Validate(void) const = 0;
-	virtual bool							IsOpen(void) const = 0;
-	virtual bool							IsTypeAccess(Type::Enum eType, AccessMethod::Enum eAccess) const = 0;
+		ISimpleBuffer*				m_pBuffer;
+		SysFileIO::Handle			m_pFile;
+		size_t						m_nSize;
 };
 
 
@@ -95,4 +71,4 @@ struct IFile
 // EOF
 //----------------------------------------------------------//
 
-#endif //_IFILE_H_
+#endif //_FILEDIRECTREADER_H_
